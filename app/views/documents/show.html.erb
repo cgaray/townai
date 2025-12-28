@@ -175,14 +175,18 @@
           <p class="text-base-content/60 max-w-md mt-2">
             We couldn't extract metadata from this document. The file may be corrupted or in an unsupported format.
           </p>
-          <% if @document.pdf.attached? %>
-            <div class="mt-6">
-              <%= link_to rails_blob_path(@document.pdf, disposition: :inline), target: "_blank", rel: "noopener", class: "btn btn-primary gap-2" do %>
+          <div class="mt-6 flex flex-wrap gap-3 justify-center">
+            <%= button_to retry_document_path(@document), method: :post, class: "btn btn-secondary gap-2" do %>
+              <%= icon("arrow-path", size: "w-4 h-4") %>
+              Retry Extraction
+            <% end %>
+            <% if @document.pdf.attached? %>
+              <%= link_to rails_blob_path(@document.pdf, disposition: :inline), target: "_blank", rel: "noopener", class: "btn btn-outline gap-2" do %>
                 <%= icon("eye", size: "w-4 h-4") %>
                 View Original PDF
               <% end %>
-            </div>
-          <% end %>
+            <% end %>
+          </div>
         <% elsif @document.pending? || @document.extracting_text? || @document.extracting_metadata? %>
           <div class="icon-circle icon-circle-xl icon-circle-brand mb-4">
             <%= icon("arrow-path", size: "w-10 h-10", class: "animate-spin-slow") %>

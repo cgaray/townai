@@ -59,16 +59,32 @@ class ExtractMetadataJob < ApplicationJob
     normalized = normalize_metadata(raw_response)
 
     if normalized
-      document.update!(extracted_metadata: normalized, status: :complete)
+      # Record successful API call before updating document
+      # This ensures accurate API tracking even if document update fails
       record_api_call(document, usage, response_time_ms, "success")
+
+      begin
+        document.update!(extracted_metadata: normalized, status: :complete)
+      rescue => e
+        # API call succeeded but document update failed - don't re-record as error
+        document.update!(status: :failed)
+        raise "Document update failed after successful API call: #{e.message}"
+      end
     else
-      document.update!(status: :failed)
       record_api_call(document, usage, response_time_ms, "error", "Failed to parse metadata")
+      document.update!(status: :failed)
       raise "Failed to parse metadata: #{raw_response.to_s.first(500)}"
     end
+  rescue ActiveRecord::RecordNotFound => e
+    # Document not found - no API call was made
+    raise e
   rescue => e
-    document&.update!(status: :failed) if document&.persisted?
-    record_api_call(document, {}, 0, "error", e.message) if document
+    # Only record API error if we haven't already recorded the call
+    # (i.e., error occurred before or during API call, not after)
+    if !defined?(usage) || usage.empty?
+      record_api_call(document, {}, response_time_ms || 0, "error", e.message) if document
+    end
+    document&.update!(status: :failed) if document&.persisted? && !document&.failed?
     raise e
   end
 

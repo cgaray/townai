@@ -78,11 +78,11 @@ class ApiCallTest < ActiveSupport::TestCase
   end
 
   test "recent scope orders by created_at desc" do
-    old = ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: 1.day.ago)
-    new = ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: Time.current)
+    ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: 1.day.ago)
+    newer = ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: Time.current)
 
     recent = ApiCall.recent
-    assert_equal new, recent.first
+    assert_equal newer, recent.first
   end
 
   test "this_month scope returns only current month calls" do

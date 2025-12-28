@@ -79,4 +79,27 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a.btn-primary[target='_blank'][rel='noopener']", text: /View PDF/
   end
+
+  test "retry action requeues failed document" do
+    doc = documents(:failed_document)
+
+    assert_enqueued_with(job: ExtractMetadataJob) do
+      post retry_document_url(doc)
+    end
+
+    assert_redirected_to document_url(doc)
+    doc.reload
+    assert doc.pending?
+  end
+
+  test "retry action only works for failed documents" do
+    doc = documents(:complete_agenda)
+
+    post retry_document_url(doc)
+
+    assert_redirected_to document_url(doc)
+    assert_equal "Only failed documents can be retried.", flash[:alert]
+    doc.reload
+    assert doc.complete?
+  end
 end
