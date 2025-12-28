@@ -14,4 +14,9 @@ Rails.application.routes.draw do
   # Defines the root path route ("/")
   resources :documents, only: [ :index, :show ]
   root "documents#index"
+
+  # Admin routes
+  namespace :admin do
+    resources :api_costs, only: [ :index ]
+  end
 end

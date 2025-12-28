@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_26_194717) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_28_192040) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -39,6 +39,27 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_26_194717) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "api_calls", force: :cascade do |t|
+    t.integer "completion_tokens"
+    t.decimal "cost_credits", precision: 12, scale: 6
+    t.datetime "created_at", null: false
+    t.integer "document_id"
+    t.text "error_message"
+    t.string "model", null: false
+    t.string "operation", null: false
+    t.integer "prompt_tokens"
+    t.string "provider", null: false
+    t.integer "response_time_ms"
+    t.string "status", null: false
+    t.integer "total_tokens"
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_api_calls_on_created_at"
+    t.index ["document_id"], name: "index_api_calls_on_document_id"
+    t.index ["model"], name: "index_api_calls_on_model"
+    t.index ["provider"], name: "index_api_calls_on_provider"
+    t.index ["status"], name: "index_api_calls_on_status"
+  end
+
   create_table "documents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "extracted_metadata"
@@ -52,4 +73,5 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_26_194717) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "api_calls", "documents"
 end

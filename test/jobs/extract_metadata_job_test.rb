@@ -176,4 +176,112 @@ class ExtractMetadataJobTest < ActiveJob::TestCase
     assert_equal "minutes", parsed["document_type"]
     assert_equal "Town Council", parsed["governing_body"]
   end
+
+  # Source text tests
+  test "normalize_attendees preserves source_text" do
+    job = ExtractMetadataJob.new
+    attendees = [
+      { "name" => "John Smith", "role" => "chair", "source_text" => "Present: John Smith, Chair" }
+    ]
+
+    result = job.send(:normalize_attendees, attendees)
+
+    assert_equal 1, result.length
+    assert_equal "Present: John Smith, Chair", result[0][:source_text]
+  end
+
+  test "normalize_topics preserves source_text" do
+    job = ExtractMetadataJob.new
+    topics = [
+      { "title" => "Budget Review", "summary" => "Quarterly review", "source_text" => "Item 1: Budget Review\nThe committee reviewed..." }
+    ]
+
+    result = job.send(:normalize_topics, topics)
+
+    assert_equal 1, result.length
+    assert_equal "Item 1: Budget Review\nThe committee reviewed...", result[0][:source_text]
+  end
+
+  test "normalize_metadata preserves source_text fields" do
+    job = ExtractMetadataJob.new
+    raw_json = <<~JSON
+      {
+        "document_type": "agenda",
+        "governing_body": "Town Council",
+        "governing_body_source_text": "TOWN OF SPRINGFIELD - TOWN COUNCIL",
+        "meeting_date": "2024-12-25",
+        "meeting_date_source_text": "December 25, 2024 at 7:00 PM",
+        "abstract": "Regular meeting",
+        "abstract_source_text": "This is a regular meeting of the Town Council...",
+        "attendees": [],
+        "topics": []
+      }
+    JSON
+
+    result = job.send(:normalize_metadata, raw_json)
+    parsed = JSON.parse(result)
+
+    assert_equal "TOWN OF SPRINGFIELD - TOWN COUNCIL", parsed["governing_body_source_text"]
+    assert_equal "December 25, 2024 at 7:00 PM", parsed["meeting_date_source_text"]
+    assert_equal "This is a regular meeting of the Town Council...", parsed["abstract_source_text"]
+  end
+
+  test "extraction_prompt includes source_text instructions" do
+    job = ExtractMetadataJob.new
+    prompt = job.send(:extraction_prompt)
+
+    assert_includes prompt, "source_text"
+    assert_includes prompt, "verbatim"
+    assert_includes prompt, "EXACT original text"
+  end
+
+  # Record API call tests
+  test "record_api_call creates ApiCall record" do
+    job = ExtractMetadataJob.new
+    document = documents(:pending_document)
+    usage = {
+      "prompt_tokens" => 100,
+      "completion_tokens" => 50,
+      "total_tokens" => 150,
+      "cost" => 0.00015
+    }
+
+    assert_difference "ApiCall.count", 1 do
+      job.send(:record_api_call, document, usage, 1500, "success")
+    end
+
+    api_call = ApiCall.last
+    assert_equal document, api_call.document
+    assert_equal "openrouter", api_call.provider
+    assert_equal "google/gemini-2.0-flash-001", api_call.model
+    assert_equal "extract_metadata", api_call.operation
+    assert_equal 100, api_call.prompt_tokens
+    assert_equal 50, api_call.completion_tokens
+    assert_equal 150, api_call.total_tokens
+    assert_in_delta 0.00015, api_call.cost_credits, 0.000001
+    assert_equal 1500, api_call.response_time_ms
+    assert_equal "success", api_call.status
+  end
+
+  test "record_api_call handles error status" do
+    job = ExtractMetadataJob.new
+    document = documents(:pending_document)
+
+    job.send(:record_api_call, document, {}, 0, "error", "Test error message")
+
+    api_call = ApiCall.last
+    assert_equal "error", api_call.status
+    assert_equal "Test error message", api_call.error_message
+  end
+
+  test "record_api_call truncates long error messages" do
+    job = ExtractMetadataJob.new
+    document = documents(:pending_document)
+    long_error = "x" * 2000
+
+    job.send(:record_api_call, document, {}, 0, "error", long_error)
+
+    api_call = ApiCall.last
+    assert_equal 1000, api_call.error_message.length
+  end
 end

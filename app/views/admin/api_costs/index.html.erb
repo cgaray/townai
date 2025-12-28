@@ -1,0 +1,195 @@
+<%# app/views/admin/api_costs/index.html.erb %>
+<div class="space-y-8">
+  <%# Page Header %>
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div>
+      <h1 class="text-4xl font-extrabold tracking-tight">
+        <span class="text-gradient-primary">API Costs</span>
+      </h1>
+      <p class="text-base-content/60 mt-2 text-lg">OpenRouter API usage and cost tracking</p>
+    </div>
+  </div>
+
+  <%# Stats Cards %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <%# Total Cost %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="icon-circle icon-circle-md icon-circle-brand">
+            <%= icon("building-library", size: "w-5 h-5") %>
+          </div>
+          <div>
+            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">Total Cost</div>
+            <div class="text-2xl font-bold"><%= number_to_currency(@total_cost, precision: 4) %></div>
+            <div class="text-xs text-base-content/50"><%= number_with_precision(@total_cost, precision: 4) %> credits</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# This Month %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="icon-circle icon-circle-md icon-circle-agenda">
+            <%= icon("calendar", size: "w-5 h-5") %>
+          </div>
+          <div>
+            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">This Month</div>
+            <div class="text-2xl font-bold"><%= number_to_currency(@total_cost_this_month, precision: 4) %></div>
+            <div class="text-xs text-base-content/50"><%= number_with_precision(@total_cost_this_month, precision: 4) %> credits</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Avg Per Document %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="icon-circle icon-circle-md icon-circle-minutes">
+            <%= icon("document", size: "w-5 h-5") %>
+          </div>
+          <div>
+            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">Avg Per Document</div>
+            <div class="text-2xl font-bold"><%= number_to_currency(@average_cost_per_document, precision: 4) %></div>
+            <div class="text-xs text-base-content/50"><%= number_with_precision(@average_cost_per_document, precision: 4) %> credits</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%# Success Rate %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="icon-circle icon-circle-md <%= @failed_calls > 0 ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success' %>">
+            <%= icon("check-circle", size: "w-5 h-5") %>
+          </div>
+          <div>
+            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">Success Rate</div>
+            <% success_rate = @total_calls > 0 ? (@successful_calls.to_f / @total_calls * 100) : 0 %>
+            <div class="text-2xl font-bold"><%= number_to_percentage(success_rate, precision: 1) %></div>
+            <div class="text-xs text-base-content/50"><%= @successful_calls %>/<%= @total_calls %> calls</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Cost by Model %>
+  <% if @cost_by_model.any? %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-5">
+        <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+          <%= icon("list-bullet", size: "w-5 h-5", class: "text-primary") %>
+          Cost by Model
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th class="text-right">Cost (Credits)</th>
+                <th class="text-right">Cost (USD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @cost_by_model.each do |model, cost| %>
+                <tr>
+                  <td class="font-mono text-sm"><%= model %></td>
+                  <td class="text-right"><%= number_with_precision(cost, precision: 6) %></td>
+                  <td class="text-right"><%= number_to_currency(cost, precision: 4) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Recent API Calls %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-5">
+      <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+        <%= icon("clock", size: "w-5 h-5", class: "text-primary") %>
+        Recent API Calls
+        <span class="badge badge-ghost badge-sm font-normal"><%= @recent_calls.size %></span>
+      </h2>
+
+      <% if @recent_calls.any? %>
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Document</th>
+                <th>Model</th>
+                <th>Operation</th>
+                <th class="text-right">Tokens</th>
+                <th class="text-right">Cost</th>
+                <th class="text-right">Response Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @recent_calls.each do |call| %>
+                <tr>
+                  <td class="text-xs text-base-content/70">
+                    <%= call.created_at.strftime("%b %d %H:%M") %>
+                  </td>
+                  <td>
+                    <% if call.document %>
+                      <%= link_to call.document.source_file_name.truncate(30), document_path(call.document), class: "link link-primary text-sm" %>
+                    <% else %>
+                      <span class="text-base-content/50 text-sm">-</span>
+                    <% end %>
+                  </td>
+                  <td class="font-mono text-xs"><%= call.model.split("/").last %></td>
+                  <td class="text-sm"><%= call.operation %></td>
+                  <td class="text-right text-sm">
+                    <% if call.total_tokens %>
+                      <%= number_with_delimiter(call.total_tokens) %>
+                      <span class="text-xs text-base-content/50">
+                        (<%= call.prompt_tokens %>/<%= call.completion_tokens %>)
+                      </span>
+                    <% else %>
+                      -
+                    <% end %>
+                  </td>
+                  <td class="text-right font-mono text-sm">
+                    <% if call.cost_credits %>
+                      <%= number_to_currency(call.cost_credits, precision: 4) %>
+                    <% else %>
+                      -
+                    <% end %>
+                  </td>
+                  <td class="text-right text-sm">
+                    <% if call.response_time_ms && call.response_time_ms > 0 %>
+                      <%= number_with_delimiter(call.response_time_ms) %>ms
+                    <% else %>
+                      -
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if call.status == "success" %>
+                      <span class="badge badge-success badge-sm">Success</span>
+                    <% else %>
+                      <span class="badge badge-error badge-sm" title="<%= call.error_message %>">Error</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div class="text-center py-8 text-base-content/50">
+          <p>No API calls recorded yet.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

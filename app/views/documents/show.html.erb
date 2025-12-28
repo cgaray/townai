@@ -51,9 +51,21 @@
         </div>
 
         <% if meta["abstract"].present? %>
-          <p class="mt-5 text-base-content/70 leading-relaxed border-l-4 border-primary/20 pl-4 italic">
-            <%= meta["abstract"] %>
-          </p>
+          <div class="mt-5">
+            <p class="text-base-content/70 leading-relaxed border-l-4 border-primary/20 pl-4 italic">
+              <%= meta["abstract"] %>
+            </p>
+            <% if meta["abstract_source_text"].present? %>
+              <details class="mt-2 ml-4">
+                <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
+                  Show source text
+                </summary>
+                <blockquote class="mt-2 text-sm text-base-content/60 border-l-2 border-base-300 pl-3 bg-base-200/30 py-2 rounded-r">
+                  <%= meta["abstract_source_text"] %>
+                </blockquote>
+              </details>
+            <% end %>
+          </div>
         <% end %>
       </div>
     </div>
@@ -71,16 +83,28 @@
           <div class="card-body p-5">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <% meta["attendees"].each do |attendee| %>
-                <div class="flex items-center gap-3">
-                  <div class="avatar-initials <%= avatar_color_class(attendee["name"]) %>">
-                    <%= avatar_initials(attendee["name"]) %>
+                <div class="space-y-1">
+                  <div class="flex items-center gap-3">
+                    <div class="avatar-initials <%= avatar_color_class(attendee["name"]) %>">
+                      <%= avatar_initials(attendee["name"]) %>
+                    </div>
+                    <div>
+                      <div class="font-semibold text-sm"><%= attendee["name"] %></div>
+                      <% if attendee["role"].present? %>
+                        <div class="text-xs text-base-content/50 mt-0.5"><%= attendee["role"]&.capitalize %></div>
+                      <% end %>
+                    </div>
                   </div>
-                  <div>
-                    <div class="font-semibold text-sm"><%= attendee["name"] %></div>
-                    <% if attendee["role"].present? %>
-                      <div class="text-xs text-base-content/50 mt-0.5"><%= attendee["role"]&.capitalize %></div>
-                    <% end %>
-                  </div>
+                  <% if attendee["source_text"].present? %>
+                    <details class="ml-12">
+                      <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
+                        Show source
+                      </summary>
+                      <blockquote class="mt-1 text-xs text-base-content/60 border-l-2 border-base-300 pl-2 bg-base-200/30 py-1 rounded-r">
+                        <%= attendee["source_text"] %>
+                      </blockquote>
+                    </details>
+                  <% end %>
                 </div>
               <% end %>
             </div>
@@ -103,22 +127,34 @@
             <% meta["topics"].each_with_index do |topic, i| %>
               <% action = topic["action_taken"] %>
               <% has_action = action.present? && action.downcase != "none" %>
-              <div class="flex items-start gap-4 px-5 py-4 hover:bg-base-50 transition-colors duration-150 <%= action_border_class(action) if has_action %>">
-                <div class="flex-none">
-                  <span class="number-circle bg-primary/10 text-primary">
-                    <%= i + 1 %>
-                  </span>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <div class="flex flex-wrap items-center gap-2">
-                    <h3 class="text-base font-bold text-base-content"><%= topic["title"] %></h3>
-                    <% if has_action %>
-                      <%= action_badge(action) %>
+              <div class="px-5 py-4 hover:bg-base-50 transition-colors duration-150 <%= action_border_class(action) if has_action %>">
+                <div class="flex items-start gap-4">
+                  <div class="flex-none">
+                    <span class="number-circle bg-primary/10 text-primary">
+                      <%= i + 1 %>
+                    </span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="text-base font-bold text-base-content"><%= topic["title"] %></h3>
+                      <% if has_action %>
+                        <%= action_badge(action) %>
+                      <% end %>
+                    </div>
+                    <% if topic["summary"].present? %>
+                      <p class="text-sm text-base-content/60 mt-2 leading-relaxed"><%= topic["summary"] %></p>
+                    <% end %>
+                    <% if topic["source_text"].present? %>
+                      <details class="mt-3">
+                        <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
+                          Show source text
+                        </summary>
+                        <blockquote class="mt-2 text-sm text-base-content/60 border-l-2 border-base-300 pl-3 bg-base-200/30 py-2 rounded-r whitespace-pre-wrap">
+                          <%= topic["source_text"] %>
+                        </blockquote>
+                      </details>
                     <% end %>
                   </div>
-                  <% if topic["summary"].present? %>
-                    <p class="text-sm text-base-content/60 mt-2 leading-relaxed"><%= topic["summary"] %></p>
-                  <% end %>
                 </div>
               </div>
             <% end %>
@@ -139,6 +175,14 @@
           <p class="text-base-content/60 max-w-md mt-2">
             We couldn't extract metadata from this document. The file may be corrupted or in an unsupported format.
           </p>
+          <% if @document.pdf.attached? %>
+            <div class="mt-6">
+              <%= link_to rails_blob_path(@document.pdf, disposition: :inline), target: "_blank", rel: "noopener", class: "btn btn-primary gap-2" do %>
+                <%= icon("eye", size: "w-4 h-4") %>
+                View Original PDF
+              <% end %>
+            </div>
+          <% end %>
         <% elsif @document.pending? || @document.extracting_text? || @document.extracting_metadata? %>
           <div class="icon-circle icon-circle-xl icon-circle-brand mb-4">
             <%= icon("arrow-path", size: "w-10 h-10", class: "animate-spin-slow") %>
@@ -147,6 +191,14 @@
           <p class="text-base-content/60 max-w-md mt-2">
             We're extracting metadata from this document. This usually takes a few seconds.
           </p>
+          <% if @document.pdf.attached? %>
+            <div class="mt-6">
+              <%= link_to rails_blob_path(@document.pdf, disposition: :inline), target: "_blank", rel: "noopener", class: "btn btn-outline btn-primary gap-2" do %>
+                <%= icon("eye", size: "w-4 h-4") %>
+                View PDF While Waiting
+              <% end %>
+            </div>
+          <% end %>
         <% else %>
           <div class="icon-circle icon-circle-xl icon-circle-default mb-4">
             <%= icon("document", size: "w-10 h-10") %>
@@ -155,6 +207,14 @@
           <p class="text-base-content/60 max-w-md mt-2">
             This document doesn't have any extracted metadata yet.
           </p>
+          <% if @document.pdf.attached? %>
+            <div class="mt-6">
+              <%= link_to rails_blob_path(@document.pdf, disposition: :inline), target: "_blank", rel: "noopener", class: "btn btn-primary gap-2" do %>
+                <%= icon("eye", size: "w-4 h-4") %>
+                View Original PDF
+              <% end %>
+            </div>
+          <% end %>
         <% end %>
       </div>
     </div>
