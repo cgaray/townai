@@ -1,0 +1,32 @@
+<h1>Documents</h1>
+
+<h2>Status</h2>
+<ul>
+  <% @status_counts.each do |status, count| %>
+    <li><%= status %>: <%= count %></li>
+  <% end %>
+</ul>
+
+<h2>Recent Documents</h2>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Filename</th>
+      <th>Status</th>
+      <th>Created</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @documents.each do |doc| %>
+      <tr>
+        <td><%= doc.id %></td>
+        <td><%= doc.source_file_name %></td>
+        <td><%= doc.status %></td>
+        <td><%= doc.created_at.strftime("%Y-%m-%d %H:%M") %></td>
+        <td><%= link_to "View", doc %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

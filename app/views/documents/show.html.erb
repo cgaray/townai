@@ -1,0 +1,17 @@
+<h1><%= @document.source_file_name %></h1>
+
+<p><strong>Status:</strong> <%= @document.status %></p>
+<p><strong>Created:</strong> <%= @document.created_at %></p>
+<p><strong>Hash:</strong> <%= @document.source_file_hash %></p>
+
+<% if @document.raw_text.present? %>
+  <h2>Extracted Text</h2>
+  <pre><%= @document.raw_text %></pre>
+<% end %>
+
+<% if @document.extracted_metadata.present? %>
+  <h2>Metadata</h2>
+  <pre><%= @document.extracted_metadata %></pre>
+<% end %>
+
+<%= link_to "Back", documents_path %>
