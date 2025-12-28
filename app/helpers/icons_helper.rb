@@ -1,7 +1,7 @@
 module IconsHelper
   def icon(name, options = {})
     size = options[:size] || "w-5 h-5"
-    classes = [size, options[:class]].compact.join(" ")
+    classes = [ size, options[:class] ].compact.join(" ")
     stroke_width = options[:stroke_width] || 1.5
 
     svg_content = case name.to_s
