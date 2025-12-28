@@ -1,32 +1,104 @@
-<h1>Documents</h1>
+<%# app/views/documents/index.html.erb %>
+<div class="space-y-8">
+  <%# Page Header %>
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div>
+      <h1 class="text-4xl font-extrabold tracking-tight">
+        <span class="text-gradient-primary">Documents</span>
+      </h1>
+      <p class="text-base-content/60 mt-2 text-lg">Town meeting agendas and minutes</p>
+    </div>
 
-<h2>Status</h2>
-<ul>
-  <% @status_counts.each do |status, count| %>
-    <li><%= status %>: <%= count %></li>
-  <% end %>
-</ul>
-
-<h2>Recent Documents</h2>
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Filename</th>
-      <th>Status</th>
-      <th>Created</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @documents.each do |doc| %>
-      <tr>
-        <td><%= doc.id %></td>
-        <td><%= doc.source_file_name %></td>
-        <td><%= doc.status %></td>
-        <td><%= doc.created_at.strftime("%Y-%m-%d %H:%M") %></td>
-        <td><%= link_to "View", doc %></td>
-      </tr>
+    <%# Document count badge %>
+    <% if @documents.any? %>
+      <div class="flex items-center gap-3">
+        <div class="badge badge-lg badge-ghost font-semibold">
+          <%= icon("document-text", size: "w-4 h-4") %>
+          <span class="ml-1"><%= pluralize(@documents.size, "document") %></span>
+        </div>
+        <% pending_count = @status_counts["pending"] || 0 %>
+        <% processing_count = (@status_counts["extracting_text"] || 0) + (@status_counts["extracting_metadata"] || 0) %>
+        <% if pending_count > 0 || processing_count > 0 %>
+          <div class="badge badge-lg badge-warning badge-with-icon font-semibold animate-pulse-subtle">
+            <%= icon("arrow-path", size: "w-4 h-4", class: "animate-spin-slow") %>
+            <span><%= pending_count + processing_count %> processing</span>
+          </div>
+        <% end %>
+      </div>
     <% end %>
-  </tbody>
-</table>
+  </div>
+
+  <%# Documents Grid or Empty State %>
+  <% if @documents.any? %>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <% @documents.each do |doc| %>
+        <% doc_type = doc.metadata_field("document_type") %>
+        <%= link_to doc, class: "card bg-base-100 border border-base-200 card-hover #{document_type_border_class(doc_type)} group" do %>
+          <div class="card-body p-5">
+            <%# Document type icon and governing body %>
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-3">
+                <%= document_type_icon(doc_type, size: :lg) %>
+                <div class="min-w-0">
+                  <h2 class="card-title text-lg font-bold group-hover:text-primary transition-colors leading-tight">
+                    <%= doc.metadata_field("governing_body") || "Unknown Body" %>
+                  </h2>
+                  <% if doc_type %>
+                    <span class="badge badge-outline badge-sm mt-1.5 font-medium"><%= doc_type&.capitalize %></span>
+                  <% end %>
+                </div>
+              </div>
+              <%= status_badge(doc.status) %>
+            </div>
+
+            <%# Meeting date %>
+            <div class="mt-4 flex items-center gap-2 text-sm text-base-content/70 font-medium">
+              <%= icon("calendar", size: "w-4 h-4", class: "text-primary/60") %>
+              <% if doc.metadata_field("meeting_date") %>
+                <%= Date.parse(doc.metadata_field("meeting_date")).strftime("%B %d, %Y") rescue doc.metadata_field("meeting_date") %>
+              <% else %>
+                <span class="italic text-base-content/40">Date not extracted</span>
+              <% end %>
+            </div>
+
+            <%# Abstract preview %>
+            <% if doc.metadata_field("abstract").present? %>
+              <p class="text-sm text-base-content/60 mt-3 line-clamp-2 leading-relaxed">
+                <%= truncate(doc.metadata_field("abstract"), length: 120) %>
+              </p>
+            <% end %>
+
+            <%# File name footer %>
+            <div class="mt-auto pt-4 border-t border-base-200/60">
+              <div class="flex items-center gap-2">
+                <%= icon("file", size: "w-3.5 h-3.5", class: "text-base-content/40") %>
+                <span class="text-xs font-mono text-base-content/40 truncate">
+                  <%= doc.source_file_name %>
+                </span>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <%# Empty State %>
+    <div class="card bg-gradient-to-br from-base-200/50 to-base-200 border border-base-300">
+      <div class="card-body items-center text-center py-20">
+        <div class="icon-circle icon-circle-xl icon-circle-default mb-6 shadow-lg">
+          <%= icon("folder-open", size: "w-10 h-10") %>
+        </div>
+        <h2 class="text-2xl font-bold">No documents yet</h2>
+        <p class="text-base-content/60 max-w-md mt-2 leading-relaxed">
+          Upload your first town meeting document to get started. We'll automatically extract metadata like attendees, topics, and actions.
+        </p>
+        <div class="card-actions mt-8">
+          <div class="bg-base-100 border border-base-300 rounded-lg px-4 py-3 shadow-sm">
+            <div class="text-xs text-base-content/50 mb-1">Run this command to import documents:</div>
+            <code class="text-sm font-mono font-semibold text-primary">bin/rails import:documents</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

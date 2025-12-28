@@ -1,11 +1,43 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
-# This model initially had no columns defined. If you add columns to the
-# model remove the "{}" from the fixture names and add the columns immediately
-# below each fixture, per the syntax in the comments below
-#
-one: {}
-# column: value
-#
-two: {}
-# column: value
+pending_document:
+  source_file_name: "town_meeting_agenda_2024.pdf"
+  source_file_hash: "abc123def456"
+  status: 0  # pending
+  raw_text:
+  extracted_metadata:
+
+extracting_text_document:
+  source_file_name: "planning_board_minutes.pdf"
+  source_file_hash: "ghi789jkl012"
+  status: 1  # extracting_text
+  raw_text:
+  extracted_metadata:
+
+extracting_metadata_document:
+  source_file_name: "selectboard_minutes_2024.pdf"
+  source_file_hash: "mno345pqr678"
+  status: 2  # extracting_metadata
+  raw_text: "Town of Springfield Selectboard Minutes December 15, 2024"
+  extracted_metadata:
+
+complete_agenda:
+  source_file_name: "finance_committee_agenda.pdf"
+  source_file_hash: "stu901vwx234"
+  status: 3  # complete
+  raw_text: "Finance Committee Meeting Agenda January 10, 2025"
+  extracted_metadata: '{"document_type":"agenda","governing_body":"Finance Committee","meeting_date":"2025-01-10","meeting_time":"19:00","abstract":"Monthly finance committee meeting to discuss budget items","attendees":[{"name":"John Smith","role":"chair","status":"present"},{"name":"Jane Doe","role":"member","status":"present"}],"topics":[{"title":"Budget Review","summary":"Review of Q4 2024 expenses","action_taken":"approved"},{"title":"Grant Applications","summary":"Discussion of pending grant applications","action_taken":"tabled"}]}'
+
+complete_minutes:
+  source_file_name: "conservation_commission_minutes.pdf"
+  source_file_hash: "yza567bcd890"
+  status: 3  # complete
+  raw_text: "Conservation Commission Meeting Minutes December 20, 2024"
+  extracted_metadata: '{"document_type":"minutes","governing_body":"Conservation Commission","meeting_date":"2024-12-20","meeting_time":"18:30","abstract":"Regular meeting of the Conservation Commission","attendees":[{"name":"Alice Johnson","role":"chair","status":"present"},{"name":"Bob Williams","role":"clerk","status":"present"},{"name":"Carol Davis","role":"member","status":"absent"}],"topics":[{"title":"Wetlands Permit Application","summary":"Review of permit application for 123 Main St","action_taken":"approved"},{"title":"Site Visit Report","summary":"Discussion of recent site visits","action_taken":"none"}]}'
+
+failed_document:
+  source_file_name: "corrupted_file.pdf"
+  source_file_hash: "efg123hij456"
+  status: 4  # failed
+  raw_text: "Unable to extract text"
+  extracted_metadata:
