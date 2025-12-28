@@ -148,6 +148,21 @@ class IconsHelperTest < ActionView::TestCase
     assert_match(/path/, result)
   end
 
+  test "icon returns eye icon" do
+    result = icon("eye")
+    assert_match(/path/, result)
+  end
+
+  test "icon returns x-mark icon" do
+    result = icon("x-mark")
+    assert_match(/path/, result)
+  end
+
+  test "icon returns arrow-down-tray icon" do
+    result = icon("arrow-down-tray")
+    assert_match(/path/, result)
+  end
+
   test "icon returns default icon for unknown name" do
     result = icon("unknown-icon-name")
     assert_match(/<svg/, result)

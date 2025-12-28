@@ -83,6 +83,12 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install JS dependencies
+        run: bun install
+
       - name: Run tests
         env:
           RAILS_ENV: test
@@ -107,6 +113,12 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install JS dependencies
+        run: bun install
 
       - name: Run System Tests
         env:
