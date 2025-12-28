@@ -65,6 +65,11 @@ class ExtractMetadataJob < ApplicationJob
 
       begin
         document.update!(extracted_metadata: normalized, status: :complete)
+
+        # Link attendees after successful extraction
+        linker = AttendeeLinker.new(document)
+        linker.link_attendees
+        Rails.logger.info("AttendeeLinker: created=#{linker.created_count}, linked=#{linker.linked_count}")
       rescue => e
         # API call succeeded but document update failed - don't re-record as error
         document.update!(status: :failed)

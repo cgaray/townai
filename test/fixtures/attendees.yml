@@ -1,0 +1,57 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+john_smith_finance:
+  name: "John Smith"
+  normalized_name: "john smith"
+  primary_governing_body: "Finance Committee"
+  governing_bodies: <%= ["Finance Committee"].to_json %>
+  first_seen_at: <%= 3.months.ago.to_date %>
+  last_seen_at: <%= 1.month.ago.to_date %>
+  document_appearances_count: 5
+
+jane_doe_finance:
+  name: "Jane Doe"
+  normalized_name: "jane doe"
+  primary_governing_body: "Finance Committee"
+  governing_bodies: <%= ["Finance Committee"].to_json %>
+  first_seen_at: <%= 2.months.ago.to_date %>
+  last_seen_at: <%= 1.month.ago.to_date %>
+  document_appearances_count: 3
+
+alice_johnson_conservation:
+  name: "Alice Johnson"
+  normalized_name: "alice johnson"
+  primary_governing_body: "Conservation Commission"
+  governing_bodies: <%= ["Conservation Commission"].to_json %>
+  first_seen_at: <%= 6.months.ago.to_date %>
+  last_seen_at: <%= 1.week.ago.to_date %>
+  document_appearances_count: 10
+
+# Same name as john_smith_finance but different governing body
+john_smith_planning:
+  name: "John Smith"
+  normalized_name: "john smith"
+  primary_governing_body: "Planning Board"
+  governing_bodies: <%= ["Planning Board"].to_json %>
+  first_seen_at: <%= 4.months.ago.to_date %>
+  last_seen_at: <%= 2.weeks.ago.to_date %>
+  document_appearances_count: 4
+
+# Similar name to John Smith (for duplicate detection testing)
+jon_smith_finance:
+  name: "Jon Smith"
+  normalized_name: "jon smith"
+  primary_governing_body: "Finance Committee"
+  governing_bodies: <%= ["Finance Committee"].to_json %>
+  first_seen_at: <%= 1.month.ago.to_date %>
+  last_seen_at: <%= 1.month.ago.to_date %>
+  document_appearances_count: 1
+
+# Merged attendee
+merged_attendee:
+  name: "J. Smith"
+  normalized_name: "j smith"
+  primary_governing_body: "Finance Committee"
+  governing_bodies: <%= ["Finance Committee"].to_json %>
+  merged_into: john_smith_finance
+  document_appearances_count: 0

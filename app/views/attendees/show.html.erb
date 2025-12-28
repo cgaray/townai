@@ -1,0 +1,230 @@
+<%# app/views/attendees/show.html.erb %>
+<div class="space-y-8">
+  <%# Back navigation %>
+  <div>
+    <%= link_to attendees_path, class: "inline-flex items-center gap-2 text-base-content/60 hover:text-primary font-medium transition-colors" do %>
+      <%= icon("chevron-left", size: "w-5 h-5") %>
+      <span>Back to Attendees</span>
+    <% end %>
+  </div>
+
+  <%# Profile Header %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-6">
+      <div class="flex flex-col sm:flex-row sm:items-start gap-6">
+        <div class="avatar-initials avatar-initials-xl <%= avatar_color_class(@attendee.name) %>">
+          <%= avatar_initials(@attendee.name) %>
+        </div>
+        <div class="flex-1">
+          <h1 class="text-2xl font-extrabold tracking-tight"><%= @attendee.name %></h1>
+          <p class="text-base-content/60 mt-1 flex items-center gap-2">
+            <%= icon("building-library", size: "w-4 h-4") %>
+            <%= @attendee.primary_governing_body %>
+          </p>
+
+          <div class="flex flex-wrap items-center gap-3 mt-4">
+            <span class="badge badge-ghost gap-1.5 py-3">
+              <%= icon("document", size: "w-4 h-4") %>
+              <%= @attendee.document_appearances_count %> document appearance<%= @attendee.document_appearances_count == 1 ? "" : "s" %>
+            </span>
+
+            <% @attendee.roles_held.each do |role| %>
+              <%= role_badge(role) %>
+            <% end %>
+          </div>
+
+          <% if @attendee.first_seen_at && @attendee.last_seen_at %>
+            <p class="text-sm text-base-content/60 mt-4 flex items-center gap-2">
+              <%= icon("calendar", size: "w-4 h-4") %>
+              <% if @attendee.first_seen_at == @attendee.last_seen_at %>
+                Appeared on <%= @attendee.first_seen_at.strftime("%B %d, %Y") %>
+              <% else %>
+                Active from <%= @attendee.first_seen_at.strftime("%B %d, %Y") %> to <%= @attendee.last_seen_at.strftime("%B %d, %Y") %>
+              <% end %>
+            </p>
+          <% end %>
+
+          <% bodies = @attendee.governing_bodies.is_a?(Array) ? @attendee.governing_bodies : [] %>
+          <% if bodies.size > 1 %>
+            <div class="mt-4">
+              <p class="text-sm text-base-content/60 mb-2">Also appears in:</p>
+              <div class="flex flex-wrap gap-2">
+                <% bodies.reject { |b| b == @attendee.primary_governing_body }.each do |body| %>
+                  <span class="badge badge-outline badge-sm"><%= body %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <%# Main content: Document Timeline %>
+    <div class="lg:col-span-2 space-y-4">
+      <h2 class="text-xl font-bold flex items-center gap-2">
+        <%= icon("clock", size: "w-5 h-5", class: "text-primary") %>
+        Document Timeline
+        <span class="badge badge-ghost badge-sm font-normal"><%= @document_attendees.size %></span>
+      </h2>
+
+      <% if @document_attendees.any? %>
+        <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
+          <div class="divide-y divide-base-200">
+            <% @document_attendees.each do |da| %>
+              <% doc = da.document %>
+              <% meta = doc.extracted_metadata.present? ? (JSON.parse(doc.extracted_metadata) rescue {}) : {} %>
+              <% doc_type = meta["document_type"] %>
+
+              <%= link_to document_path(doc), class: "block px-5 py-4 hover:bg-base-50 transition-colors duration-150" do %>
+                <div class="flex items-start gap-4">
+                  <%= document_type_icon(doc_type, size: :md) %>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <h3 class="font-bold text-base-content"><%= meta["governing_body"] || "Unknown" %></h3>
+                      <% if doc_type %>
+                        <span class="badge badge-outline badge-sm"><%= doc_type.capitalize %></span>
+                      <% end %>
+                    </div>
+
+                    <% if meta["meeting_date"] %>
+                      <p class="text-sm text-base-content/60 mt-1 flex items-center gap-1.5">
+                        <%= icon("calendar", size: "w-3.5 h-3.5") %>
+                        <%= Date.parse(meta["meeting_date"]).strftime("%B %d, %Y") rescue meta["meeting_date"] %>
+                      </p>
+                    <% end %>
+
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                      <% if da.role %>
+                        <%= role_badge(da.role) %>
+                      <% end %>
+                      <% if da.status %>
+                        <span class="badge badge-sm <%= da.status == 'present' ? 'badge-success' : da.status == 'remote' ? 'badge-info' : 'badge-warning' %> badge-outline">
+                          <%= da.status.capitalize %>
+                        </span>
+                      <% end %>
+                    </div>
+
+                    <% if da.source_text.present? %>
+                      <p class="text-xs text-base-content/50 mt-2 line-clamp-2">
+                        "<%= da.source_text.truncate(150) %>"
+                      </p>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div class="card bg-base-200/50 border border-base-300">
+          <div class="card-body items-center text-center py-8">
+            <p class="text-base-content/60">No documents found for this attendee.</p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Sidebar: Co-attendees and Potential Duplicates %>
+    <div class="space-y-6">
+      <%# Co-attendees %>
+      <% if @co_attendees.any? %>
+        <div class="space-y-3">
+          <h3 class="text-lg font-bold flex items-center gap-2">
+            <%= icon("users", size: "w-4 h-4", class: "text-primary") %>
+            Frequently Seen With
+          </h3>
+          <div class="card bg-base-100 border border-base-200 shadow-sm">
+            <div class="card-body p-4">
+              <div class="space-y-3">
+                <% @co_attendees.each do |co| %>
+                  <%= link_to attendee_path(co), class: "flex items-center gap-3 p-2 rounded-lg hover:bg-base-200 transition-colors" do %>
+                    <div class="avatar-initials <%= avatar_color_class(co.name) %>">
+                      <%= avatar_initials(co.name) %>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-sm truncate"><%= co.name %></p>
+                      <p class="text-xs text-base-content/50 truncate"><%= co.primary_governing_body %></p>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Potential Duplicates %>
+      <% same_name = @potential_duplicates[:same_name_different_body] %>
+      <% similar_name = @potential_duplicates[:similar_name] %>
+      <% if same_name.any? || similar_name.any? %>
+        <div class="space-y-3">
+          <h3 class="text-lg font-bold flex items-center gap-2">
+            <%= icon("exclamation-triangle", size: "w-4 h-4", class: "text-warning") %>
+            Potential Duplicates
+          </h3>
+          <div class="card bg-warning/5 border border-warning/20 shadow-sm">
+            <div class="card-body p-4">
+              <div class="space-y-4">
+                <% if same_name.any? %>
+                  <div>
+                    <p class="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">Same Name, Different Body</p>
+                    <div class="space-y-2">
+                      <% same_name.each do |dup| %>
+                        <div class="flex items-center justify-between gap-2 p-2 bg-base-100 rounded-lg">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <div class="avatar-initials avatar-initials-sm <%= avatar_color_class(dup.name) %>">
+                              <%= avatar_initials(dup.name) %>
+                            </div>
+                            <div class="min-w-0">
+                              <p class="font-medium text-sm truncate"><%= dup.name %></p>
+                              <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body %></p>
+                            </div>
+                          </div>
+                          <%= button_to admin_attendees_merge_path(source_id: dup.id, target_id: @attendee.id),
+                              method: :post,
+                              class: "btn btn-xs btn-warning btn-outline",
+                              data: { turbo_confirm: "Merge #{dup.name} (#{dup.primary_governing_body}) into #{@attendee.name}? This cannot be undone." } do %>
+                            Merge
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+
+                <% if similar_name.any? %>
+                  <div>
+                    <p class="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2">Similar Names</p>
+                    <div class="space-y-2">
+                      <% similar_name.each do |dup| %>
+                        <div class="flex items-center justify-between gap-2 p-2 bg-base-100 rounded-lg">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <div class="avatar-initials avatar-initials-sm <%= avatar_color_class(dup.name) %>">
+                              <%= avatar_initials(dup.name) %>
+                            </div>
+                            <div class="min-w-0">
+                              <p class="font-medium text-sm truncate"><%= dup.name %></p>
+                              <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body %></p>
+                            </div>
+                          </div>
+                          <%= button_to admin_attendees_merge_path(source_id: dup.id, target_id: @attendee.id),
+                              method: :post,
+                              class: "btn btn-xs btn-warning btn-outline",
+                              data: { turbo_confirm: "Merge #{dup.name} into #{@attendee.name}? This cannot be undone." } do %>
+                            Merge
+                          <% end %>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
