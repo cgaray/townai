@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@plugin "daisyui" {
+  themes: false;
+}
 
 /* Override DaisyUI light theme with bold, vibrant civic colors */
 :root, [data-theme="light"] {
