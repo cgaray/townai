@@ -1,0 +1,280 @@
+# AGENTS.md
+
+This file contains guidelines and commands for agentic coding agents working in this Rails + TypeScript codebase.
+
+## Project Structure
+
+This is a Rails 8.1 application with TypeScript/Bun frontend components:
+- **Backend**: Ruby on Rails 8.1 with SQLite, Active Storage, Solid Queue/Cable/Cache
+- **Frontend**: TypeScript with Bun, Tailwind CSS, DaisyUI, Stimulus
+- **Deployment**: Kamal (Docker-based)
+
+## Essential Commands
+
+### Ruby/Rails Commands
+```bash
+# Setup the entire application
+bin/setup
+
+# Run Rails server
+bin/rails s
+
+# Run Rails console
+bin/rails c
+
+# Database operations
+bin/rails db:migrate
+bin/rails db:seed
+bin/rails db:reset
+
+# Run all tests
+bin/rails test
+
+# Run specific test file
+bin/rails test test/models/document_test.rb
+
+# Run single test method
+bin/rails test test/models/document_test.rb -n test_should_create_document
+```
+
+### Code Quality & Security
+```bash
+# Ruby linting/style checking
+bin/rubocop
+
+# Auto-fix RuboCop issues
+bin/rubocop -a
+
+# Security audit for gems
+bin/bundler-audit
+
+# Security vulnerability scanning
+bin/brakeman
+
+# Importmap vulnerability audit
+bin/importmap audit
+```
+
+### TypeScript/Bun Commands
+```bash
+# Install dependencies
+bun install
+
+# Run TypeScript file
+bun index.ts
+
+# Run tests (if any exist)
+bun test
+
+# Build frontend assets
+bun build
+```
+
+### Full CI Pipeline
+```bash
+# Run complete CI suite locally
+bin/ci
+```
+
+## Code Style Guidelines
+
+### Ruby/Rails Style
+- Follow RuboCop Rails Omakase configuration (`.rubocop.yml`)
+- Use Rails 8.1 conventions and patterns
+- Prefer `enum` over string constants for model statuses
+- Use `has_one_attached`/`has_many_attached` for Active Storage
+- Follow RESTful controller patterns
+- Use `stale_when_importmap_changes` in controllers with importmap
+
+### Model Conventions
+```ruby
+class Document < ApplicationRecord
+  has_one_attached :pdf
+  
+  enum :status, [:pending, :extracting_text, :extracting_metadata, :complete, :failed]
+  
+  # Use descriptive method names
+  def metadata_field(field)
+    return nil unless extracted_metadata.present?
+    JSON.parse(extracted_metadata)[field] rescue nil
+  end
+end
+```
+
+### Controller Conventions
+```ruby
+class DocumentsController < ApplicationController
+  def index
+    @status_counts = Document.group(:status).count
+    @documents = Document.order(created_at: :desc).limit(100)
+  end
+  
+  def show
+    @document = Document.find(params[:id])
+  end
+end
+```
+
+### TypeScript Style
+- Use strict TypeScript configuration (`tsconfig.json`)
+- Prefer ESNext syntax and features
+- Use `bun:sqlite` instead of `better-sqlite3`
+- Use `Bun.serve()` instead of Express
+- Import CSS files directly in TypeScript
+- Use React with JSX transform
+
+### Import Conventions
+```typescript
+// Node.js built-ins
+import { serve } from "bun";
+
+// Local files (use relative paths)
+import { helper } from "./helper";
+import "./styles.css";
+
+// React
+import React from "react";
+import { createRoot } from "react-dom/client";
+```
+
+### Frontend Architecture
+- Use HTML imports with `Bun.serve()` routing
+- Import `.tsx`, `.jsx`, `.css` files directly in HTML
+- Use Stimulus for JavaScript controllers
+- Tailwind CSS with DaisyUI for styling
+- Hot Module Replacement with `bun --hot`
+
+### Error Handling
+- Use `rescue nil` for safe JSON parsing in models
+- Implement proper error handling in controllers
+- Use Rails exception handling patterns
+- Return meaningful error responses
+
+### Testing Patterns
+- Use Rails built-in testing framework
+- Place tests in `test/` directory mirroring `app/` structure
+- Use fixtures for test data
+- Test models, controllers, jobs, and system integration
+- Run tests in parallel with `parallelize(workers: :number_of_processors)`
+
+### Security Guidelines
+- Always run `bin/bundler-audit` and `bin/brakeman` before commits
+- Use Rails security features (CSRF, CSP, etc.)
+- Validate and sanitize user inputs
+- Use parameter filtering for sensitive data
+- Keep dependencies updated
+
+### Database Patterns
+- Use Rails migrations with descriptive names
+- Follow Active Record conventions
+- Use Solid Queue for background jobs
+- Use Solid Cache for caching
+- Use Solid Cable for Action Cable
+
+### Asset Management
+- Use Propshaft for asset pipeline
+- Use Importmap for JavaScript dependencies
+- Use Tailwind CSS for styling
+- Use Active Storage for file uploads
+
+### UI Design System
+
+The application uses a custom design system built on DaisyUI with a bold, vibrant civic theme.
+
+#### Color Palette
+- **Primary**: Royal blue (`#2563EB`) - CTAs, links, primary actions
+- **Secondary**: Civic red (`#DC2626`) - important accents
+- **Accent**: Emerald (`#059669`) - success states
+- **Document Types**: Agenda (blue gradient), Minutes (purple gradient)
+
+#### Icons Helper (`app/helpers/icons_helper.rb`)
+Use SVG icons from Heroicons instead of emoji:
+
+```erb
+<%# Basic icon %>
+<%= icon("document", size: "w-5 h-5") %>
+
+<%# Icon with custom class %>
+<%= icon("arrow-path", size: "w-4 h-4", class: "animate-spin-slow") %>
+
+<%# Icon in gradient circle %>
+<%= icon_in_circle("building-library", type: :brand, size: :lg) %>
+
+<%# Document type icon with appropriate gradient %>
+<%= document_type_icon("agenda", size: :md) %>
+```
+
+Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, `check-circle`, `x-circle`, `arrow-path`, `building-library`, `chevron-left`, `folder-open`, `bars-3`, `list-bullet`, `file`
+
+#### Documents Helper (`app/helpers/documents_helper.rb`)
+```erb
+<%# Status badge with icon %>
+<%= status_badge(document.status) %>
+
+<%# Document type icon in gradient circle %>
+<%= document_type_icon(doc.metadata_field("document_type"), size: :lg) %>
+
+<%# Border class for document type %>
+<div class="card <%= document_type_border_class(doc_type) %>">
+
+<%# Action badge with icon %>
+<%= action_badge("approved") %>
+
+<%# Avatar initials for attendees %>
+<div class="avatar-initials <%= avatar_color_class(name) %>">
+  <%= avatar_initials(name) %>
+</div>
+```
+
+#### CSS Utility Classes (`app/assets/tailwind/application.css`)
+```css
+/* Card hover animation */
+.card-hover { /* scale(1.02) + shadow on hover */ }
+
+/* Gradient text */
+.text-gradient-primary { /* Blue gradient text */ }
+
+/* Icon circles with gradients */
+.icon-circle.icon-circle-agenda { /* Blue gradient */ }
+.icon-circle.icon-circle-minutes { /* Purple gradient */ }
+.icon-circle.icon-circle-brand { /* Primary gradient */ }
+
+/* Document type borders */
+.border-t-agenda { /* 4px blue top border */ }
+.border-t-minutes { /* 4px purple top border */ }
+
+/* Animations */
+.animate-pulse-subtle { /* Subtle opacity pulse */ }
+.animate-spin-slow { /* 2s rotation */ }
+.animate-slide-up { /* Fade in from below */ }
+
+/* Avatar initials */
+.avatar-initials { /* Circular avatar with initials */ }
+
+/* Numbered list circles */
+.number-circle { /* Circular number indicator */ }
+```
+
+### Naming Conventions
+- Use snake_case for Ruby files and methods
+- Use PascalCase for classes and modules
+- Use camelCase for JavaScript/TypeScript
+- Use kebab-case for file names in views
+- Use descriptive variable and method names
+
+## Development Workflow
+
+1. Run `bin/setup` for initial setup
+2. Use `bin/rails s` for development server
+3. Run `bin/rubocop -a` before committing
+4. Run `bin/ci` to verify everything works
+5. Use `bin/rails test` for running tests
+6. Use `bin/rails c` for debugging in console
+
+## Important Notes
+
+- This application uses Bun instead of Node.js for frontend tooling
+- Rails 8.1 uses Solid suite for queueing, caching, and cables
+- The application is configured for Kamal deployment
+- Always use the provided bin scripts instead of direct gem commands
+- Follow Rails conventions and patterns throughout the codebase

@@ -1,0 +1,182 @@
+<%# app/views/documents/show.html.erb %>
+<div class="space-y-8">
+  <%# Back navigation %>
+  <div>
+    <%= link_to documents_path, class: "inline-flex items-center gap-2 text-base-content/60 hover:text-primary font-medium transition-colors" do %>
+      <%= icon("chevron-left", size: "w-5 h-5") %>
+      <span>Back to Documents</span>
+    <% end %>
+  </div>
+
+  <% if @document.extracted_metadata.present? %>
+    <% meta = JSON.parse(@document.extracted_metadata) rescue {} %>
+    <% doc_type = meta["document_type"] %>
+
+    <%# Header Card with gradient accent %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden <%= document_type_border_class(doc_type) %>">
+      <div class="card-body p-6">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <%= document_type_icon(doc_type, size: :xl) %>
+            <div>
+              <h1 class="text-2xl font-extrabold tracking-tight"><%= meta["governing_body"] || "Unknown Body" %></h1>
+              <div class="flex flex-wrap items-center gap-3 mt-3">
+                <% if doc_type %>
+                  <span class="badge badge-outline font-semibold"><%= doc_type&.capitalize %></span>
+                <% end %>
+                <% if meta["meeting_date"] %>
+                  <span class="flex items-center gap-1.5 text-sm text-base-content/70 font-medium">
+                    <%= icon("calendar", size: "w-4 h-4", class: "text-primary/60") %>
+                    <%= Date.parse(meta["meeting_date"]).strftime("%B %d, %Y") rescue meta["meeting_date"] %>
+                  </span>
+                <% end %>
+                <% if meta["meeting_time"] %>
+                  <span class="flex items-center gap-1.5 text-sm text-base-content/70 font-medium">
+                    <%= icon("clock", size: "w-4 h-4", class: "text-primary/60") %>
+                    <%= meta["meeting_time"] %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <%= status_badge(@document.status) %>
+        </div>
+
+        <% if meta["abstract"].present? %>
+          <p class="mt-5 text-base-content/70 leading-relaxed border-l-4 border-primary/20 pl-4 italic">
+            <%= meta["abstract"] %>
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Attendees Section %>
+    <% if meta["attendees"].present? && meta["attendees"].any? %>
+      <div class="space-y-4">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          <%= icon("users", size: "w-5 h-5", class: "text-primary") %>
+          Attendees
+          <span class="badge badge-ghost badge-sm font-normal"><%= meta["attendees"].size %></span>
+        </h2>
+
+        <div class="card bg-base-100 border border-base-200 shadow-sm">
+          <div class="card-body p-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <% meta["attendees"].each do |attendee| %>
+                <div class="flex items-center gap-3">
+                  <div class="avatar-initials <%= avatar_color_class(attendee["name"]) %>">
+                    <%= avatar_initials(attendee["name"]) %>
+                  </div>
+                  <div>
+                    <div class="font-semibold text-sm"><%= attendee["name"] %></div>
+                    <% if attendee["role"].present? %>
+                      <div class="text-xs text-base-content/50 mt-0.5"><%= attendee["role"]&.capitalize %></div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Agenda Items %>
+    <% if meta["topics"].present? && meta["topics"].any? %>
+      <div class="space-y-4">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          <%= icon("list-bullet", size: "w-5 h-5", class: "text-primary") %>
+          Agenda Items
+          <span class="badge badge-ghost badge-sm font-normal"><%= meta["topics"].size %></span>
+        </h2>
+
+        <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
+          <div class="divide-y divide-base-200">
+            <% meta["topics"].each_with_index do |topic, i| %>
+              <% action = topic["action_taken"] %>
+              <% has_action = action.present? && action.downcase != "none" %>
+              <div class="flex items-start gap-4 px-5 py-4 hover:bg-base-50 transition-colors duration-150 <%= action_border_class(action) if has_action %>">
+                <div class="flex-none">
+                  <span class="number-circle bg-primary/10 text-primary">
+                    <%= i + 1 %>
+                  </span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-base font-bold text-base-content"><%= topic["title"] %></h3>
+                    <% if has_action %>
+                      <%= action_badge(action) %>
+                    <% end %>
+                  </div>
+                  <% if topic["summary"].present? %>
+                    <p class="text-sm text-base-content/60 mt-2 leading-relaxed"><%= topic["summary"] %></p>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+  <% else %>
+    <%# No metadata yet %>
+    <div class="card bg-gradient-to-br from-base-200/50 to-base-200 border border-base-300">
+      <div class="card-body items-center text-center py-16">
+        <% if @document.failed? %>
+          <div class="icon-circle icon-circle-xl bg-error/20 text-error mb-4">
+            <%= icon("x-circle", size: "w-10 h-10") %>
+          </div>
+          <h2 class="text-xl font-bold">Extraction Failed</h2>
+          <p class="text-base-content/60 max-w-md mt-2">
+            We couldn't extract metadata from this document. The file may be corrupted or in an unsupported format.
+          </p>
+        <% elsif @document.pending? || @document.extracting_text? || @document.extracting_metadata? %>
+          <div class="icon-circle icon-circle-xl icon-circle-brand mb-4">
+            <%= icon("arrow-path", size: "w-10 h-10", class: "animate-spin-slow") %>
+          </div>
+          <h2 class="text-xl font-bold">Processing Document</h2>
+          <p class="text-base-content/60 max-w-md mt-2">
+            We're extracting metadata from this document. This usually takes a few seconds.
+          </p>
+        <% else %>
+          <div class="icon-circle icon-circle-xl icon-circle-default mb-4">
+            <%= icon("document", size: "w-10 h-10") %>
+          </div>
+          <h2 class="text-xl font-bold">No Metadata Available</h2>
+          <p class="text-base-content/60 max-w-md mt-2">
+            This document doesn't have any extracted metadata yet.
+          </p>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Document Info Footer %>
+  <div class="border-t border-base-200 pt-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-base-content/50">
+      <div class="flex items-center gap-2">
+        <%= icon("file", size: "w-4 h-4") %>
+        <span class="font-mono"><%= @document.source_file_name %></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <%= icon("clock", size: "w-4 h-4") %>
+        <span>Added <%= time_ago_in_words(@document.created_at) %> ago</span>
+      </div>
+    </div>
+  </div>
+
+  <%# Raw Metadata Collapsible %>
+  <% if @document.extracted_metadata.present? %>
+    <div class="collapse collapse-arrow bg-base-200/50 border border-base-200 rounded-xl">
+      <input type="checkbox" />
+      <div class="collapse-title font-semibold flex items-center gap-2">
+        <%= icon("document-text", size: "w-4 h-4") %>
+        View Raw Metadata
+      </div>
+      <div class="collapse-content">
+        <pre class="text-xs overflow-auto bg-base-100 p-4 rounded-lg mt-2 border border-base-200 font-mono"><%= JSON.pretty_generate(JSON.parse(@document.extracted_metadata)) rescue @document.extracted_metadata %></pre>
+      </div>
+    </div>
+  <% end %>
+</div>

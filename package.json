@@ -1,0 +1,13 @@
+{
+  "name": "townai",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "daisyui": "^5.5.14"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
