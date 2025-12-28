@@ -1,6 +1,4 @@
 Rails.application.routes.draw do
-  get "documents/index"
-  get "documents/show"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -17,10 +15,14 @@ Rails.application.routes.draw do
       post :retry
     end
   end
+
+  resources :attendees, only: [ :index, :show ]
+
   root "documents#index"
 
   # Admin routes
   namespace :admin do
     resources :api_costs, only: [ :index ]
+    post "attendees/merge", to: "attendees#merge", as: :attendees_merge
   end
 end

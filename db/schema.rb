@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_28_192040) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_28_202011) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -60,6 +60,36 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_28_192040) do
     t.index ["status"], name: "index_api_calls_on_status"
   end
 
+  create_table "attendees", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "document_appearances_count", default: 0
+    t.datetime "first_seen_at"
+    t.json "governing_bodies", default: []
+    t.datetime "last_seen_at"
+    t.integer "merged_into_id"
+    t.string "name", null: false
+    t.string "normalized_name", null: false
+    t.string "primary_governing_body", null: false
+    t.datetime "updated_at", null: false
+    t.index ["document_appearances_count"], name: "index_attendees_on_document_appearances_count"
+    t.index ["merged_into_id"], name: "index_attendees_on_merged_into_id"
+    t.index ["name"], name: "index_attendees_on_name"
+    t.index ["normalized_name", "primary_governing_body"], name: "index_attendees_on_normalized_name_and_governing_body", unique: true
+  end
+
+  create_table "document_attendees", force: :cascade do |t|
+    t.integer "attendee_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "document_id", null: false
+    t.string "role"
+    t.text "source_text"
+    t.string "status"
+    t.datetime "updated_at", null: false
+    t.index ["attendee_id"], name: "index_document_attendees_on_attendee_id"
+    t.index ["document_id", "attendee_id"], name: "index_document_attendees_on_document_id_and_attendee_id", unique: true
+    t.index ["document_id"], name: "index_document_attendees_on_document_id"
+  end
+
   create_table "documents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "extracted_metadata"
@@ -74,4 +104,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_28_192040) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_calls", "documents"
+  add_foreign_key "attendees", "attendees", column: "merged_into_id"
+  add_foreign_key "document_attendees", "attendees"
+  add_foreign_key "document_attendees", "documents"
 end
