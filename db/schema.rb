@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_28_202011) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_29_120726) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -66,6 +66,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_28_202011) do
     t.datetime "first_seen_at"
     t.json "governing_bodies", default: []
     t.datetime "last_seen_at"
+    t.datetime "merged_at"
     t.integer "merged_into_id"
     t.string "name", null: false
     t.string "normalized_name", null: false

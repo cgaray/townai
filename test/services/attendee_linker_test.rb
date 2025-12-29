@@ -127,20 +127,22 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
     end
   end
 
-  test "normalize_role handles valid roles" do
+  test "normalize_role preserves valid roles with original casing" do
     linker = AttendeeLinker.new(@complete_doc)
 
-    # Use send to test private method
+    # Use send to test private method - role is free-form, preserves casing
     assert_equal "chair", linker.send(:normalize_role, "chair")
-    assert_equal "member", linker.send(:normalize_role, "MEMBER")
-    assert_equal "staff", linker.send(:normalize_role, "  Staff  ")
+    assert_equal "MEMBER", linker.send(:normalize_role, "MEMBER")
+    assert_equal "Staff", linker.send(:normalize_role, "  Staff  ")
+    assert_equal "Vice-Chair", linker.send(:normalize_role, "Vice-Chair")
+    assert_equal "Associate Member", linker.send(:normalize_role, "Associate Member")
   end
 
-  test "normalize_role returns nil for invalid roles" do
+  test "normalize_role returns nil for blank roles" do
     linker = AttendeeLinker.new(@complete_doc)
 
-    assert_nil linker.send(:normalize_role, "president")
     assert_nil linker.send(:normalize_role, "")
+    assert_nil linker.send(:normalize_role, "   ")
     assert_nil linker.send(:normalize_role, nil)
   end
 
@@ -190,5 +192,42 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
 
     assert linker.success?
     assert_empty linker.errors
+  end
+
+  test "link_attendees deduplicates attendees by name keeping preferred status" do
+    unique_suffix = SecureRandom.hex(4)
+    doc = Document.create!(
+      source_file_name: "test_dedup.pdf",
+      source_file_hash: "unique_dedup_#{unique_suffix}",
+      status: :complete,
+      extracted_metadata: {
+        governing_body: "Dedup Test Board #{unique_suffix}",
+        attendees: [
+          { name: "Dedup Person One #{unique_suffix}", role: "member", status: "present" },
+          { name: "Dedup Person One #{unique_suffix}", role: "member", status: "absent" },
+          { name: "Dedup Person Two #{unique_suffix}", role: "chair", status: "remote" },
+          { name: "Dedup Person Two #{unique_suffix}", role: "chair", status: "absent" }
+        ]
+      }.to_json
+    )
+
+    linker = AttendeeLinker.new(doc)
+
+    # Should create only 2 attendees, not 4
+    assert_difference "Attendee.count", 2 do
+      assert_difference "DocumentAttendee.count", 2 do
+        assert linker.link_attendees
+      end
+    end
+
+    # Person One should be present (higher priority than absent)
+    person_one = doc.attendees.find_by("normalized_name LIKE ?", "dedup person one%")
+    person_one_link = DocumentAttendee.find_by(document: doc, attendee: person_one)
+    assert_equal "present", person_one_link.status
+
+    # Person Two should be remote (higher priority than absent)
+    person_two = doc.attendees.find_by("normalized_name LIKE ?", "dedup person two%")
+    person_two_link = DocumentAttendee.find_by(document: doc, attendee: person_two)
+    assert_equal "remote", person_two_link.status
   end
 end

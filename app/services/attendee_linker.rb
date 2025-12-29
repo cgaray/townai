@@ -55,7 +55,33 @@ class AttendeeLinker
     raw = document.metadata_field("attendees")
     return [] unless raw.is_a?(Array)
 
-    raw.select { |a| a.is_a?(Hash) && a["name"].present? }
+    valid = raw.select { |a| a.is_a?(Hash) && a["name"].present? }
+
+    # Deduplicate by normalized name, keeping the entry with the most useful status
+    # Priority: present > remote > absent > nil
+    deduplicated = {}
+    valid.each do |attendee_data|
+      name = attendee_data["name"].to_s.strip
+      normalized = Attendee.normalize_name(name)
+      next if normalized.blank?
+
+      existing = deduplicated[normalized]
+      if existing.nil? || status_priority(attendee_data["status"]) > status_priority(existing["status"])
+        deduplicated[normalized] = attendee_data
+      end
+    end
+
+    deduplicated.values
+  end
+
+  # Higher number = higher priority when deduplicating
+  def status_priority(status)
+    case status.to_s.downcase
+    when "present" then 3
+    when "remote" then 2
+    when "absent" then 1
+    else 0
+    end
   end
 
   def link_single_attendee(attendee_data, governing_body)
@@ -111,14 +137,13 @@ class AttendeeLinker
   end
 
   def normalize_role(role)
-    normalize_enum(role, DocumentAttendee::ROLES)
+    # Role is free-form - just clean up whitespace, preserve original casing
+    role.to_s.strip.presence
   end
 
   def normalize_status(status)
-    normalize_enum(status, DocumentAttendee::STATUSES)
-  end
-
-  def normalize_enum(value, allowed_values)
-    value.to_s.downcase.strip.presence.then { |v| allowed_values.include?(v) ? v : nil }
+    # Status is validated enum - normalize to lowercase
+    normalized = status.to_s.downcase.strip.presence
+    DocumentAttendee::STATUSES.include?(normalized) ? normalized : nil
   end
 end
