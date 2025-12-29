@@ -99,19 +99,14 @@ module DocumentsHelper
   def role_badge(role)
     return nil if role.blank?
 
-    # Highlight common leadership roles, otherwise use neutral styling
     badge_class = case role.to_s.downcase
-    when "chair", "chairman", "chairwoman", "chairperson" then "badge-primary"
-    when "vice-chair", "vice chair", "vice-chairman" then "badge-primary"
-    when "clerk", "secretary" then "badge-secondary"
+    when "chair" then "badge-primary"
+    when "clerk" then "badge-secondary"
     when "staff" then "badge-accent"
     else "badge-ghost"
     end
 
-    # Titleize the role for display, but handle hyphenated roles
-    display_role = role.to_s.split(/[-\s]/).map(&:capitalize).join(" ").gsub(" - ", "-")
-
-    content_tag :span, display_role, class: "badge badge-sm badge-outline #{badge_class}"
+    content_tag :span, role.to_s.capitalize, class: "badge badge-sm badge-outline #{badge_class}"
   end
 
   def avatar_initials(name)

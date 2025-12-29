@@ -1,8 +1,6 @@
 class Document < ApplicationRecord
   has_one_attached :pdf
   has_many :api_calls, dependent: :nullify
-  has_many :document_attendees, dependent: :destroy
-  has_many :attendees, through: :document_attendees
 
   enum :status, [ :pending, :extracting_text, :extracting_metadata, :complete, :failed ]
 

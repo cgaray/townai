@@ -71,73 +71,41 @@
     </div>
 
     <%# Attendees Section %>
-    <% if @document.document_attendees.any? || (meta["attendees"].present? && meta["attendees"].any?) %>
+    <% if meta["attendees"].present? && meta["attendees"].any? %>
       <div class="space-y-4">
         <h2 class="text-xl font-bold flex items-center gap-2">
           <%= icon("users", size: "w-5 h-5", class: "text-primary") %>
           Attendees
-          <span class="badge badge-ghost badge-sm font-normal"><%= @document.document_attendees.any? ? @document.document_attendees.size : meta["attendees"]&.size || 0 %></span>
+          <span class="badge badge-ghost badge-sm font-normal"><%= meta["attendees"].size %></span>
         </h2>
 
         <div class="card bg-base-100 border border-base-200 shadow-sm">
           <div class="card-body p-5">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <% if @document.document_attendees.any? %>
-                <%# Display linked attendees with links to their Person %>
-                <% @document.document_attendees.includes(attendee: :person).each do |da| %>
-                  <div class="space-y-1">
-                    <div class="flex items-center gap-3">
-                      <%= link_to person_path(da.attendee.person), class: "flex items-center gap-3 hover:opacity-80 transition-opacity" do %>
-                        <div class="avatar-initials <%= avatar_color_class(da.attendee.person.name) %>">
-                          <%= avatar_initials(da.attendee.person.name) %>
-                        </div>
-                        <div>
-                          <div class="font-semibold text-sm hover:text-primary"><%= da.attendee.person.name %></div>
-                          <% if da.role.present? %>
-                            <div class="text-xs text-base-content/50 mt-0.5"><%= da.role.capitalize %></div>
-                          <% end %>
-                        </div>
+              <% meta["attendees"].each do |attendee| %>
+                <div class="space-y-1">
+                  <div class="flex items-center gap-3">
+                    <div class="avatar-initials <%= avatar_color_class(attendee["name"]) %>">
+                      <%= avatar_initials(attendee["name"]) %>
+                    </div>
+                    <div>
+                      <div class="font-semibold text-sm"><%= attendee["name"] %></div>
+                      <% if attendee["role"].present? %>
+                        <div class="text-xs text-base-content/50 mt-0.5"><%= attendee["role"]&.capitalize %></div>
                       <% end %>
                     </div>
-                    <% if da.source_text.present? %>
-                      <details class="ml-12">
-                        <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
-                          Show source
-                        </summary>
-                        <blockquote class="mt-1 text-xs text-base-content/60 border-l-2 border-base-300 pl-2 bg-base-200/30 py-1 rounded-r whitespace-pre-wrap">
-                          <%= da.source_text %>
-                        </blockquote>
-                      </details>
-                    <% end %>
                   </div>
-                <% end %>
-              <% else %>
-                <%# Fallback to raw metadata if no linked attendees %>
-                <% (meta["attendees"] || []).each do |attendee| %>
-                  <div class="space-y-1">
-                    <div class="flex items-center gap-3">
-                      <div class="avatar-initials <%= avatar_color_class(attendee["name"]) %>">
-                        <%= avatar_initials(attendee["name"]) %>
-                      </div>
-                      <div>
-                        <div class="font-semibold text-sm"><%= attendee["name"] %></div>
-                        <% if attendee["role"].present? %>
-                          <div class="text-xs text-base-content/50 mt-0.5"><%= attendee["role"]&.capitalize %></div>
-                        <% end %>
-                      </div>
-                    </div>
-                    <% if attendee["source_text"].present? %>
-                      <details class="ml-12">
-                        <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
-                          Show source
-                        </summary>
-                        <blockquote class="mt-1 text-xs text-base-content/60 border-l-2 border-base-300 pl-2 bg-base-200/30 py-1 rounded-r whitespace-pre-wrap">
-                          <%= attendee["source_text"] %>
-                        </blockquote>
-                      </details>
-                    <% end %>
-                  </div>
-                <% end %>
+                  <% if attendee["source_text"].present? %>
+                    <details class="ml-12">
+                      <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
+                        Show source
+                      </summary>
+                      <blockquote class="mt-1 text-xs text-base-content/60 border-l-2 border-base-300 pl-2 bg-base-200/30 py-1 rounded-r whitespace-pre-wrap">
+                        <%= attendee["source_text"] %>
+                      </blockquote>
+                    </details>
+                  <% end %>
+                </div>
               <% end %>
             </div>
           </div>
