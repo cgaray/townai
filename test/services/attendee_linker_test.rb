@@ -119,13 +119,45 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
       status: :complete,
       extracted_metadata: '{"governing_body":"Test Board","attendees":[{"name":""},{"name":"Valid Person"}]}'
     )
-    doc.save!
 
     linker = AttendeeLinker.new(doc)
 
     assert_difference "Attendee.count", 1 do
       linker.link_attendees
     end
+  end
+
+  test "normalize_role handles valid roles" do
+    linker = AttendeeLinker.new(@complete_doc)
+
+    # Use send to test private method
+    assert_equal "chair", linker.send(:normalize_role, "chair")
+    assert_equal "member", linker.send(:normalize_role, "MEMBER")
+    assert_equal "staff", linker.send(:normalize_role, "  Staff  ")
+  end
+
+  test "normalize_role returns nil for invalid roles" do
+    linker = AttendeeLinker.new(@complete_doc)
+
+    assert_nil linker.send(:normalize_role, "president")
+    assert_nil linker.send(:normalize_role, "")
+    assert_nil linker.send(:normalize_role, nil)
+  end
+
+  test "normalize_status handles valid statuses" do
+    linker = AttendeeLinker.new(@complete_doc)
+
+    assert_equal "present", linker.send(:normalize_status, "present")
+    assert_equal "absent", linker.send(:normalize_status, "ABSENT")
+    assert_equal "remote", linker.send(:normalize_status, "  Remote  ")
+  end
+
+  test "normalize_status returns nil for invalid statuses" do
+    linker = AttendeeLinker.new(@complete_doc)
+
+    assert_nil linker.send(:normalize_status, "late")
+    assert_nil linker.send(:normalize_status, "")
+    assert_nil linker.send(:normalize_status, nil)
   end
 
   test "link_attendees populates errors when document not complete" do

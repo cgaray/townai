@@ -42,11 +42,15 @@ class AttendeeMerger
 
   def move_document_attendees
     # Move all document links from source to target
-    # Handle race conditions by rescuing unique constraint violations
-    source.document_attendees.find_each do |da|
+    # Use database-level query to avoid stale collection issues from concurrent merges
+    # Loop until no more records to move (handles concurrent modifications)
+    loop do
+      da = DocumentAttendee.find_by(attendee_id: source.id)
+      break unless da
+
       da.update!(attendee: target)
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
-      # Target already has a link to this document (created concurrently or validation failed)
+      # Target already has a link to this document - delete the duplicate
       da.destroy!
     end
   end
