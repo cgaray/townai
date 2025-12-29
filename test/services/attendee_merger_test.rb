@@ -2,105 +2,78 @@ require "test_helper"
 
 class AttendeeMergerTest < ActiveSupport::TestCase
   setup do
-    @source = attendees(:jon_smith_finance)
-    @target = attendees(:john_smith_finance)
+    @source_person = people(:jon_smith)
+    @target_person = people(:john_smith)
     @document = documents(:complete_agenda)
 
     # Clean up any existing document_attendees to avoid uniqueness conflicts
     DocumentAttendee.where(document: @document).delete_all
+  end
 
+  test "merge moves attendees from source to target" do
+    source_attendee = attendees(:jon_smith_finance)
+    original_target_count = @target_person.attendees.count
+
+    merger = AttendeeMerger.new(source: @source_person, target: @target_person)
+    assert merger.merge!
+
+    source_attendee.reload
+    @target_person.reload
+
+    assert_equal @target_person, source_attendee.person
+    assert_equal original_target_count + 1, @target_person.attendees.count
+  end
+
+  test "merge deletes source person" do
+    source_id = @source_person.id
+
+    merger = AttendeeMerger.new(source: @source_person, target: @target_person)
+    merger.merge!
+
+    assert_nil Person.find_by(id: source_id)
+  end
+
+  test "merge updates target counter cache" do
     # Create a document link for source attendee
+    source_attendee = attendees(:jon_smith_finance)
     DocumentAttendee.create!(
       document: @document,
-      attendee: @source,
+      attendee: source_attendee,
       role: "member",
       status: "present"
     )
-  end
+    @source_person.update_appearances_count!
+    @target_person.update_appearances_count!
 
-  test "merge moves document_attendees from source to target" do
-    merger = AttendeeMerger.new(source: @source, target: @target)
+    original_source_count = @source_person.document_appearances_count
+    original_target_count = @target_person.document_appearances_count
 
-    assert_difference -> { @source.reload.document_attendees.count }, -1 do
-      assert merger.merge!
-    end
-
-    # Document should now be linked to target
-    assert DocumentAttendee.exists?(document: @document, attendee: @target)
-    assert_not DocumentAttendee.exists?(document: @document, attendee: @source)
-  end
-
-  test "merge marks source as merged" do
-    merger = AttendeeMerger.new(source: @source, target: @target)
+    merger = AttendeeMerger.new(source: @source_person, target: @target_person)
     merger.merge!
 
-    @source.reload
-    assert @source.merged?
-    assert_equal @target, @source.merged_into
-  end
-
-  test "merge combines governing_bodies" do
-    @source.update!(governing_bodies: [ "Finance Committee", "Special Committee" ])
-    @target.update!(governing_bodies: [ "Finance Committee" ])
-
-    merger = AttendeeMerger.new(source: @source, target: @target)
-    merger.merge!
-
-    @target.reload
-    assert_includes @target.governing_bodies, "Finance Committee"
-    assert_includes @target.governing_bodies, "Special Committee"
+    @target_person.reload
+    # Target should now have source's document appearances added
+    assert_equal original_target_count + original_source_count, @target_person.document_appearances_count
   end
 
   test "merge fails when source is nil" do
-    merger = AttendeeMerger.new(source: nil, target: @target)
+    merger = AttendeeMerger.new(source: nil, target: @target_person)
 
     assert_not merger.merge!
-    assert_includes merger.errors, "Source attendee not found"
+    assert_includes merger.errors, "Source person not found"
   end
 
   test "merge fails when target is nil" do
-    merger = AttendeeMerger.new(source: @source, target: nil)
+    merger = AttendeeMerger.new(source: @source_person, target: nil)
 
     assert_not merger.merge!
-    assert_includes merger.errors, "Target attendee not found"
+    assert_includes merger.errors, "Target person not found"
   end
 
   test "merge fails when source equals target" do
-    merger = AttendeeMerger.new(source: @source, target: @source)
+    merger = AttendeeMerger.new(source: @source_person, target: @source_person)
 
     assert_not merger.merge!
-    assert_includes merger.errors, "Cannot merge an attendee into itself"
-  end
-
-  test "merge fails when source is already merged" do
-    merged = attendees(:merged_attendee)
-    merger = AttendeeMerger.new(source: merged, target: @target)
-
-    assert_not merger.merge!
-    assert_includes merger.errors, "Source attendee is already merged"
-  end
-
-  test "merge fails when target is already merged" do
-    merged = attendees(:merged_attendee)
-    merger = AttendeeMerger.new(source: @source, target: merged)
-
-    assert_not merger.merge!
-    assert_includes merger.errors, "Target attendee is already merged"
-  end
-
-  test "merge handles duplicate document links" do
-    # Create link for target to same document
-    DocumentAttendee.create!(
-      document: @document,
-      attendee: @target,
-      role: "chair",
-      status: "present"
-    )
-
-    merger = AttendeeMerger.new(source: @source, target: @target)
-
-    # Should not raise error, source link should be deleted
-    assert merger.merge!
-    assert_not DocumentAttendee.exists?(document: @document, attendee: @source)
+    assert_includes merger.errors, "Cannot merge a person into themselves"
   end
 end

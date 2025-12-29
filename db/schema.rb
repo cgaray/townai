@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_29_120726) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_29_125336) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -62,20 +62,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_29_120726) do
 
   create_table "attendees", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "document_appearances_count", default: 0
-    t.datetime "first_seen_at"
-    t.json "governing_bodies", default: []
-    t.datetime "last_seen_at"
-    t.datetime "merged_at"
-    t.integer "merged_into_id"
+    t.string "governing_body", null: false
     t.string "name", null: false
     t.string "normalized_name", null: false
-    t.string "primary_governing_body", null: false
+    t.integer "person_id"
     t.datetime "updated_at", null: false
-    t.index ["document_appearances_count"], name: "index_attendees_on_document_appearances_count"
-    t.index ["merged_into_id"], name: "index_attendees_on_merged_into_id"
     t.index ["name"], name: "index_attendees_on_name"
-    t.index ["normalized_name", "primary_governing_body"], name: "index_attendees_on_normalized_name_and_governing_body", unique: true
+    t.index ["normalized_name", "governing_body"], name: "index_attendees_on_normalized_name_and_governing_body", unique: true
+    t.index ["person_id"], name: "index_attendees_on_person_id"
   end
 
   create_table "document_attendees", force: :cascade do |t|
@@ -102,10 +96,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_29_120726) do
     t.index ["source_file_hash"], name: "index_documents_on_source_file_hash", unique: true
   end
 
+  create_table "people", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "document_appearances_count", default: 0
+    t.string "name", null: false
+    t.string "normalized_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["document_appearances_count"], name: "index_people_on_document_appearances_count"
+    t.index ["name"], name: "index_people_on_name"
+    t.index ["normalized_name"], name: "index_people_on_normalized_name"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_calls", "documents"
-  add_foreign_key "attendees", "attendees", column: "merged_into_id"
+  add_foreign_key "attendees", "people"
   add_foreign_key "document_attendees", "attendees"
   add_foreign_key "document_attendees", "documents"
 end

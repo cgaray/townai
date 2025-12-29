@@ -16,13 +16,14 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :attendees, only: [ :index, :show ]
+  resources :people, only: [ :index, :show ]
 
   root "documents#index"
 
   # Admin routes
   namespace :admin do
     resources :api_costs, only: [ :index ]
-    post "attendees/merge", to: "attendees#merge", as: :attendees_merge
+    post "people/merge", to: "people#merge", as: :people_merge
+    post "people/unmerge", to: "people#unmerge", as: :people_unmerge
   end
 end

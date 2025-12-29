@@ -19,7 +19,7 @@ namespace :attendees do
         puts "[#{index + 1}/#{total}] Document #{document.id}: created=#{linker.created_count}, linked=#{linker.linked_count}"
       else
         skipped += 1
-        puts "[#{index + 1}/#{total}] Document #{document.id}: skipped (no governing body or attendees)"
+        puts "[#{index + 1}/#{total}] Document #{document.id}: skipped (#{linker.errors.join(', ')})"
       end
     rescue StandardError => e
       errors += 1
@@ -32,48 +32,47 @@ namespace :attendees do
     puts "  Skipped: #{skipped}"
     puts "  Errors: #{errors}"
     puts "  Total attendees: #{Attendee.count}"
-    puts "  Active attendees: #{Attendee.active.count}"
+    puts "  Total people: #{Person.count}"
   end
 
-  desc "Show attendee statistics"
+  desc "Show attendee and people statistics"
   task stats: :environment do
-    puts "Attendee Statistics"
-    puts "==================="
-    puts "Total attendees: #{Attendee.count}"
-    puts "Active attendees: #{Attendee.active.count}"
-    puts "Merged attendees: #{Attendee.merged.count}"
+    puts "People & Attendee Statistics"
+    puts "============================"
+    puts "Total people: #{Person.count}"
+    puts "Total attendees (raw extractions): #{Attendee.count}"
     puts "Document-attendee links: #{DocumentAttendee.count}"
     puts ""
     puts "By governing body:"
-    Attendee.active.group(:primary_governing_body).count.sort_by { |_, v| -v }.each do |body, count|
+    Attendee.group(:governing_body).count.sort_by { |_, v| -v }.each do |body, count|
       puts "  #{body}: #{count}"
     end
     puts ""
-    puts "Top 10 by appearances:"
-    Attendee.active.by_appearances.limit(10).each do |attendee|
-      puts "  #{attendee.name} (#{attendee.primary_governing_body}): #{attendee.document_appearances_count} docs"
+    puts "Top 10 people by appearances:"
+    Person.by_appearances.limit(10).each do |person|
+      puts "  #{person.name} (#{person.primary_governing_body}): #{person.document_appearances_count} docs"
     end
   end
 
-  desc "Find potential duplicate attendees"
+  desc "Find potential duplicate people"
   task find_duplicates: :environment do
-    puts "Potential Duplicate Attendees"
-    puts "=============================="
+    puts "Potential Duplicate People"
+    puts "=========================="
 
     duplicates_found = 0
 
-    Attendee.active.find_each do |attendee|
-      potential = attendee.potential_duplicates
+    Person.find_each do |person|
+      potential = person.potential_duplicates
       same_name = potential[:same_name_different_body]
       similar_name = potential[:similar_name]
 
       next if same_name.empty? && similar_name.empty?
 
       duplicates_found += 1
-      puts "\n#{attendee.name} (#{attendee.primary_governing_body}, ID: #{attendee.id})"
+      puts "\n#{person.name} (#{person.primary_governing_body}, ID: #{person.id})"
 
       if same_name.any?
-        puts "  Same name, different body:"
+        puts "  Same name:"
         same_name.each do |dup|
           puts "    - #{dup.name} (#{dup.primary_governing_body}, ID: #{dup.id})"
         end
@@ -87,6 +86,6 @@ namespace :attendees do
       end
     end
 
-    puts "\nTotal attendees with potential duplicates: #{duplicates_found}"
+    puts "\nTotal people with potential duplicates: #{duplicates_found}"
   end
 end
