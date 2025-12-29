@@ -1,12 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Use fixed dates for test stability
 
 john_smith_finance:
   name: "John Smith"
   normalized_name: "john smith"
   primary_governing_body: "Finance Committee"
   governing_bodies: <%= ["Finance Committee"].to_json %>
-  first_seen_at: <%= 3.months.ago.to_date %>
-  last_seen_at: <%= 1.month.ago.to_date %>
+  first_seen_at: "2024-09-01"
+  last_seen_at: "2024-11-15"
   document_appearances_count: 5
 
 jane_doe_finance:
@@ -14,8 +15,8 @@ jane_doe_finance:
   normalized_name: "jane doe"
   primary_governing_body: "Finance Committee"
   governing_bodies: <%= ["Finance Committee"].to_json %>
-  first_seen_at: <%= 2.months.ago.to_date %>
-  last_seen_at: <%= 1.month.ago.to_date %>
+  first_seen_at: "2024-10-01"
+  last_seen_at: "2024-11-15"
   document_appearances_count: 3
 
 alice_johnson_conservation:
@@ -23,8 +24,8 @@ alice_johnson_conservation:
   normalized_name: "alice johnson"
   primary_governing_body: "Conservation Commission"
   governing_bodies: <%= ["Conservation Commission"].to_json %>
-  first_seen_at: <%= 6.months.ago.to_date %>
-  last_seen_at: <%= 1.week.ago.to_date %>
+  first_seen_at: "2024-06-01"
+  last_seen_at: "2024-12-20"
   document_appearances_count: 10
 
 # Same name as john_smith_finance but different governing body
@@ -33,8 +34,8 @@ john_smith_planning:
   normalized_name: "john smith"
   primary_governing_body: "Planning Board"
   governing_bodies: <%= ["Planning Board"].to_json %>
-  first_seen_at: <%= 4.months.ago.to_date %>
-  last_seen_at: <%= 2.weeks.ago.to_date %>
+  first_seen_at: "2024-08-01"
+  last_seen_at: "2024-12-10"
   document_appearances_count: 4
 
 # Similar name to John Smith (for duplicate detection testing)
@@ -43,8 +44,8 @@ jon_smith_finance:
   normalized_name: "jon smith"
   primary_governing_body: "Finance Committee"
   governing_bodies: <%= ["Finance Committee"].to_json %>
-  first_seen_at: <%= 1.month.ago.to_date %>
-  last_seen_at: <%= 1.month.ago.to_date %>
+  first_seen_at: "2024-11-01"
+  last_seen_at: "2024-11-01"
   document_appearances_count: 1
 
 # Merged attendee

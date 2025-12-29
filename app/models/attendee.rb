@@ -116,23 +116,31 @@ class Attendee < ApplicationRecord
   end
 
   # Get co-attendees (people who have appeared in meetings with this attendee)
+  # Orders by number of shared document appearances (most frequent first)
   def co_attendees(limit: 10)
-    arel = DocumentAttendee.arel_table
-
     Attendee.active
             .joins(:document_attendees)
             .where(document_attendees: { document_id: document_ids })
             .where.not(id: id)
             .group(:id)
-            .order(arel[:id].count.desc)
+            .order(Attendee.arel_table[:id].count.desc)
             .limit(limit)
   end
 
   # Update first/last seen dates based on documents
   def update_seen_dates!
-    dates = documents.filter_map { |d| d.metadata_field("meeting_date") }
-                     .map { |d| Date.parse(d) rescue nil }
-                     .compact
+    dates = []
+
+    documents.each do |doc|
+      date_str = doc.metadata_field("meeting_date")
+      next if date_str.blank?
+
+      begin
+        dates << Date.parse(date_str)
+      rescue ArgumentError, TypeError => e
+        Rails.logger.warn("Attendee#update_seen_dates!: Failed to parse date '#{date_str}' for document #{doc.id}: #{e.message}")
+      end
+    end
 
     return if dates.empty?
 

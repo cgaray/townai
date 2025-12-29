@@ -4,6 +4,9 @@ class CreateAttendees < ActiveRecord::Migration[8.1]
       t.string :name, null: false
       t.string :normalized_name, null: false
       t.string :primary_governing_body, null: false
+      # NOTE: JSON columns in SQLite are stored as text. For PostgreSQL, consider
+      # using jsonb for better query performance. Currently only used for storage,
+      # not queried directly, so SQLite compatibility is fine.
       t.json :governing_bodies, default: []
       t.datetime :first_seen_at
       t.datetime :last_seen_at
