@@ -63,16 +63,18 @@ class ExtractMetadataJobTest < ActiveJob::TestCase
     assert_equal "present", result[0][:status]
   end
 
-  test "normalize_attendees validates roles" do
+  test "normalize_attendees preserves free-form roles" do
     job = ExtractMetadataJob.new
     attendees = [
-      { "name" => "John", "role" => "invalid_role", "status" => "present" }
+      { "name" => "John", "role" => "Vice-Chair", "status" => "present" },
+      { "name" => "Jane", "role" => "Associate Member", "status" => "present" }
     ]
 
     result = job.send(:normalize_attendees, attendees)
 
-    assert_equal 1, result.length
-    assert_nil result[0][:role]
+    assert_equal 2, result.length
+    assert_equal "Vice-Chair", result[0][:role]
+    assert_equal "Associate Member", result[1][:role]
   end
 
   test "normalize_attendees validates statuses" do

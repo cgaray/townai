@@ -18,7 +18,7 @@ class Attendee < ApplicationRecord
 
   scope :active, -> { where(merged_into_id: nil) }
   scope :merged, -> { where.not(merged_into_id: nil) }
-  scope :by_appearances, -> { order(document_appearances_count: :desc) }
+  scope :by_appearances, -> { order(document_appearances_count: :desc, name: :asc) }
 
   # Normalize a name for matching purposes
   def self.normalize_name(name)
@@ -117,10 +117,13 @@ class Attendee < ApplicationRecord
 
   # Get co-attendees (people who have appeared in meetings with this attendee)
   # Orders by number of shared document appearances (most frequent first)
+  # Uses subquery to avoid loading all document_ids into memory
   def co_attendees(limit: 10)
+    doc_ids_subquery = document_attendees.select(:document_id)
+
     Attendee.active
             .joins(:document_attendees)
-            .where(document_attendees: { document_id: document_ids })
+            .where(document_attendees: { document_id: doc_ids_subquery })
             .where.not(id: id)
             .group(:id)
             .order(Attendee.arel_table[:id].count.desc)

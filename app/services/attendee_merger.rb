@@ -44,7 +44,16 @@ class AttendeeMerger
     # Move all document links from source to target
     # Use database-level query to avoid stale collection issues from concurrent merges
     # Loop until no more records to move (handles concurrent modifications)
+    # Safety counter prevents infinite loops from unexpected edge cases
+    max_iterations = DocumentAttendee.where(attendee_id: source.id).count + 10
+    iterations = 0
+
     loop do
+      iterations += 1
+      if iterations > max_iterations
+        raise "Merge loop exceeded maximum iterations (#{max_iterations}) - possible infinite loop"
+      end
+
       da = DocumentAttendee.find_by(attendee_id: source.id)
       break unless da
 
@@ -62,7 +71,7 @@ class AttendeeMerger
   end
 
   def mark_source_as_merged
-    source.update!(merged_into: target)
+    source.update!(merged_into: target, merged_at: Time.current)
   end
 
   def update_target_dates_and_counts
