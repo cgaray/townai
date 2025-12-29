@@ -7,21 +7,26 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
     DocumentAttendee.where(document: @complete_doc).delete_all
   end
 
-  test "link_attendees creates new attendees from document metadata" do
-    # Clear existing attendees for clean test
+  test "link_attendees creates new attendees and people from document metadata" do
+    # Clear existing attendees for clean test (order matters for foreign keys)
     DocumentAttendee.delete_all
     Attendee.delete_all
+    Person.delete_all
 
     linker = AttendeeLinker.new(@complete_doc)
+    result = linker.link_attendees
 
-    assert_difference "Attendee.count", 2 do
-      assert_difference "DocumentAttendee.count", 2 do
-        assert linker.link_attendees
-      end
-    end
-
+    assert result, "link_attendees should succeed: #{linker.errors.inspect}"
     assert_equal 2, linker.created_count
     assert_equal 0, linker.linked_count
+    assert_equal 2, Attendee.count
+    assert_equal 2, Person.count
+    assert_equal 2, DocumentAttendee.count
+
+    # Each attendee should have a Person
+    Attendee.all.each do |attendee|
+      assert_not_nil attendee.person
+    end
   end
 
   test "link_attendees links to existing attendees" do
@@ -87,13 +92,17 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
   test "link_attendees stores role and status" do
     DocumentAttendee.delete_all
     Attendee.delete_all
+    Person.delete_all
 
     linker = AttendeeLinker.new(@complete_doc)
-    linker.link_attendees
+    result = linker.link_attendees
+    assert result, "link_attendees should succeed: #{linker.errors.inspect}"
 
     # John Smith is chair, present
     john = Attendee.find_by(normalized_name: "john smith")
+    assert_not_nil john, "Should find John Smith attendee"
     da = DocumentAttendee.find_by(attendee: john, document: @complete_doc)
+    assert_not_nil da, "Should find DocumentAttendee for John Smith"
 
     assert_equal "chair", da.role
     assert_equal "present", da.status

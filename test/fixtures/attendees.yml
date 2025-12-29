@@ -1,58 +1,40 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-# Use fixed dates for test stability
 
 john_smith_finance:
   name: "John Smith"
   normalized_name: "john smith"
-  primary_governing_body: "Finance Committee"
-  governing_bodies: <%= ["Finance Committee"].to_json %>
-  first_seen_at: "2024-09-01"
-  last_seen_at: "2024-11-15"
-  document_appearances_count: 5
+  governing_body: "Finance Committee"
+  person: john_smith
 
 jane_doe_finance:
   name: "Jane Doe"
   normalized_name: "jane doe"
-  primary_governing_body: "Finance Committee"
-  governing_bodies: <%= ["Finance Committee"].to_json %>
-  first_seen_at: "2024-10-01"
-  last_seen_at: "2024-11-15"
-  document_appearances_count: 3
+  governing_body: "Finance Committee"
+  person: jane_doe
 
 alice_johnson_conservation:
   name: "Alice Johnson"
   normalized_name: "alice johnson"
-  primary_governing_body: "Conservation Commission"
-  governing_bodies: <%= ["Conservation Commission"].to_json %>
-  first_seen_at: "2024-06-01"
-  last_seen_at: "2024-12-20"
-  document_appearances_count: 10
+  governing_body: "Conservation Commission"
+  person: alice_johnson
 
 # Same name as john_smith_finance but different governing body
 john_smith_planning:
   name: "John Smith"
   normalized_name: "john smith"
-  primary_governing_body: "Planning Board"
-  governing_bodies: <%= ["Planning Board"].to_json %>
-  first_seen_at: "2024-08-01"
-  last_seen_at: "2024-12-10"
-  document_appearances_count: 4
+  governing_body: "Planning Board"
+  person: john_smith_planning_person
 
 # Similar name to John Smith (for duplicate detection testing)
 jon_smith_finance:
   name: "Jon Smith"
   normalized_name: "jon smith"
-  primary_governing_body: "Finance Committee"
-  governing_bodies: <%= ["Finance Committee"].to_json %>
-  first_seen_at: "2024-11-01"
-  last_seen_at: "2024-11-01"
-  document_appearances_count: 1
+  governing_body: "Finance Committee"
+  person: jon_smith
 
-# Merged attendee
-merged_attendee:
+# Example of an attendee that could be merged with john_smith_finance
+j_smith_finance:
   name: "J. Smith"
   normalized_name: "j smith"
-  primary_governing_body: "Finance Committee"
-  governing_bodies: <%= ["Finance Committee"].to_json %>
-  merged_into: john_smith_finance
-  document_appearances_count: 0
+  governing_body: "Finance Committee"
+  person: j_smith

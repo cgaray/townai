@@ -93,10 +93,10 @@
                 <% end %>
               </li>
               <li>
-                <%= link_to attendees_path, class: "flex items-center gap-3 px-3 py-2.5 rounded-lg menu-item-hover font-medium #{request.path.start_with?('/attendees') ? 'bg-primary/10 text-primary' : 'text-base-content/70 hover:text-base-content'}" do %>
+                <%= link_to people_path, class: "flex items-center gap-3 px-3 py-2.5 rounded-lg menu-item-hover font-medium #{request.path.start_with?('/people') ? 'bg-primary/10 text-primary' : 'text-base-content/70 hover:text-base-content'}" do %>
                   <%= icon("users", size: "w-5 h-5") %>
-                  <span>Attendees</span>
-                  <span class="ml-auto badge badge-sm badge-ghost"><%= Attendee.active.count rescue 0 %></span>
+                  <span>People</span>
+                  <span class="ml-auto badge badge-sm badge-ghost"><%= Person.count rescue 0 %></span>
                 <% end %>
               </li>
             </ul>
