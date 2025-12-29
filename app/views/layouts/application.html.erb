@@ -92,6 +92,13 @@
                   <span class="ml-auto badge badge-sm badge-ghost"><%= Document.count rescue 0 %></span>
                 <% end %>
               </li>
+              <li>
+                <%= link_to people_path, class: "flex items-center gap-3 px-3 py-2.5 rounded-lg menu-item-hover font-medium #{request.path.start_with?('/people') ? 'bg-primary/10 text-primary' : 'text-base-content/70 hover:text-base-content'}" do %>
+                  <%= icon("users", size: "w-5 h-5") %>
+                  <span>People</span>
+                  <span class="ml-auto badge badge-sm badge-ghost"><%= Person.count rescue 0 %></span>
+                <% end %>
+              </li>
             </ul>
           </div>
 

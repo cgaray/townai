@@ -1,0 +1,77 @@
+<%# app/views/people/index.html.erb %>
+<div class="space-y-6">
+  <%# Header %>
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-extrabold tracking-tight flex items-center gap-3">
+        <%= icon("users", size: "w-7 h-7", class: "text-primary") %>
+        <span class="text-gradient-primary">People</span>
+      </h1>
+      <p class="text-base-content/60 mt-1">
+        <%= @people.size %> people tracked from meeting documents
+      </p>
+    </div>
+  </div>
+
+  <%# People Grid %>
+  <% if @people.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <% @people.each do |person| %>
+        <%= link_to person_path(person), class: "card bg-base-100 border border-base-200 shadow-sm card-hover" do %>
+          <div class="card-body p-4">
+            <div class="flex items-start gap-3">
+              <div class="avatar-initials avatar-initials-lg <%= avatar_color_class(person.name) %>">
+                <%= avatar_initials(person.name) %>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-base truncate"><%= person.name %></h3>
+                <p class="text-xs text-base-content/60 truncate mt-0.5">
+                  <%= person.primary_governing_body %>
+                </p>
+
+                <div class="flex flex-wrap items-center gap-2 mt-2">
+                  <span class="badge badge-ghost badge-sm gap-1">
+                    <%= icon("document", size: "w-3 h-3") %>
+                    <%= person.document_appearances_count %> doc<%= person.document_appearances_count == 1 ? "" : "s" %>
+                  </span>
+
+                  <% if person.roles_held.any? %>
+                    <% person.roles_held.first(2).each do |role| %>
+                      <%= role_badge(role) %>
+                    <% end %>
+                  <% end %>
+                </div>
+
+                <% if person.first_seen_at && person.last_seen_at %>
+                  <p class="text-xs text-base-content/50 mt-2">
+                    <% if person.first_seen_at == person.last_seen_at %>
+                      <%= person.first_seen_at.strftime("%b %Y") %>
+                    <% else %>
+                      <%= person.first_seen_at.strftime("%b %Y") %> - <%= person.last_seen_at.strftime("%b %Y") %>
+                    <% end %>
+                  </p>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="card bg-gradient-to-br from-base-200/50 to-base-200 border border-base-300">
+      <div class="card-body items-center text-center py-16">
+        <div class="icon-circle icon-circle-xl icon-circle-default mb-4">
+          <%= icon("users", size: "w-10 h-10") %>
+        </div>
+        <h2 class="text-xl font-bold">No People Yet</h2>
+        <p class="text-base-content/60 max-w-md mt-2">
+          People will appear here as documents are processed. Each attendee from meeting minutes and agendas will be tracked.
+        </p>
+        <%= link_to documents_path, class: "btn btn-primary mt-4" do %>
+          <%= icon("document", size: "w-4 h-4") %>
+          View Documents
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

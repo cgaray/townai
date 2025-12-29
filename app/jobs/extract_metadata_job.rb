@@ -65,6 +65,14 @@ class ExtractMetadataJob < ApplicationJob
 
       begin
         document.update!(extracted_metadata: normalized, status: :complete)
+
+        # Link attendees after successful extraction
+        linker = AttendeeLinker.new(document)
+        if linker.link_attendees
+          Rails.logger.info("AttendeeLinker: created=#{linker.created_count}, linked=#{linker.linked_count}")
+        else
+          Rails.logger.warn("AttendeeLinker failed for document #{document.id}: #{linker.errors.join(', ')}")
+        end
       rescue => e
         # API call succeeded but document update failed - don't re-record as error
         document.update!(status: :failed)
@@ -185,8 +193,8 @@ class ExtractMetadataJob < ApplicationJob
       next unless a.is_a?(Hash)
       {
         name: a["name"].to_s.presence,
-        role: validate_enum(a["role"], %w[member chair clerk staff public]),
-        status: validate_enum(a["status"], %w[present absent remote]),
+        role: a["role"].to_s.strip.presence,  # Free-form, preserve as-is
+        status: validate_enum(a["status"], DocumentAttendee::STATUSES),
         source_text: a["source_text"].to_s.presence
       }.compact
     end.compact.reject(&:empty?)
