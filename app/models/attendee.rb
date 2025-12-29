@@ -117,12 +117,14 @@ class Attendee < ApplicationRecord
 
   # Get co-attendees (people who have appeared in meetings with this attendee)
   def co_attendees(limit: 10)
+    arel = DocumentAttendee.arel_table
+
     Attendee.active
             .joins(:document_attendees)
             .where(document_attendees: { document_id: document_ids })
             .where.not(id: id)
             .group(:id)
-            .order(Arel.sql("COUNT(*) DESC"))
+            .order(arel[:id].count.desc)
             .limit(limit)
   end
 
