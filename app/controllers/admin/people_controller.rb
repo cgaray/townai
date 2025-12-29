@@ -7,7 +7,7 @@ class Admin::PeopleController < ApplicationController
     source = Person.find(params[:source_id])
     target = Person.find(params[:target_id])
 
-    merger = ::AttendeeMerger.new(source: source, target: target)
+    merger = ::PersonMerger.new(source: source, target: target)
 
     if merger.merge!
       redirect_to person_path(target), notice: "Successfully merged #{source.name} into #{target.name}"

@@ -72,7 +72,7 @@ class PersonTest < ActiveSupport::TestCase
     john = people(:john_smith)
     duplicates = john.potential_duplicates
 
-    same_name = duplicates[:same_name_different_body]
+    same_name = duplicates[:same_name]
     assert_includes same_name, people(:john_smith_planning_person)
   end
 

@@ -197,7 +197,7 @@
       <% end %>
 
       <%# Potential Duplicates %>
-      <% same_name = @potential_duplicates[:same_name_different_body] %>
+      <% same_name = @potential_duplicates[:same_name] %>
       <% similar_name = @potential_duplicates[:similar_name] %>
       <% if same_name.any? || similar_name.any? %>
         <div class="space-y-3">

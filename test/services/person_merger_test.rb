@@ -1,6 +1,6 @@
 require "test_helper"
 
-class AttendeeMergerTest < ActiveSupport::TestCase
+class PersonMergerTest < ActiveSupport::TestCase
   setup do
     @source_person = people(:jon_smith)
     @target_person = people(:john_smith)
@@ -14,7 +14,7 @@ class AttendeeMergerTest < ActiveSupport::TestCase
     source_attendee = attendees(:jon_smith_finance)
     original_target_count = @target_person.attendees.count
 
-    merger = AttendeeMerger.new(source: @source_person, target: @target_person)
+    merger = PersonMerger.new(source: @source_person, target: @target_person)
     assert merger.merge!
 
     source_attendee.reload
@@ -27,7 +27,7 @@ class AttendeeMergerTest < ActiveSupport::TestCase
   test "merge deletes source person" do
     source_id = @source_person.id
 
-    merger = AttendeeMerger.new(source: @source_person, target: @target_person)
+    merger = PersonMerger.new(source: @source_person, target: @target_person)
     merger.merge!
 
     assert_nil Person.find_by(id: source_id)
@@ -48,7 +48,7 @@ class AttendeeMergerTest < ActiveSupport::TestCase
     original_source_count = @source_person.document_appearances_count
     original_target_count = @target_person.document_appearances_count
 
-    merger = AttendeeMerger.new(source: @source_person, target: @target_person)
+    merger = PersonMerger.new(source: @source_person, target: @target_person)
     merger.merge!
 
     @target_person.reload
@@ -57,21 +57,21 @@ class AttendeeMergerTest < ActiveSupport::TestCase
   end
 
   test "merge fails when source is nil" do
-    merger = AttendeeMerger.new(source: nil, target: @target_person)
+    merger = PersonMerger.new(source: nil, target: @target_person)
 
     assert_not merger.merge!
     assert_includes merger.errors, "Source person not found"
   end
 
   test "merge fails when target is nil" do
-    merger = AttendeeMerger.new(source: @source_person, target: nil)
+    merger = PersonMerger.new(source: @source_person, target: nil)
 
     assert_not merger.merge!
     assert_includes merger.errors, "Target person not found"
   end
 
   test "merge fails when source equals target" do
-    merger = AttendeeMerger.new(source: @source_person, target: @source_person)
+    merger = PersonMerger.new(source: @source_person, target: @source_person)
 
     assert_not merger.merge!
     assert_includes merger.errors, "Cannot merge a person into themselves"

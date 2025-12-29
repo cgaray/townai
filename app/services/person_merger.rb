@@ -3,7 +3,7 @@
 # Merges two Person records by moving all attendees from source to target.
 # The source Person is deleted after the merge.
 # This is reversible via PersonUnmerger.
-class AttendeeMerger
+class PersonMerger
   attr_reader :source, :target, :errors
 
   def initialize(source:, target:)

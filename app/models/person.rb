@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Person < ApplicationRecord
-  has_many :attendees, dependent: :nullify
+  has_many :attendees, dependent: :restrict_with_error
   has_many :document_attendees, through: :attendees
   has_many :documents, -> { distinct }, through: :document_attendees
 
@@ -56,7 +56,7 @@ class Person < ApplicationRecord
   end
 
   # Find potential duplicate people for merge suggestions
-  # Returns a hash with :same_name_different_body and :similar_name arrays
+  # Returns a hash with :same_name and :similar_name arrays
   def potential_duplicates
     same_name = Person
       .where(normalized_name: normalized_name)
@@ -74,7 +74,7 @@ class Person < ApplicationRecord
       .select { |p| Attendee.levenshtein_distance(normalized_name, p.normalized_name) <= 2 }
 
     {
-      same_name_different_body: same_name,
+      same_name: same_name,
       similar_name: similar_name
     }
   end
