@@ -230,11 +230,12 @@ class ExtractMetadataJobTest < ActiveJob::TestCase
 
   test "extraction_prompt includes source_text instructions" do
     job = ExtractMetadataJob.new
-    prompt = job.send(:extraction_prompt)
+    prompt = job.send(:extraction_prompt, "Sample document text")
 
     assert_includes prompt, "source_text"
     assert_includes prompt, "verbatim"
     assert_includes prompt, "EXACT original text"
+    assert_includes prompt, "Sample document text"
   end
 
   # Record API call tests

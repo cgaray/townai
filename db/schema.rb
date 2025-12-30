@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_29_125336) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_30_122151) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -85,6 +85,20 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_29_125336) do
     t.index ["document_id"], name: "index_document_attendees_on_document_id"
   end
 
+  create_table "document_sections", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "document_id", null: false
+    t.integer "page_end", null: false
+    t.integer "page_start", null: false
+    t.integer "position", default: 0, null: false
+    t.string "section_type", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["document_id", "position"], name: "index_document_sections_on_document_id_and_position"
+    t.index ["document_id"], name: "index_document_sections_on_document_id"
+    t.index ["section_type"], name: "index_document_sections_on_section_type"
+  end
+
   create_table "documents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "extracted_metadata"
@@ -113,4 +127,5 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_29_125336) do
   add_foreign_key "attendees", "people"
   add_foreign_key "document_attendees", "attendees"
   add_foreign_key "document_attendees", "documents"
+  add_foreign_key "document_sections", "documents"
 end
