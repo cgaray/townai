@@ -11,17 +11,23 @@ class Person < ApplicationRecord
 
   scope :by_appearances, -> { order(document_appearances_count: :desc, name: :asc) }
 
-  # Get all governing bodies this person has been seen in
+  # Get all governing bodies this person has been seen in (as GoverningBody records)
   def governing_bodies
-    attendees.pluck(:governing_body).uniq.compact
+    GoverningBody.joins(:attendees).where(attendees: { person_id: id }).distinct
+  end
+
+  # Get all governing body names (extracted strings) for display
+  def governing_body_names
+    attendees.pluck(:governing_body_extracted).uniq.compact
   end
 
   # Get the most common governing body (primary affiliation)
   def primary_governing_body
     attendees
-      .group(:governing_body)
+      .joins(:governing_body)
+      .group("governing_bodies.id")
       .order(Arel.sql("COUNT(*) DESC"))
-      .pick(:governing_body)
+      .first&.governing_body
   end
 
   # Get date range from document metadata

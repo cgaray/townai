@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_30_182934) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_30_184307) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -62,13 +62,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_182934) do
 
   create_table "attendees", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "governing_body", null: false
+    t.string "governing_body_extracted", null: false
+    t.integer "governing_body_id"
     t.string "name", null: false
     t.string "normalized_name", null: false
     t.integer "person_id"
     t.datetime "updated_at", null: false
+    t.index ["governing_body_id"], name: "index_attendees_on_governing_body_id"
     t.index ["name"], name: "index_attendees_on_name"
-    t.index ["normalized_name", "governing_body"], name: "index_attendees_on_normalized_name_and_governing_body", unique: true
+    t.index ["normalized_name", "governing_body_extracted"], name: "idx_on_normalized_name_governing_body_extracted_9e815d8a81", unique: true
     t.index ["person_id"], name: "index_attendees_on_person_id"
   end
 
@@ -88,12 +90,24 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_182934) do
   create_table "documents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "extracted_metadata"
+    t.integer "governing_body_id"
     t.text "raw_text"
     t.string "source_file_hash"
     t.string "source_file_name"
     t.integer "status", default: 0
     t.datetime "updated_at", null: false
+    t.index ["governing_body_id"], name: "index_documents_on_governing_body_id"
     t.index ["source_file_hash"], name: "index_documents_on_source_file_hash", unique: true
+  end
+
+  create_table "governing_bodies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "documents_count", default: 0
+    t.string "name", null: false
+    t.string "normalized_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_governing_bodies_on_name"
+    t.index ["normalized_name"], name: "index_governing_bodies_on_normalized_name", unique: true
   end
 
   create_table "people", force: :cascade do |t|
@@ -110,7 +124,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_182934) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "api_calls", "documents"
+  add_foreign_key "attendees", "governing_bodies"
   add_foreign_key "attendees", "people"
   add_foreign_key "document_attendees", "attendees"
   add_foreign_key "document_attendees", "documents"
+  add_foreign_key "documents", "governing_bodies"
 end

@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :governing_bodies, only: [ :index, :show ]
   resources :people, only: [ :index, :show ]
 
   root "documents#index"

@@ -1,0 +1,11 @@
+# frozen_string_literal: true
+
+select_board:
+  name: Select Board
+  normalized_name: select board
+  documents_count: 1
+
+redevelopment_board:
+  name: Redevelopment Board
+  normalized_name: redevelopment board
+  documents_count: 0
