@@ -70,7 +70,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_184307) do
     t.datetime "updated_at", null: false
     t.index ["governing_body_id"], name: "index_attendees_on_governing_body_id"
     t.index ["name"], name: "index_attendees_on_name"
-    t.index ["normalized_name", "governing_body_extracted"], name: "idx_on_normalized_name_governing_body_extracted_9e815d8a81", unique: true
+    t.index ["normalized_name", "governing_body_extracted"], name: "index_attendees_on_normalized_name_and_governing_body_extracted", unique: true
     t.index ["person_id"], name: "index_attendees_on_person_id"
   end
 
