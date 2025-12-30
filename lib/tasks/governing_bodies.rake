@@ -24,7 +24,7 @@ namespace :governing_bodies do
       next if name.blank?
 
       gb = GoverningBody.find_or_create_by_name(name)
-      attendee.update_column(:governing_body_id, gb.id)
+      attendee.update!(governing_body_id: gb.id)
       attendee_count += 1
     end
     puts "  Updated #{attendee_count} attendees"
