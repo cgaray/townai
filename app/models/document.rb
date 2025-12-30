@@ -9,7 +9,13 @@ class Document < ApplicationRecord
 
   def parsed_metadata
     return {} unless extracted_metadata.present?
-    @parsed_metadata ||= JSON.parse(extracted_metadata) rescue {}
+
+    if @parsed_metadata_source != extracted_metadata
+      @parsed_metadata = JSON.parse(extracted_metadata) rescue {}
+      @parsed_metadata_source = extracted_metadata
+    end
+
+    @parsed_metadata
   end
 
   def metadata_field(field)
