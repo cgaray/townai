@@ -10,42 +10,30 @@ class ExtractMetadataJob < ApplicationJob
 
     start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
+    # Extract primary content from PDF (agenda/minutes only, not attachments)
+    primary_text, extraction_info = extract_primary_content(document)
+
+    Rails.logger.info(
+      "ExtractMetadataJob: document=#{document.id} " \
+      "total_pages=#{extraction_info[:total_pages]} " \
+      "primary_pages=#{extraction_info[:primary_content][:page_count]} " \
+      "detection=#{extraction_info[:detection_method]} " \
+      "text_length=#{primary_text.length}"
+    )
+
     client = OpenAI::Client.new(
       access_token: Rails.application.credentials.openrouter_api_key,
       uri_base: "https://openrouter.ai/api/v1/"
     )
 
-    pdf_base64 = nil
-    document.pdf.open do |file|
-      pdf_base64 = Base64.strict_encode64(file.read)
-    end
-
     response = client.chat(
       parameters: {
         model: MODEL,
         max_tokens: 8192,
-        plugins: [
-          {
-            id: "file-parser",
-            pdf: { engine: "pdf-text" }
-          }
-        ],
         usage: { include: true },
         messages: [ {
           role: "user",
-          content: [
-            {
-              type: "file",
-              file: {
-                filename: document.source_file_name,
-                file_data: "data:application/pdf;base64,#{pdf_base64}"
-              }
-            },
-            {
-              type: "text",
-              text: extraction_prompt
-            }
-          ]
+          content: extraction_prompt(primary_text)
         } ]
       }
     )
@@ -73,7 +61,7 @@ class ExtractMetadataJob < ApplicationJob
         else
           Rails.logger.warn("AttendeeLinker failed for document #{document.id}: #{linker.errors.join(', ')}")
         end
-      rescue => e
+      rescue StandardError => e
         # API call succeeded but document update failed - don't re-record as error
         document.update!(status: :failed)
         raise "Document update failed after successful API call: #{e.message}"
@@ -83,22 +71,37 @@ class ExtractMetadataJob < ApplicationJob
       document.update!(status: :failed)
       raise "Failed to parse metadata: #{raw_response.to_s.first(500)}"
     end
-  rescue ActiveRecord::RecordNotFound => e
-    # Document not found - no API call was made
-    raise e
-  rescue => e
+  rescue ActiveRecord::RecordNotFound
+    # Document not found - no API call was made, just re-raise
+    raise
+  rescue StandardError => e
     # Only record API error if we haven't already recorded the call
     # (i.e., error occurred before or during API call, not after)
-    if !defined?(usage) || usage.empty?
+    if usage.nil? || usage.empty?
       record_api_call(document, {}, response_time_ms || 0, "error", e.message) if document
     end
     document&.update!(status: :failed) if document&.persisted? && !document&.failed?
-    raise e
+    raise
   end
 
   private
 
-  def extraction_prompt
+  # Extract primary content from PDF (first N pages)
+  def extract_primary_content(document)
+    document.pdf.open do |file|
+      extractor = PdfSectionExtractor.new(file.path)
+      text = extractor.extract_primary_text
+      info = extractor.analyze
+
+      # If no text extracted (e.g., scanned PDF), fall back to empty string
+      # The LLM will fail gracefully
+      text = "" if text.blank?
+
+      [ text, info ]
+    end
+  end
+
+  def extraction_prompt(document_text)
     <<~PROMPT
       Extract metadata from this town meeting document. Return ONLY valid JSON:
 
@@ -135,6 +138,9 @@ class ExtractMetadataJob < ApplicationJob
       - source_text fields must contain the EXACT original text from the document, not paraphrased
       - attendees array can be empty if not listed
       - Include as much relevant source text as possible for each item
+
+      --- DOCUMENT TEXT ---
+      #{document_text}
     PROMPT
   end
 
@@ -152,7 +158,7 @@ class ExtractMetadataJob < ApplicationJob
       status: status,
       error_message: error_message&.first(1000)
     )
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error("Failed to record API call: #{e.message}")
   end
 

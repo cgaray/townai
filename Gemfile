@@ -71,3 +71,7 @@ gem "ruby-openai", "~> 8.3"
 
 
 gem "tailwindcss-rails", "~> 4.4"
+
+gem "pdf-reader", "~> 2.15"
+
+gem "pagy", "~> 9.0"

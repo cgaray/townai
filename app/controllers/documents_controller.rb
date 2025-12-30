@@ -1,7 +1,13 @@
 class DocumentsController < ApplicationController
+  # SQL fragment for sorting: complete first, then failed, then pending/processing
+  # Enum values: pending=0, extracting_text=1, extracting_metadata=2, complete=3, failed=4
+  STATUS_SORT_SQL = "CASE status WHEN 3 THEN 0 WHEN 4 THEN 1 ELSE 2 END".freeze
+
   def index
     @status_counts = Document.group(:status).count
-    @documents = Document.order(created_at: :desc).limit(100)
+    # Show complete documents first, then failed, then pending
+    documents = Document.order(Arel.sql(STATUS_SORT_SQL), created_at: :desc)
+    @pagy, @documents = pagy(documents, limit: 24)
   end
 
   def show
