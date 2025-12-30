@@ -61,7 +61,7 @@ class ExtractMetadataJob < ApplicationJob
         else
           Rails.logger.warn("AttendeeLinker failed for document #{document.id}: #{linker.errors.join(', ')}")
         end
-      rescue => e
+      rescue StandardError => e
         # API call succeeded but document update failed - don't re-record as error
         document.update!(status: :failed)
         raise "Document update failed after successful API call: #{e.message}"
@@ -71,17 +71,17 @@ class ExtractMetadataJob < ApplicationJob
       document.update!(status: :failed)
       raise "Failed to parse metadata: #{raw_response.to_s.first(500)}"
     end
-  rescue ActiveRecord::RecordNotFound => e
-    # Document not found - no API call was made
-    raise e
-  rescue => e
+  rescue ActiveRecord::RecordNotFound
+    # Document not found - no API call was made, just re-raise
+    raise
+  rescue StandardError => e
     # Only record API error if we haven't already recorded the call
     # (i.e., error occurred before or during API call, not after)
     if usage.nil? || usage.empty?
       record_api_call(document, {}, response_time_ms || 0, "error", e.message) if document
     end
     document&.update!(status: :failed) if document&.persisted? && !document&.failed?
-    raise e
+    raise
   end
 
   private
@@ -158,7 +158,7 @@ class ExtractMetadataJob < ApplicationJob
       status: status,
       error_message: error_message&.first(1000)
     )
-  rescue => e
+  rescue StandardError => e
     Rails.logger.error("Failed to record API call: #{e.message}")
   end
 

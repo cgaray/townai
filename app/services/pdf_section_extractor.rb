@@ -53,7 +53,7 @@ class PdfSectionExtractor
       begin
         page = reader.pages[page_num - 1]
         text_parts << page.text.to_s
-      rescue => e
+      rescue StandardError => e
         Rails.logger.warn("Failed to extract text from page #{page_num}: #{e.message}")
       end
     end

@@ -52,18 +52,19 @@ class PdfSectionExtractorTest < ActiveSupport::TestCase
     assert analysis[:primary_content][:page_count] <= PdfSectionExtractor::MAX_PAGES
   end
 
+  # Optional integration test - requires sample PDF with bookmarks in tmp/samples/
+  # This test is skipped in CI and standard test runs where the file doesn't exist
   test "uses outline detection when PDF has Meeting Agenda bookmark" do
-    # Test with a real PDF that has outlines if available
     pdf_path = Rails.root.join("tmp/samples/Agenda_2014_12_15_Meeting(96).pdf")
-    skip "Outline PDF not found in tmp/samples" unless File.exist?(pdf_path)
+    skip "Outline PDF not found in tmp/samples (optional integration test)" unless File.exist?(pdf_path)
 
     extractor = PdfSectionExtractor.new(pdf_path)
     analysis = extractor.analyze
 
-    # This specific PDF should have an outline
-    if analysis[:detection_method] == :outline
-      assert analysis[:primary_content][:start_page] >= 1
-      assert analysis[:primary_content][:end_page] <= extractor.page_count
-    end
+    # This specific PDF has bookmarks, so outline detection should be used
+    assert_equal :outline, analysis[:detection_method], "Expected outline detection for PDF with bookmarks"
+    assert analysis[:primary_content][:start_page] >= 1
+    assert analysis[:primary_content][:end_page] <= extractor.page_count
+    assert analysis[:primary_content][:end_page] <= PdfSectionExtractor::MAX_PAGES
   end
 end
