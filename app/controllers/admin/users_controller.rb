@@ -13,7 +13,8 @@ module Admin
     end
 
     def create
-      @user = User.new(user_params)
+      @user = User.new
+      assign_user_attributes(@user)
 
       if @user.save
         # Send invitation email with magic link
@@ -33,7 +34,8 @@ module Admin
         return
       end
 
-      if @user.update(user_params)
+      assign_user_attributes(@user)
+      if @user.save
         redirect_to admin_users_path, notice: "User updated successfully."
       else
         render :edit, status: :unprocessable_entity
@@ -60,10 +62,9 @@ module Admin
       @user = User.find(params[:id])
     end
 
-    def user_params
-      # :admin is permitted because this controller is protected by require_admin
-      # Only existing admins can create/modify other admins
-      params.require(:user).permit(:email, :admin)
+    def assign_user_attributes(user)
+      user.email = params[:user][:email] if params[:user].key?(:email)
+      user.admin = ActiveModel::Type::Boolean.new.cast(params[:user][:admin]) if params[:user].key?(:admin)
     end
   end
 end
