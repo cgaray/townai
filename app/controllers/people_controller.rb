@@ -4,11 +4,13 @@ class PeopleController < ApplicationController
   include MeetingTimeline
 
   def index
-    @people = Person
-      .includes(attendees: :governing_body)
-      .includes(:document_attendees)
-      .by_appearances
-      .limit(100)
+    @pagy, @people = pagy(
+      Person
+        .includes(attendees: :governing_body)
+        .includes(:document_attendees)
+        .by_appearances,
+      limit: 24
+    )
   end
 
   def show
