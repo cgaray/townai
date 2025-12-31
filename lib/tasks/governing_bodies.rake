@@ -12,7 +12,7 @@ namespace :governing_bodies do
       next if name.blank?
 
       gb = GoverningBody.find_or_create_by_name(name)
-      doc.update_column(:governing_body_id, gb.id)
+      doc.update!(governing_body: gb)
       doc_count += 1
     end
     puts "  Updated #{doc_count} documents"
