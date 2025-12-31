@@ -32,10 +32,10 @@ class GoverningBodiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: /Meeting History/
   end
 
-  test "show displays people section" do
+  test "show displays members section" do
     gb = governing_bodies(:select_board)
     get governing_body_path(gb)
-    assert_select "h2", text: /People/
+    assert_select "h3", text: /Members/
   end
 
   test "show returns 404 for non-existent governing body" do
