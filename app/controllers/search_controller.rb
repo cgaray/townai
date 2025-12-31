@@ -80,7 +80,7 @@ class SearchController < ApplicationController
       governing_bodies_count: @current_town.governing_bodies.count,
       people_count: @current_town.people.count,
       complete_count: @current_town.documents.complete.count,
-      processing_count: @current_town.documents.where(status: [:extracting_text, :extracting_metadata]).count
+      processing_count: @current_town.documents.where(status: [ :extracting_text, :extracting_metadata ]).count
     }
   end
   helper_method :town_stats

@@ -7,6 +7,6 @@ class ChangeGoverningBodyUniqueIndexToIncludeTown < ActiveRecord::Migration[8.1]
 
     # Add a new composite unique index on (normalized_name, town_id)
     # This allows the same governing body name in different towns
-    add_index :governing_bodies, [:normalized_name, :town_id], unique: true
+    add_index :governing_bodies, [ :normalized_name, :town_id ], unique: true
   end
 end

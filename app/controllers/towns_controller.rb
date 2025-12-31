@@ -18,7 +18,7 @@ class TownsController < ApplicationController
       governing_bodies_count: @governing_bodies_count,
       people_count: @people_count,
       complete_count: @town.documents.complete.count,
-      processing_count: @town.documents.where(status: [:extracting_text, :extracting_metadata]).count
+      processing_count: @town.documents.where(status: [ :extracting_text, :extracting_metadata ]).count
     }
   end
 

@@ -212,11 +212,11 @@ module Seeds
     def build_attendees_data(attendees)
       attendees.map.with_index do |attendee, i|
         role = case i
-               when 0 then "chair"
-               when 1 then "vice-chair"
-               when 2 then "clerk"
-               else "member"
-               end
+        when 0 then "chair"
+        when 1 then "vice-chair"
+        when 2 then "clerk"
+        else "member"
+        end
         status = STATUSES.sample
 
         {
@@ -315,7 +315,7 @@ module Seeds
 
     def random_time
       hour = rand(17..19)
-      minute = [0, 30].sample
+      minute = [ 0, 30 ].sample
       format("%02d:%02d", hour, minute)
     end
 

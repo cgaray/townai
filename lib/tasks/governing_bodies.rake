@@ -59,5 +59,4 @@ namespace :governing_bodies do
       puts "  #{gb.name}: #{gb.documents_count} documents"
     end
   end
-
 end
