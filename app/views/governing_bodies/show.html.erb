@@ -42,11 +42,8 @@
                  icon_class: "text-primary",
                  subtitle_type: :appearances,
                  pagy: @pagy_people,
-                 url_builder: ->(page) { governing_body_path(@governing_body, people_page: page) } %>
-
-      <% if @people.empty? %>
-        <div class="text-base-content/50 italic">No members recorded yet</div>
-      <% end %>
+                 url_builder: ->(page) { governing_body_path(@governing_body, people_page: page) },
+                 empty_message: "No members recorded yet" %>
     </div>
   </div>
 </div>

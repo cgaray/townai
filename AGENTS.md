@@ -280,6 +280,17 @@ Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, 
 <%# Stat card for dashboards %>
 <%= render "shared/stat_card", icon_name: "calendar", title: "This Month", value: "$1.23", subtitle: "..." %>
 
+<%# People list with optional pagination %>
+<%# subtitle_type: :governing_body (show org name) or :appearances (show count) %>
+<%= render "shared/people_list",
+           people: @people,
+           title: "Members",
+           icon_name: "users",
+           subtitle_type: :appearances,
+           pagy: @pagy,
+           url_builder: ->(page) { path(page: page) },
+           empty_message: "No members yet" %>
+
 <%# Search modal (included in application layout) %>
 <%# Triggered by Cmd/Ctrl+K keyboard shortcut %>
 ```
