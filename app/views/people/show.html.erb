@@ -88,7 +88,7 @@
                       <div class="min-w-0">
                         <p class="font-medium text-sm truncate"><%= attendee.name %></p>
                         <p class="text-xs text-base-content/50 truncate">
-                          <%= attendee.governing_body&.name || attendee.governing_body_extracted %> &middot; <%= attendee.document_attendees.count %> doc<%= attendee.document_attendees.count == 1 ? "" : "s" %>
+                          <%= attendee.governing_body&.name || attendee.governing_body_extracted %> &middot; <%= attendee.document_attendees.size %> doc<%= attendee.document_attendees.size == 1 ? "" : "s" %>
                         </p>
                       </div>
                     </div>

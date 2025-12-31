@@ -27,12 +27,25 @@ class Person < ApplicationRecord
   end
 
   # Get the most common governing body (primary affiliation)
+  # Uses preloaded data when available to avoid N+1 queries
   def primary_governing_body
-    attendees
-      .joins(:governing_body)
-      .group("governing_bodies.id")
-      .order(Arel.sql("COUNT(*) DESC"))
-      .first&.governing_body
+    return @primary_governing_body if defined?(@primary_governing_body)
+
+    @primary_governing_body = if attendees.loaded?
+      # Use in-memory calculation when preloaded
+      attendees
+        .select(&:governing_body)
+        .group_by(&:governing_body)
+        .max_by { |_, v| v.size }
+        &.first
+    else
+      # Fall back to database query
+      attendees
+        .joins(:governing_body)
+        .group("governing_bodies.id")
+        .order(Arel.sql("COUNT(*) DESC"))
+        .first&.governing_body
+    end
   end
 
   # Get date range from document metadata
@@ -54,10 +67,12 @@ class Person < ApplicationRecord
   end
 
   # Find people who frequently appear in the same documents
+  # Includes associations to avoid N+1 when displaying primary_governing_body
   def co_people(limit: 10)
     doc_ids_subquery = document_attendees.select(:document_id)
 
     Person
+      .includes(attendees: :governing_body)
       .joins(attendees: :document_attendees)
       .where(document_attendees: { document_id: doc_ids_subquery })
       .where.not(id: id)
@@ -68,8 +83,10 @@ class Person < ApplicationRecord
 
   # Find potential duplicate people for merge suggestions
   # Returns a hash with :same_name and :similar_name arrays
+  # Includes associations to avoid N+1 when displaying primary_governing_body
   def potential_duplicates
     same_name = Person
+      .includes(attendees: :governing_body)
       .where(normalized_name: normalized_name)
       .where.not(id: id)
 
@@ -78,6 +95,7 @@ class Person < ApplicationRecord
     max_length = normalized_name.length + 2
 
     similar_name = Person
+      .includes(attendees: :governing_body)
       .where.not(id: id)
       .where.not(normalized_name: normalized_name)
       .where("LENGTH(normalized_name) BETWEEN ? AND ?", min_length, max_length)
@@ -98,19 +116,18 @@ class Person < ApplicationRecord
   private
 
   def compute_seen_dates
-    dates = []
-
-    documents.find_each do |doc|
+    dates = documents.filter_map do |doc|
       date_str = doc.metadata_field("meeting_date")
       next if date_str.blank?
 
       begin
-        dates << Date.parse(date_str)
+        Date.parse(date_str)
       rescue ArgumentError, TypeError
-        # Skip invalid dates
+        nil
       end
     end
 
-    { first: dates.min, last: dates.max }
+    first, last = dates.minmax
+    { first: first, last: last }
   end
 end

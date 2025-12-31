@@ -4,12 +4,16 @@ class PeopleController < ApplicationController
   include MeetingTimeline
 
   def index
-    @people = Person.by_appearances.limit(100)
+    @people = Person
+      .includes(attendees: :governing_body)
+      .includes(:document_attendees)
+      .by_appearances
+      .limit(100)
   end
 
   def show
     @person = Person.find(params[:id])
-    @attendees = @person.attendees.order(:name)
+    @attendees = @person.attendees.includes(:governing_body, :document_attendees).order(:name)
     @document_attendees = @person.document_attendees
                                   .includes(:attendee, document: :pdf_attachment)
                                   .order("documents.created_at DESC")

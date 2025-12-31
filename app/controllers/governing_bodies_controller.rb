@@ -15,7 +15,8 @@ class GoverningBodiesController < ApplicationController
       .find(params[:id])
 
     # Build hierarchical timeline: year → month → day → documents
-    @meetings_by_year = build_meetings_hierarchy(@governing_body.documents.complete)
+    # Eager load pdf attachment to avoid N+1 queries
+    @meetings_by_year = build_meetings_hierarchy(@governing_body.documents.complete.with_attached_pdf)
 
     @pagy_people, @people = pagy(
       @governing_body.people.by_appearances,

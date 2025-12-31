@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_30_184307) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_31_024801) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -98,6 +98,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_30_184307) do
     t.datetime "updated_at", null: false
     t.index ["governing_body_id"], name: "index_documents_on_governing_body_id"
     t.index ["source_file_hash"], name: "index_documents_on_source_file_hash", unique: true
+    t.index ["status"], name: "index_documents_on_status"
   end
 
   create_table "governing_bodies", force: :cascade do |t|

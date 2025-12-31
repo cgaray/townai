@@ -6,12 +6,17 @@ class DocumentsController < ApplicationController
   def index
     @status_counts = Document.group(:status).count
     # Show complete documents first, then failed, then pending
-    documents = Document.order(Arel.sql(STATUS_SORT_SQL), created_at: :desc)
+    # Eager load pdf attachment to avoid N+1 queries
+    documents = Document.with_attached_pdf.order(Arel.sql(STATUS_SORT_SQL), created_at: :desc)
     @pagy, @documents = pagy(documents, limit: 24)
   end
 
   def show
-    @document = Document.find(params[:id])
+    # Eager load document_attendees with their attendees and people to avoid N+1
+    @document = Document
+      .includes(document_attendees: { attendee: :person })
+      .with_attached_pdf
+      .find(params[:id])
   end
 
   def retry

@@ -68,7 +68,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <% if @document.document_attendees.any? %>
                 <%# Display linked attendees with links to their Person %>
-                <% @document.document_attendees.includes(attendee: :person).each do |da| %>
+                <% @document.document_attendees.each do |da| %>
                   <div class="space-y-1">
                     <div class="flex items-center gap-3">
                       <%= link_to person_path(da.attendee.person), class: "flex items-center gap-3 hover:opacity-80 transition-opacity" do %>
