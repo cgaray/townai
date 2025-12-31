@@ -147,7 +147,7 @@
 
     <%# Detect Mac and update keyboard shortcut hints %>
     <script>
-      if (navigator.platform.indexOf('Mac') !== -1) {
+      if (navigator.platform.includes('Mac')) {
         document.querySelectorAll('[data-hotkey-modifier]').forEach(el => {
           el.textContent = 'Cmd';
         });

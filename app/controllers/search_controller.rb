@@ -16,6 +16,12 @@ class SearchController < ApplicationController
       @counts = {}
       @total_count = 0
     end
+  rescue StandardError => e
+    Rails.logger.error("[SearchController] Search error: #{e.message}")
+    @results = []
+    @counts = {}
+    @total_count = 0
+    flash.now[:alert] = "Search encountered an error. Please try a simpler query."
   end
 
   # GET /search/quick - Quick results for modal (JSON)
@@ -36,5 +42,8 @@ class SearchController < ApplicationController
     else
       render json: { results: [], counts: {}, total: 0 }
     end
+  rescue StandardError => e
+    Rails.logger.error("[SearchController] Quick search error: #{e.message}")
+    render json: { results: [], counts: {}, total: 0, error: "Search failed" }
   end
 end

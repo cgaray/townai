@@ -179,8 +179,7 @@ class SearchIndexer
     end
 
     def document_type_label(document)
-      doc_type = document.metadata_field("document_type")
-      case doc_type&.downcase
+      case document.metadata_field("document_type")&.downcase
       when "agenda" then "Agenda"
       when "minutes" then "Minutes"
       else "Document"

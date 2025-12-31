@@ -32,7 +32,7 @@ class Document < ApplicationRecord
   end
 
   def reindex_for_search
-    SearchIndexer.index_document(self)
+    ReindexSearchJob.perform_later("document", id)
   end
 
   def remove_from_search_index

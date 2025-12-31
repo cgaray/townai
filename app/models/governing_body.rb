@@ -31,7 +31,7 @@ class GoverningBody < ApplicationRecord
   private
 
   def reindex_for_search
-    SearchIndexer.index_governing_body(self)
+    ReindexSearchJob.perform_later("governing_body", id)
   end
 
   def remove_from_search_index

@@ -11,6 +11,7 @@
                data-search-target="input"
                data-action="input->search#onInput keydown->search#handleKeydown"
                placeholder="Search documents, topics, people..."
+               aria-label="Search documents, topics, people, and governing bodies"
                class="input input-bordered w-full pl-10 pr-20"
                autocomplete="off">
         <div class="absolute right-3 top-1/2 -translate-y-1/2">
@@ -21,15 +22,21 @@
 
     <%# Filter tabs %>
     <div class="px-4 pt-3 pb-2 border-b border-base-300 bg-base-200/50">
-      <div class="flex gap-2" data-search-target="tabs">
+      <div class="flex gap-2" role="tablist" aria-label="Filter search results by type" data-search-target="tabs">
         <button type="button" 
+                role="tab"
+                aria-selected="true"
+                aria-label="Show all results"
                 data-action="click->search#setType" 
                 data-type=""
-                class="btn btn-xs btn-ghost search-tab-active">
+                class="btn btn-xs btn-primary search-tab-active">
           All
           <span class="badge badge-xs ml-1" data-search-target="countAll">0</span>
         </button>
         <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by documents"
                 data-action="click->search#setType"
                 data-type="document"
                 class="btn btn-xs btn-ghost">
@@ -37,6 +44,9 @@
           <span class="badge badge-xs ml-1" data-search-target="countDocuments">0</span>
         </button>
         <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by topics"
                 data-action="click->search#setType"
                 data-type="topic"
                 class="btn btn-xs btn-ghost">
@@ -44,6 +54,9 @@
           <span class="badge badge-xs ml-1" data-search-target="countTopics">0</span>
         </button>
         <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by people"
                 data-action="click->search#setType"
                 data-type="person"
                 class="btn btn-xs btn-ghost">
@@ -51,6 +64,9 @@
           <span class="badge badge-xs ml-1" data-search-target="countPeople">0</span>
         </button>
         <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by governing bodies"
                 data-action="click->search#setType"
                 data-type="governing_body"
                 class="btn btn-xs btn-ghost">
@@ -69,8 +85,9 @@
       </div>
 
       <%# Loading state %>
-      <div class="p-8 text-center hidden" data-search-target="loading">
-        <span class="loading loading-spinner loading-md"></span>
+      <div class="p-8 text-center hidden" role="status" aria-live="polite" data-search-target="loading">
+        <span class="loading loading-spinner loading-md" aria-label="Loading search results"></span>
+        <span class="sr-only">Loading search results...</span>
       </div>
 
       <%# No results state %>

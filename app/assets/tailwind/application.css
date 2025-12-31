@@ -276,8 +276,9 @@ mark {
   font-weight: 500;
 }
 
-/* Search tab active state */
-.search-tab-active {
-  background-color: var(--color-primary) !important;
-  color: var(--color-primary-content) !important;
+/* Search tab active state - higher specificity to override btn-ghost */
+.btn.search-tab-active,
+.btn.btn-ghost.search-tab-active {
+  background-color: var(--color-primary);
+  color: var(--color-primary-content);
 }

@@ -79,14 +79,13 @@ class SearchIndexerTest < ActiveSupport::TestCase
   test "rebuild_all rebuilds entire index" do
     # Index something first
     SearchIndexer.index_person(people(:john_smith))
-    initial_results = SearchEntry.search("smith")
+    assert SearchEntry.search("smith").any?, "Person should be indexed before rebuild"
 
     # Rebuild clears and reindexes
     SearchIndexer.rebuild_all!
 
-    # Should still have people indexed
+    # Should still have people indexed after rebuild
     results = SearchEntry.search("smith")
-    # Results may differ if fixtures changed, but method should complete
     assert_kind_of Array, results
   end
 end

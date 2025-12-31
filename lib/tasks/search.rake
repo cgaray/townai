@@ -8,6 +8,7 @@ namespace :search do
 
   desc "Index a single document by ID"
   task :index_document, [ :id ] => :environment do |_t, args|
+    abort "Usage: bin/rails search:index_document[ID]" if args[:id].blank?
     document = Document.find(args[:id])
     SearchIndexer.index_document(document)
     puts "Indexed document ##{document.id}"
@@ -15,6 +16,7 @@ namespace :search do
 
   desc "Index a single person by ID"
   task :index_person, [ :id ] => :environment do |_t, args|
+    abort "Usage: bin/rails search:index_person[ID]" if args[:id].blank?
     person = Person.find(args[:id])
     SearchIndexer.index_person(person)
     puts "Indexed person ##{person.id}"
@@ -22,6 +24,7 @@ namespace :search do
 
   desc "Index a single governing body by ID"
   task :index_governing_body, [ :id ] => :environment do |_t, args|
+    abort "Usage: bin/rails search:index_governing_body[ID]" if args[:id].blank?
     governing_body = GoverningBody.find(args[:id])
     SearchIndexer.index_governing_body(governing_body)
     puts "Indexed governing body ##{governing_body.id}"

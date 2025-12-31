@@ -135,7 +135,7 @@ class Person < ApplicationRecord
   end
 
   def reindex_for_search
-    SearchIndexer.index_person(self)
+    ReindexSearchJob.perform_later("person", id)
   end
 
   def remove_from_search_index

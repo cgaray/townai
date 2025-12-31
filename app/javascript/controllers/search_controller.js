@@ -116,9 +116,10 @@ export default class extends Controller {
   renderResultItem(result, index) {
     const iconName = this.getIconName(result.entity_type)
     const typeLabel = this.getTypeLabel(result.entity_type)
+    const safeUrl = this.sanitizeUrl(result.url)
     
     return `
-      <a href="${result.url}" 
+      <a href="${safeUrl}" 
          class="block p-3 hover:bg-base-200 transition-colors search-result ${index === this.selectedIndex ? 'bg-base-200' : ''}"
          data-index="${index}"
          data-action="mouseenter->search#onResultHover click->search#close">
@@ -139,6 +140,14 @@ export default class extends Controller {
         </div>
       </a>
     `
+  }
+
+  sanitizeUrl(url) {
+    // Only allow relative paths starting with /
+    if (typeof url === 'string' && url.startsWith('/')) {
+      return this.escapeHtml(url)
+    }
+    return '#'
   }
 
   getIconName(entityType) {
