@@ -1,0 +1,37 @@
+<%# Shared people list component %>
+<%# locals: (people:, title:, icon_name: "users", icon_class: "text-primary", subtitle_type: :governing_body, pagy: nil, url_builder: nil) %>
+<%# subtitle_type: :governing_body (show primary_governing_body) or :appearances (show appearance count) %>
+<% return unless people.any? %>
+<div class="space-y-3">
+  <h3 class="text-lg font-bold flex items-center gap-2">
+    <%= icon(icon_name, size: "w-4 h-4", class: icon_class) %>
+    <%= title %>
+    <% if pagy %>
+      <span class="badge badge-ghost badge-sm font-normal"><%= pagy.count %></span>
+    <% end %>
+  </h3>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="space-y-3">
+        <% people.each do |person| %>
+          <%= link_to person_path(person), class: "flex items-center gap-3 p-2 rounded-lg hover:bg-base-200 transition-colors" do %>
+            <%= avatar(person.name) %>
+            <div class="flex-1 min-w-0">
+              <p class="font-medium text-sm truncate"><%= person.name %></p>
+              <p class="text-xs text-base-content/50 truncate">
+                <% if subtitle_type == :governing_body %>
+                  <%= person.primary_governing_body&.name %>
+                <% else %>
+                  <%= pluralize(person.document_appearances_count, "appearance") %>
+                <% end %>
+              </p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  <% if pagy && url_builder %>
+    <%= render "shared/pagination", pagy: pagy, url_builder: url_builder %>
+  <% end %>
+</div>

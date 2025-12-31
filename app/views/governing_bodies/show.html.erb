@@ -23,42 +23,30 @@
     </div>
   </div>
 
-  <%# Meeting Timeline %>
-  <%= render "shared/meeting_timeline",
-             meetings_by_year: @meetings_by_year,
-             title: "Meeting History",
-             count_label: "meetings",
-             item_partial: "governing_bodies/timeline_item" %>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <%# Main content: Meeting Timeline %>
+    <div class="lg:col-span-2">
+      <%= render "shared/meeting_timeline",
+                 meetings_by_year: @meetings_by_year,
+                 title: "Meeting History",
+                 count_label: "meetings",
+                 item_partial: "governing_bodies/timeline_item" %>
+    </div>
 
-  <%# People Section %>
-  <div class="space-y-4">
-    <%= section_header("People", icon_name: "users") %>
+    <%# Sidebar: Members %>
+    <div class="space-y-6">
+      <%= render "shared/people_list",
+                 people: @people,
+                 title: "Members",
+                 icon_name: "users",
+                 icon_class: "text-primary",
+                 subtitle_type: :appearances,
+                 pagy: @pagy_people,
+                 url_builder: ->(page) { governing_body_path(@governing_body, people_page: page) } %>
 
-    <% if @people.any? %>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-        <% @people.each do |person| %>
-          <%= link_to person, class: "card bg-base-100 border border-base-200 card-hover group" do %>
-            <div class="card-body p-3">
-              <div class="flex items-center gap-3">
-                <%= avatar(person.name) %>
-                <div class="min-w-0 flex-1">
-                  <div class="font-medium text-sm group-hover:text-primary transition-colors truncate">
-                    <%= person.name %>
-                  </div>
-                  <div class="text-xs text-base-content/50">
-                    <%= pluralize(person.document_appearances_count, "appearance") %>
-                  </div>
-                </div>
-              </div>
-            </div>
-          <% end %>
-        <% end %>
-      </div>
-
-      <%# People Pagination %>
-      <%= render "shared/pagination", pagy: @pagy_people, url_builder: ->(page) { governing_body_path(@governing_body, people_page: page) } %>
-    <% else %>
-      <div class="text-base-content/50 italic">No people recorded yet</div>
-    <% end %>
+      <% if @people.empty? %>
+        <div class="text-base-content/50 italic">No members recorded yet</div>
+      <% end %>
+    </div>
   </div>
 </div>

@@ -107,29 +107,12 @@
       <% end %>
 
       <%# Co-people %>
-      <% if @co_people.any? %>
-        <div class="space-y-3">
-          <h3 class="text-lg font-bold flex items-center gap-2">
-            <%= icon("users", size: "w-4 h-4", class: "text-primary") %>
-            Frequently Seen With
-          </h3>
-          <div class="card bg-base-100 border border-base-200 shadow-sm">
-            <div class="card-body p-4">
-              <div class="space-y-3">
-                <% @co_people.each do |co| %>
-                  <%= link_to person_path(co), class: "flex items-center gap-3 p-2 rounded-lg hover:bg-base-200 transition-colors" do %>
-                    <%= avatar(co.name) %>
-                    <div class="flex-1 min-w-0">
-                      <p class="font-medium text-sm truncate"><%= co.name %></p>
-                      <p class="text-xs text-base-content/50 truncate"><%= co.primary_governing_body&.name %></p>
-                    </div>
-                  <% end %>
-                <% end %>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% end %>
+      <%= render "shared/people_list",
+                 people: @co_people,
+                 title: "Frequently Seen With",
+                 icon_name: "users",
+                 icon_class: "text-primary",
+                 subtitle_type: :governing_body %>
 
       <%# Potential Duplicates %>
       <% same_name = @potential_duplicates[:same_name] %>
