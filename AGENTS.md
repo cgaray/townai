@@ -35,6 +35,10 @@ bin/rails test test/models/document_test.rb
 
 # Run single test method
 bin/rails test test/models/document_test.rb -n test_should_create_document
+
+# Search index operations
+bin/rails search:rebuild      # Rebuild entire search index
+bin/rails search:stats        # Show index statistics
 ```
 
 ### Code Quality & Security
@@ -170,6 +174,31 @@ import { createRoot } from "react-dom/client";
 - Use Solid Queue for background jobs
 - Use Solid Cache for caching
 - Use Solid Cable for Action Cable
+- Use SQLite FTS5 for full-text search (see `SearchEntry` model)
+
+### Full-Text Search
+
+The application uses SQLite FTS5 for full-text search via `SearchEntry` model:
+
+```ruby
+# Search across all indexed content
+SearchEntry.search("budget", types: ["document", "topic"], limit: 20)
+
+# Get counts by entity type
+SearchEntry.counts_by_type("budget")
+
+# Reindex content (runs via background job)
+SearchIndexer.index_document(document)
+SearchIndexer.index_person(person)
+SearchIndexer.index_governing_body(governing_body)
+
+# Rebuild entire index
+bin/rails search:rebuild
+```
+
+**Indexed entities:** Documents (with topics indexed separately), People, Governing Bodies
+
+**Note:** FTS5 is SQLite-specific. The search feature uses SQL schema format (`db/structure.sql`) to properly handle the virtual table.
 
 ### Asset Management
 - Use Propshaft for asset pipeline
@@ -204,7 +233,7 @@ Use SVG icons from Heroicons instead of emoji:
 <%= document_type_icon("agenda", size: :md) %>
 ```
 
-Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, `check-circle`, `x-circle`, `arrow-path`, `building-library`, `chevron-left`, `folder-open`, `bars-3`, `list-bullet`, `file`, `currency-dollar`, `exclamation-triangle`, `identification`
+Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, `check-circle`, `x-circle`, `arrow-path`, `building-library`, `chevron-left`, `folder-open`, `bars-3`, `list-bullet`, `file`, `currency-dollar`, `exclamation-triangle`, `identification`, `magnifying-glass`
 
 #### Documents Helper (`app/helpers/documents_helper.rb`)
 ```erb
@@ -250,6 +279,20 @@ Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, 
 
 <%# Stat card for dashboards %>
 <%= render "shared/stat_card", icon_name: "calendar", title: "This Month", value: "$1.23", subtitle: "..." %>
+
+<%# People list with optional pagination %>
+<%# subtitle_type: :governing_body (show org name) or :appearances (show count) %>
+<%= render "shared/people_list",
+           people: @people,
+           title: "Members",
+           icon_name: "users",
+           subtitle_type: :appearances,
+           pagy: @pagy,
+           url_builder: ->(page) { path(page: page) },
+           empty_message: "No members yet" %>
+
+<%# Search modal (included in application layout) %>
+<%# Triggered by Cmd/Ctrl+K keyboard shortcut %>
 ```
 
 #### CSS Utility Classes (`app/assets/tailwind/application.css`)

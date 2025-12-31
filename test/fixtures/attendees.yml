@@ -6,6 +6,13 @@ john_smith_finance:
   governing_body_extracted: "Finance Committee"
   person: john_smith
 
+john_smith_select_board:
+  name: "John Smith SB"
+  normalized_name: "john smith sb"
+  governing_body_extracted: "Select Board"
+  governing_body: select_board
+  person: jane_doe
+
 jane_doe_finance:
   name: "Jane Doe"
   normalized_name: "jane doe"
