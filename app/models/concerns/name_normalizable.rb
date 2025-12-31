@@ -6,7 +6,7 @@ module NameNormalizable
   extend ActiveSupport::Concern
 
   included do
-    before_validation :set_normalized_name, if: -> { name.present? && normalized_name.blank? }
+    before_validation :set_normalized_name, if: -> { name.present? && (normalized_name.blank? || name_changed?) }
   end
 
   class_methods do

@@ -195,6 +195,10 @@ h1 {
   border-top: 4px solid #64748B;
 }
 
+.border-t-brand {
+  border-top: 4px solid #2563EB;
+}
+
 
 
 /* Line clamp for text truncation */

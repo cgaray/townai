@@ -195,7 +195,7 @@ Use SVG icons from Heroicons instead of emoji:
 <%= icon("document", size: "w-5 h-5") %>
 
 <%# Icon with custom class %>
-<%= icon("arrow-path", size: "w-4 h-4", class: "animate-spin-slow") %>
+<%= icon("arrow-path", size: "w-4 h-4", class: "text-primary") %>
 
 <%# Icon in gradient circle %>
 <%= icon_in_circle("building-library", type: :brand, size: :lg) %>
@@ -204,15 +204,18 @@ Use SVG icons from Heroicons instead of emoji:
 <%= document_type_icon("agenda", size: :md) %>
 ```
 
-Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, `check-circle`, `x-circle`, `arrow-path`, `building-library`, `chevron-left`, `folder-open`, `bars-3`, `list-bullet`, `file`
+Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, `check-circle`, `x-circle`, `arrow-path`, `building-library`, `chevron-left`, `folder-open`, `bars-3`, `list-bullet`, `file`, `currency-dollar`, `exclamation-triangle`, `identification`
 
 #### Documents Helper (`app/helpers/documents_helper.rb`)
 ```erb
-<%# Status badge with icon %>
+<%# Status badge with icon (uses DaisyUI loading spinner for processing states) %>
 <%= status_badge(document.status) %>
 
 <%# Document type icon in gradient circle %>
 <%= document_type_icon(doc.metadata_field("document_type"), size: :lg) %>
+
+<%# Document type badge for timelines %>
+<%= document_type_badge(doc_type) %>
 
 <%# Border class for document type %>
 <div class="card <%= document_type_border_class(doc_type) %>">
@@ -220,10 +223,33 @@ Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, 
 <%# Action badge with icon %>
 <%= action_badge("approved") %>
 
-<%# Avatar initials for attendees %>
-<div class="avatar-initials <%= avatar_color_class(name) %>">
-  <%= avatar_initials(name) %>
-</div>
+<%# Section header with icon and optional count %>
+<%= section_header("Attendees", icon_name: "users", count: 5) %>
+
+<%# DaisyUI avatar with initials (uses avatar-placeholder component) %>
+<%= avatar(person.name, size: :lg) %>
+<%# Sizes: :sm (32px), :md (40px), :lg (48px), :xl (64px) %>
+```
+
+#### Shared View Partials (`app/views/shared/`)
+```erb
+<%# Page header with gradient title %>
+<%= render "shared/page_header", title: "Documents", subtitle: "Town meeting agendas", badge: badge_content %>
+
+<%# Back navigation link %>
+<%= render "shared/back_link", path: documents_path, text: "Back to Documents" %>
+
+<%# Empty state card %>
+<%= render "shared/empty_state", icon_name: "folder-open", title: "No documents", description: "..." %>
+
+<%# Pagination %>
+<%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { pagy_url_for(@pagy, page) } %>
+
+<%# Collapsible source text %>
+<%= render "shared/source_text_details", source_text: text, label: "Show source" %>
+
+<%# Stat card for dashboards %>
+<%= render "shared/stat_card", icon_name: "calendar", title: "This Month", value: "$1.23", subtitle: "..." %>
 ```
 
 #### CSS Utility Classes (`app/assets/tailwind/application.css`)
@@ -242,18 +268,22 @@ Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, 
 /* Document type borders */
 .border-t-agenda { /* 4px blue top border */ }
 .border-t-minutes { /* 4px purple top border */ }
+.border-t-brand { /* 4px primary blue top border */ }
 
 /* Animations */
 .animate-pulse-subtle { /* Subtle opacity pulse */ }
-.animate-spin-slow { /* 2s rotation */ }
 .animate-slide-up { /* Fade in from below */ }
-
-/* Avatar initials */
-.avatar-initials { /* Circular avatar with initials */ }
 
 /* Numbered list circles */
 .number-circle { /* Circular number indicator */ }
 ```
+
+**Note:** For loading spinners, use DaisyUI's built-in `loading` component:
+```erb
+<span class="loading loading-spinner loading-sm"></span>
+```
+
+**Note:** For avatars, use the `avatar` helper which renders DaisyUI's `avatar-placeholder` component.
 
 ### Naming Conventions
 - Use snake_case for Ruby files and methods

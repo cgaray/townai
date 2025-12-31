@@ -179,4 +179,85 @@ class DocumentsHelperTest < ActionView::TestCase
     # At least some should be different
     assert colors.uniq.length > 1
   end
+
+  test "avatar_size_class returns correct classes for each size" do
+    assert_equal "w-8 text-xs", avatar_size_class(:sm)
+    assert_equal "w-10 text-sm", avatar_size_class(:md)
+    assert_equal "w-12 text-base", avatar_size_class(:lg)
+    assert_equal "w-16 text-lg", avatar_size_class(:xl)
+  end
+
+  test "avatar_size_class returns md size by default" do
+    assert_equal "w-10 text-sm", avatar_size_class(nil)
+    assert_equal "w-10 text-sm", avatar_size_class(:unknown)
+  end
+
+  test "avatar returns DaisyUI avatar placeholder markup" do
+    result = avatar("John Smith")
+    assert_match(/avatar avatar-placeholder/, result)
+    assert_match(/rounded-full/, result)
+    assert_match(/>JS</, result)
+  end
+
+  test "avatar uses correct size class" do
+    result = avatar("John Smith", size: :lg)
+    assert_match(/w-12/, result)
+  end
+
+  test "section_header returns h2 with icon and title" do
+    result = section_header("Test Title", icon_name: "users")
+    assert_match(/<h2/, result)
+    assert_match(/Test Title/, result)
+    assert_match(/<svg/, result)
+  end
+
+  test "section_header includes count badge when provided" do
+    result = section_header("Test Title", icon_name: "users", count: 5)
+    assert_match(/badge/, result)
+    assert_match(/>5</, result)
+  end
+
+  test "section_header works without icon" do
+    result = section_header("Test Title")
+    assert_match(/<h2/, result)
+    assert_match(/Test Title/, result)
+  end
+
+  test "document_type_badge returns primary badge for agenda" do
+    result = document_type_badge("agenda")
+    assert_match(/badge-primary/, result)
+    assert_match(/Agenda/, result)
+  end
+
+  test "document_type_badge returns secondary badge for minutes" do
+    result = document_type_badge("minutes")
+    assert_match(/badge-secondary/, result)
+    assert_match(/Minutes/, result)
+  end
+
+  test "document_type_badge returns ghost badge for unknown type" do
+    result = document_type_badge("unknown")
+    assert_match(/badge-ghost/, result)
+  end
+
+  test "document_type_badge handles nil" do
+    result = document_type_badge(nil)
+    assert_match(/Document/, result)
+  end
+
+  test "document_type_icon returns icon in circle for agenda" do
+    result = document_type_icon("agenda")
+    assert_match(/icon-circle/, result)
+    assert_match(/<svg/, result)
+  end
+
+  test "document_type_icon returns icon in circle for minutes" do
+    result = document_type_icon("minutes")
+    assert_match(/icon-circle/, result)
+  end
+
+  test "document_type_icon accepts size parameter" do
+    result = document_type_icon("agenda", size: :lg)
+    assert_match(/icon-circle-lg/, result)
+  end
 end
