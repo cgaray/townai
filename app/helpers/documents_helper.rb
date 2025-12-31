@@ -9,7 +9,7 @@ module DocumentsHelper
   end
 
   # Document type badge for timeline items
-  def document_type_badge(doc_type, size: :md)
+  def document_type_badge(doc_type)
     badge_class = case doc_type.to_s.downcase
     when "agenda" then "badge-primary"
     when "minutes" then "badge-secondary"
@@ -17,11 +17,9 @@ module DocumentsHelper
     end
 
     icon_name = doc_type.to_s.downcase == "minutes" ? "document-text" : "list-bullet"
-    padding = size == :sm ? "px-2 py-2" : "px-2.5 py-2.5"
-    icon_size = "w-3 h-3"
 
-    content_tag :span, class: "badge #{padding} gap-1.5 #{badge_class}" do
-      concat icon(icon_name, size: icon_size)
+    content_tag :span, class: "badge px-2.5 py-2.5 gap-1.5 #{badge_class}" do
+      concat icon(icon_name, size: "w-3 h-3")
       concat(doc_type&.capitalize || "Document")
     end
   end
@@ -156,13 +154,14 @@ module DocumentsHelper
   end
 
   # Renders a DaisyUI avatar with initials
+  # Uses DaisyUI's avatar-placeholder which handles centering automatically
   def avatar(name, size: :md)
     size_class = avatar_size_class(size)
     color_class = avatar_color_class(name)
     initials = avatar_initials(name)
 
-    content_tag :div, class: "avatar placeholder" do
-      content_tag :div, class: "#{color_class} #{size_class} rounded-full flex items-center justify-center" do
+    content_tag :div, class: "avatar avatar-placeholder" do
+      content_tag :div, class: "#{color_class} #{size_class} rounded-full" do
         content_tag :span, initials
       end
     end

@@ -66,7 +66,7 @@ def random_name
 end
 
 def random_date_in_past(months_back: 24)
-  Date.today - rand(1..(months_back * 30))
+  rand(1..months_back).months.ago.to_date - rand(0..27).days
 end
 
 def random_time
@@ -211,13 +211,16 @@ governing_bodies.each do |body|
 end
 
 # Update counter caches
+# Note: Person.document_appearances_count is a custom counter (not a Rails counter_cache),
+# so we use update_column intentionally to bypass callbacks for performance during seeding.
 puts "Updating counter caches..."
 Person.find_each do |person|
   person.update_column(:document_appearances_count, person.document_attendees.count)
 end
 
+# GoverningBody.documents_count uses Rails counter_cache, so use reset_counters
 GoverningBody.find_each do |body|
-  body.update_column(:documents_count, body.documents.count)
+  GoverningBody.reset_counters(body.id, :documents)
 end
 
 # Create some sample API calls
