@@ -1,0 +1,61 @@
+<%# Individual search result item %>
+<% 
+  icon_name = case result[:entity_type]
+  when "document" then "document-text"
+  when "topic" then "list-bullet"
+  when "person" then "identification"
+  when "governing_body" then "building-library"
+  else "document"
+  end
+
+  icon_type = case result[:entity_type]
+  when "document", "topic" then :agenda
+  when "governing_body" then :brand
+  else :default
+  end
+
+  type_label = case result[:entity_type]
+  when "document" then "Document"
+  when "topic" then "Topic"
+  when "person" then "Person"
+  when "governing_body" then "Governing Body"
+  else "Result"
+  end
+%>
+
+<%= link_to result[:url], class: "card bg-base-100 shadow-sm border border-base-300 card-hover block" do %>
+  <div class="card-body p-4">
+    <div class="flex items-start gap-4">
+      <%# Icon %>
+      <%= icon_in_circle(icon_name, type: icon_type, size: :md) %>
+
+      <%# Content %>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="badge badge-sm badge-ghost"><%= type_label %></span>
+        </div>
+        
+        <h3 class="font-semibold text-base-content line-clamp-1">
+          <%= result[:title] %>
+        </h3>
+        
+        <% if result[:subtitle].present? %>
+          <p class="text-sm text-base-content/60 line-clamp-1">
+            <%= result[:subtitle] %>
+          </p>
+        <% end %>
+        
+        <% if result[:snippet].present? %>
+          <p class="text-sm text-base-content/70 mt-2 line-clamp-2">
+            <%== result[:snippet] %>
+          </p>
+        <% end %>
+      </div>
+
+      <%# Arrow indicator %>
+      <div class="flex-shrink-0 text-base-content/30">
+        <%= icon("chevron-right", size: "w-5 h-5") %>
+      </div>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,98 @@
+<%= render "shared/page_header",
+  title: "Search Results",
+  subtitle: @query.present? ? "#{@total_count} #{'result'.pluralize(@total_count)} for \"#{@query}\"" : "Search town meeting documents, people, and governing bodies" %>
+
+<div class="space-y-6">
+  <%# Search form %>
+  <div class="card bg-base-100 shadow-sm border border-base-300">
+    <div class="card-body">
+      <%= form_with url: search_path, method: :get, local: true, class: "flex gap-4 items-end" do |f| %>
+        <div class="form-control flex-1">
+          <label class="label">
+            <span class="label-text font-medium">Search</span>
+          </label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40">
+              <%= icon("magnifying-glass", size: "w-5 h-5") %>
+            </span>
+            <input type="text" 
+                   name="q" 
+                   value="<%= @query %>" 
+                   placeholder="Search documents, topics, people..."
+                   class="input input-bordered w-full pl-10"
+                   autofocus>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          Search
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <% if @query.present? %>
+    <%# Filter tabs %>
+    <div class="tabs tabs-boxed bg-base-200 p-1">
+      <%= link_to search_path(q: @query), 
+          class: "tab #{@type.blank? ? 'tab-active' : ''}" do %>
+        All
+        <span class="badge badge-sm ml-1"><%= @total_count %></span>
+      <% end %>
+      
+      <% if @counts["document"].to_i > 0 %>
+        <%= link_to search_path(q: @query, type: "document"), 
+            class: "tab #{@type == 'document' ? 'tab-active' : ''}" do %>
+          Documents
+          <span class="badge badge-sm ml-1"><%= @counts["document"] %></span>
+        <% end %>
+      <% end %>
+      
+      <% if @counts["topic"].to_i > 0 %>
+        <%= link_to search_path(q: @query, type: "topic"), 
+            class: "tab #{@type == 'topic' ? 'tab-active' : ''}" do %>
+          Topics
+          <span class="badge badge-sm ml-1"><%= @counts["topic"] %></span>
+        <% end %>
+      <% end %>
+      
+      <% if @counts["person"].to_i > 0 %>
+        <%= link_to search_path(q: @query, type: "person"), 
+            class: "tab #{@type == 'person' ? 'tab-active' : ''}" do %>
+          People
+          <span class="badge badge-sm ml-1"><%= @counts["person"] %></span>
+        <% end %>
+      <% end %>
+      
+      <% if @counts["governing_body"].to_i > 0 %>
+        <%= link_to search_path(q: @query, type: "governing_body"), 
+            class: "tab #{@type == 'governing_body' ? 'tab-active' : ''}" do %>
+          Governing Bodies
+          <span class="badge badge-sm ml-1"><%= @counts["governing_body"] %></span>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# Results list %>
+    <% if @results.any? %>
+      <div class="space-y-3">
+        <% @results.each do |result| %>
+          <%= render "search/result_item", result: result %>
+        <% end %>
+      </div>
+    <% else %>
+      <%= render "shared/empty_state",
+        icon_name: "magnifying-glass",
+        title: "No results found",
+        description: "Try different keywords or remove filters" %>
+    <% end %>
+  <% else %>
+    <%# Empty state when no query %>
+    <div class="text-center py-12">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 mb-4">
+        <%= icon("magnifying-glass", size: "w-8 h-8", class: "text-base-content/40") %>
+      </div>
+      <p class="text-base-content/60">Enter a search term to find documents, topics, people, and governing bodies.</p>
+      <p class="text-sm text-base-content/40 mt-2">Tip: Press <kbd class="kbd kbd-sm" data-hotkey-modifier>Ctrl</kbd> + <kbd class="kbd kbd-sm">K</kbd> to search from anywhere</p>
+    </div>
+  <% end %>
+</div>

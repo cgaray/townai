@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_31_024801) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_31_025933) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -130,4 +130,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_31_024801) do
   add_foreign_key "document_attendees", "attendees"
   add_foreign_key "document_attendees", "documents"
   add_foreign_key "documents", "governing_bodies"
-end
+
+  # Virtual tables defined in this database.
+  # Note that virtual tables may not work with other database engines. Be careful if changing database.

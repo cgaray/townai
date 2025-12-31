@@ -266,3 +266,18 @@ h1 {
   border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.5);
 }
+
+/* Search highlight styling */
+mark {
+  background-color: oklch(92% 0.16 100);
+  color: inherit;
+  padding: 0.1em 0.2em;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+/* Search tab active state */
+.search-tab-active {
+  background-color: var(--color-primary) !important;
+  color: var(--color-primary-content) !important;
+}

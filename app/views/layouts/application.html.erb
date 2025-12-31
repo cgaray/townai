@@ -49,10 +49,16 @@
               <span class="text-xl font-extrabold tracking-tight text-gradient-primary">TownAI</span>
             <% end %>
           </div>
-          <div class="flex-none gap-2">
-            <div class="text-sm font-medium text-base-content/60 hidden sm:block">
-              Town Meeting Document Manager
-            </div>
+          <div class="flex-none gap-2 flex items-center">
+            <%# Search trigger button %>
+            <button type="button" 
+                    onclick="document.getElementById('search-modal').showModal()"
+                    class="btn btn-ghost btn-sm gap-2 text-base-content/60 hover:text-base-content">
+              <%= icon("magnifying-glass", size: "w-4 h-4") %>
+              <span class="hidden sm:inline">Search</span>
+              <kbd class="kbd kbd-sm hidden sm:inline-flex" data-hotkey-modifier>Ctrl</kbd>
+              <kbd class="kbd kbd-sm hidden sm:inline-flex">K</kbd>
+            </button>
           </div>
         </nav>
 
@@ -135,5 +141,17 @@
         </div>
       </aside>
     </div>
+
+    <%# Search modal %>
+    <%= render "shared/search_modal" %>
+
+    <%# Detect Mac and update keyboard shortcut hints %>
+    <script>
+      if (navigator.platform.indexOf('Mac') !== -1) {
+        document.querySelectorAll('[data-hotkey-modifier]').forEach(el => {
+          el.textContent = 'Cmd';
+        });
+      }
+    </script>
   </body>
 </html>

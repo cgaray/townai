@@ -23,5 +23,8 @@ module Townai
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Use SQL schema format to properly handle FTS5 virtual tables
+    config.active_record.schema_format = :sql
   end
 end
