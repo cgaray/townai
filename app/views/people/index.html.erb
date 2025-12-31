@@ -48,7 +48,7 @@
       <% end %>
     </div>
 
-    <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { people_path(page: page) } %>
+    <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { pagy_url_for(@pagy, page) } %>
   <% else %>
     <% action_content = capture do %>
       <%= link_to documents_path, class: "btn btn-primary" do %>
