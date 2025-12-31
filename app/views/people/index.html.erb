@@ -3,7 +3,7 @@
   <%# Header %>
   <%= render "shared/page_header",
              title: "People",
-             subtitle: "#{@people.size} people tracked from meeting documents" %>
+             subtitle: "#{@pagy.count} people tracked from meeting documents" %>
 
   <%# People Grid %>
   <% if @people.any? %>
@@ -47,6 +47,8 @@
         <% end %>
       <% end %>
     </div>
+
+    <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { people_path(page: page) } %>
   <% else %>
     <% action_content = capture do %>
       <%= link_to documents_path, class: "btn btn-primary" do %>
