@@ -75,3 +75,5 @@ gem "tailwindcss-rails", "~> 4.4"
 gem "pdf-reader", "~> 2.15"
 
 gem "pagy", "~> 9.0"
+
+gem "text", "~> 1.3"

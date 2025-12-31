@@ -1,0 +1,11 @@
+<%# Collapsible source text details %>
+<%# locals: (source_text:, label: "Show source text", margin_class: "mt-2 ml-4") %>
+<% return unless source_text.present? %>
+<details class="<%= margin_class %>">
+  <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
+    <%= label %>
+  </summary>
+  <blockquote class="mt-2 text-sm text-base-content/60 border-l-2 border-base-300 pl-3 bg-base-200/30 py-2 rounded-r whitespace-pre-wrap">
+    <%= source_text %>
+  </blockquote>
+</details>

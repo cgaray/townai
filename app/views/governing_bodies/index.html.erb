@@ -1,20 +1,17 @@
 <div class="space-y-8">
   <%# Page Header %>
-  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-    <div>
-      <h1 class="text-4xl font-extrabold tracking-tight">
-        <span class="text-gradient-primary">Governing Bodies</span>
-      </h1>
-      <p class="text-base-content/60 mt-2 text-lg">Town boards, committees, and commissions</p>
-    </div>
-
+  <% header_badge = capture do %>
     <% if @governing_bodies.any? %>
       <div class="badge badge-lg badge-ghost font-semibold">
         <%= icon("building-library", size: "w-4 h-4") %>
         <span class="ml-1"><%= pluralize(@governing_bodies.size, "body", "bodies") %></span>
       </div>
     <% end %>
-  </div>
+  <% end %>
+  <%= render "shared/page_header",
+             title: "Governing Bodies",
+             subtitle: "Town boards, committees, and commissions",
+             badge: header_badge %>
 
   <%# Governing Bodies Grid %>
   <% if @governing_bodies.any? %>
@@ -46,16 +43,9 @@
     </div>
   <% else %>
     <%# Empty State %>
-    <div class="card bg-gradient-to-br from-base-200/50 to-base-200 border border-base-300">
-      <div class="card-body items-center text-center py-20">
-        <div class="icon-circle icon-circle-xl icon-circle-default mb-6 shadow-lg">
-          <%= icon("building-library", size: "w-10 h-10") %>
-        </div>
-        <h2 class="text-2xl font-bold">No governing bodies yet</h2>
-        <p class="text-base-content/60 max-w-md mt-2 leading-relaxed">
-          Governing bodies will be created automatically when documents are processed.
-        </p>
-      </div>
-    </div>
+    <%= render "shared/empty_state",
+               icon_name: "building-library",
+               title: "No governing bodies yet",
+               description: "Governing bodies will be created automatically when documents are processed." %>
   <% end %>
 </div>

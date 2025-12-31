@@ -1,15 +1,7 @@
 <%# app/views/documents/index.html.erb %>
 <div class="space-y-8">
   <%# Page Header %>
-  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-    <div>
-      <h1 class="text-4xl font-extrabold tracking-tight">
-        <span class="text-gradient-primary">Documents</span>
-      </h1>
-      <p class="text-base-content/60 mt-2 text-lg">Town meeting agendas and minutes</p>
-    </div>
-
-    <%# Document count badge %>
+  <% header_badge = capture do %>
     <% if @documents.any? %>
       <div class="flex items-center gap-3">
         <div class="badge badge-lg badge-ghost font-semibold">
@@ -20,13 +12,17 @@
         <% processing_count = (@status_counts["extracting_text"] || 0) + (@status_counts["extracting_metadata"] || 0) %>
         <% if pending_count > 0 || processing_count > 0 %>
           <div class="badge badge-lg badge-warning badge-with-icon font-semibold animate-pulse-subtle">
-            <%= icon("arrow-path", size: "w-4 h-4", class: "animate-spin-slow") %>
+            <span class="loading loading-spinner loading-xs"></span>
             <span><%= pending_count + processing_count %> processing</span>
           </div>
         <% end %>
       </div>
     <% end %>
-  </div>
+  <% end %>
+  <%= render "shared/page_header",
+             title: "Documents",
+             subtitle: "Town meeting agendas and minutes",
+             badge: header_badge %>
 
   <%# Documents Grid or Empty State %>
   <% if @documents.any? %>
@@ -84,49 +80,19 @@
     </div>
 
     <%# Pagination %>
-    <% if @pagy.pages > 1 %>
-      <div class="flex justify-center mt-8">
-        <div class="join">
-          <% if @pagy.prev %>
-            <%= link_to pagy_url_for(@pagy, @pagy.prev), class: "join-item btn btn-sm" do %>
-              <%= icon("chevron-left", size: "w-4 h-4") %>
-            <% end %>
-          <% else %>
-            <span class="join-item btn btn-sm btn-disabled"><%= icon("chevron-left", size: "w-4 h-4") %></span>
-          <% end %>
-
-          <span class="join-item btn btn-sm btn-ghost pointer-events-none">
-            Page <%= @pagy.page %> of <%= @pagy.pages %>
-          </span>
-
-          <% if @pagy.next %>
-            <%= link_to pagy_url_for(@pagy, @pagy.next), class: "join-item btn btn-sm" do %>
-              <%= icon("chevron-right", size: "w-4 h-4") %>
-            <% end %>
-          <% else %>
-            <span class="join-item btn btn-sm btn-disabled"><%= icon("chevron-right", size: "w-4 h-4") %></span>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
+    <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { pagy_url_for(@pagy, page) } %>
   <% else %>
     <%# Empty State %>
-    <div class="card bg-gradient-to-br from-base-200/50 to-base-200 border border-base-300">
-      <div class="card-body items-center text-center py-20">
-        <div class="icon-circle icon-circle-xl icon-circle-default mb-6 shadow-lg">
-          <%= icon("folder-open", size: "w-10 h-10") %>
-        </div>
-        <h2 class="text-2xl font-bold">No documents yet</h2>
-        <p class="text-base-content/60 max-w-md mt-2 leading-relaxed">
-          Upload your first town meeting document to get started. We'll automatically extract metadata like attendees, topics, and actions.
-        </p>
-        <div class="card-actions mt-8">
-          <div class="bg-base-100 border border-base-300 rounded-lg px-4 py-3 shadow-sm">
-            <div class="text-xs text-base-content/50 mb-1">Run this command to import documents:</div>
-            <code class="text-sm font-mono font-semibold text-primary">bin/rails import:documents</code>
-          </div>
-        </div>
+    <% action_content = capture do %>
+      <div class="bg-base-100 border border-base-300 rounded-lg px-4 py-3 shadow-sm">
+        <div class="text-xs text-base-content/50 mb-1">Run this command to import documents:</div>
+        <code class="text-sm font-mono font-semibold text-primary">bin/rails import:documents</code>
       </div>
-    </div>
+    <% end %>
+    <%= render "shared/empty_state",
+               icon_name: "folder-open",
+               title: "No documents yet",
+               description: "Upload your first town meeting document to get started. We'll automatically extract metadata like attendees, topics, and actions.",
+               action: action_content %>
   <% end %>
 </div>

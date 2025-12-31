@@ -220,24 +220,4 @@ class IconsHelperTest < ActionView::TestCase
     result = icon_in_circle("document", options: { class: "custom-class" })
     assert_match(/custom-class/, result)
   end
-
-  test "document_type_icon_with_circle returns agenda icon for agenda type" do
-    result = document_type_icon_with_circle("agenda")
-    assert_match(/icon-circle-agenda/, result)
-  end
-
-  test "document_type_icon_with_circle returns minutes icon for minutes type" do
-    result = document_type_icon_with_circle("minutes")
-    assert_match(/icon-circle-minutes/, result)
-  end
-
-  test "document_type_icon_with_circle returns default icon for unknown type" do
-    result = document_type_icon_with_circle("unknown")
-    assert_match(/icon-circle/, result)
-  end
-
-  test "document_type_icon_with_circle accepts size parameter" do
-    result = document_type_icon_with_circle("agenda", size: :lg)
-    assert_match(/icon-circle-lg/, result)
-  end
 end

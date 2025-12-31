@@ -1,12 +1,7 @@
 <%# app/views/documents/show.html.erb %>
 <div class="space-y-8">
   <%# Back navigation %>
-  <div>
-    <%= link_to documents_path, class: "inline-flex items-center gap-2 text-base-content/60 hover:text-primary font-medium transition-colors" do %>
-      <%= icon("chevron-left", size: "w-5 h-5") %>
-      <span>Back to Documents</span>
-    <% end %>
-  </div>
+  <%= render "shared/back_link", path: documents_path, text: "Back to Documents" %>
 
   <% if @document.extracted_metadata.present? %>
     <% meta = JSON.parse(@document.extracted_metadata) rescue {} %>
@@ -55,16 +50,7 @@
             <p class="text-base-content/70 leading-relaxed border-l-4 border-primary/20 pl-4 italic">
               <%= meta["abstract"] %>
             </p>
-            <% if meta["abstract_source_text"].present? %>
-              <details class="mt-2 ml-4">
-                <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
-                  Show source text
-                </summary>
-                <blockquote class="mt-2 text-sm text-base-content/60 border-l-2 border-base-300 pl-3 bg-base-200/30 py-2 rounded-r whitespace-pre-wrap">
-                  <%= meta["abstract_source_text"] %>
-                </blockquote>
-              </details>
-            <% end %>
+            <%= render "shared/source_text_details", source_text: meta["abstract_source_text"] %>
           </div>
         <% end %>
       </div>
@@ -73,11 +59,9 @@
     <%# Attendees Section %>
     <% if @document.document_attendees.any? || (meta["attendees"].present? && meta["attendees"].any?) %>
       <div class="space-y-4">
-        <h2 class="text-xl font-bold flex items-center gap-2">
-          <%= icon("users", size: "w-5 h-5", class: "text-primary") %>
-          Attendees
-          <span class="badge badge-ghost badge-sm font-normal"><%= @document.document_attendees.any? ? @document.document_attendees.size : meta["attendees"]&.size || 0 %></span>
-        </h2>
+        <%= section_header("Attendees",
+                          icon_name: "users",
+                          count: @document.document_attendees.any? ? @document.document_attendees.size : meta["attendees"]&.size || 0) %>
 
         <div class="card bg-base-100 border border-base-200 shadow-sm">
           <div class="card-body p-5">
@@ -88,9 +72,7 @@
                   <div class="space-y-1">
                     <div class="flex items-center gap-3">
                       <%= link_to person_path(da.attendee.person), class: "flex items-center gap-3 hover:opacity-80 transition-opacity" do %>
-                        <div class="avatar-initials <%= avatar_color_class(da.attendee.person.name) %>">
-                          <%= avatar_initials(da.attendee.person.name) %>
-                        </div>
+                        <%= avatar(da.attendee.person.name) %>
                         <div>
                           <div class="font-semibold text-sm hover:text-primary"><%= da.attendee.person.name %></div>
                           <% if da.role.present? %>
@@ -99,16 +81,7 @@
                         </div>
                       <% end %>
                     </div>
-                    <% if da.source_text.present? %>
-                      <details class="ml-12">
-                        <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
-                          Show source
-                        </summary>
-                        <blockquote class="mt-1 text-xs text-base-content/60 border-l-2 border-base-300 pl-2 bg-base-200/30 py-1 rounded-r whitespace-pre-wrap">
-                          <%= da.source_text %>
-                        </blockquote>
-                      </details>
-                    <% end %>
+                    <%= render "shared/source_text_details", source_text: da.source_text, label: "Show source", margin_class: "ml-12" %>
                   </div>
                 <% end %>
               <% else %>
@@ -116,9 +89,7 @@
                 <% (meta["attendees"] || []).each do |attendee| %>
                   <div class="space-y-1">
                     <div class="flex items-center gap-3">
-                      <div class="avatar-initials <%= avatar_color_class(attendee["name"]) %>">
-                        <%= avatar_initials(attendee["name"]) %>
-                      </div>
+                      <%= avatar(attendee["name"]) %>
                       <div>
                         <div class="font-semibold text-sm"><%= attendee["name"] %></div>
                         <% if attendee["role"].present? %>
@@ -126,16 +97,7 @@
                         <% end %>
                       </div>
                     </div>
-                    <% if attendee["source_text"].present? %>
-                      <details class="ml-12">
-                        <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
-                          Show source
-                        </summary>
-                        <blockquote class="mt-1 text-xs text-base-content/60 border-l-2 border-base-300 pl-2 bg-base-200/30 py-1 rounded-r whitespace-pre-wrap">
-                          <%= attendee["source_text"] %>
-                        </blockquote>
-                      </details>
-                    <% end %>
+                    <%= render "shared/source_text_details", source_text: attendee["source_text"], label: "Show source", margin_class: "ml-12" %>
                   </div>
                 <% end %>
               <% end %>
@@ -148,11 +110,7 @@
     <%# Agenda Items %>
     <% if meta["topics"].present? && meta["topics"].any? %>
       <div class="space-y-4">
-        <h2 class="text-xl font-bold flex items-center gap-2">
-          <%= icon("list-bullet", size: "w-5 h-5", class: "text-primary") %>
-          Agenda Items
-          <span class="badge badge-ghost badge-sm font-normal"><%= meta["topics"].size %></span>
-        </h2>
+        <%= section_header("Agenda Items", icon_name: "list-bullet", count: meta["topics"].size) %>
 
         <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
           <div class="divide-y divide-base-200">
@@ -176,16 +134,7 @@
                     <% if topic["summary"].present? %>
                       <p class="text-sm text-base-content/60 mt-2 leading-relaxed"><%= topic["summary"] %></p>
                     <% end %>
-                    <% if topic["source_text"].present? %>
-                      <details class="mt-3">
-                        <summary class="text-xs text-base-content/50 cursor-pointer hover:text-primary">
-                          Show source text
-                        </summary>
-                        <blockquote class="mt-2 text-sm text-base-content/60 border-l-2 border-base-300 pl-3 bg-base-200/30 py-2 rounded-r whitespace-pre-wrap">
-                          <%= topic["source_text"] %>
-                        </blockquote>
-                      </details>
-                    <% end %>
+                    <%= render "shared/source_text_details", source_text: topic["source_text"], margin_class: "mt-3" %>
                   </div>
                 </div>
               </div>
@@ -221,7 +170,7 @@
           </div>
         <% elsif @document.pending? || @document.extracting_text? || @document.extracting_metadata? %>
           <div class="icon-circle icon-circle-xl icon-circle-brand mb-4">
-            <%= icon("arrow-path", size: "w-10 h-10", class: "animate-spin-slow") %>
+            <span class="loading loading-spinner loading-lg"></span>
           </div>
           <h2 class="text-xl font-bold">Processing Document</h2>
           <p class="text-base-content/60 max-w-md mt-2">

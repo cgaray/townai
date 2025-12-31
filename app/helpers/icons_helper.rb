@@ -158,14 +158,4 @@ module IconsHelper
       icon(name, size: icon_size)
     end
   end
-
-  def document_type_icon_with_circle(type, size: :md)
-    icon_name = case type.to_s.downcase
-    when "agenda" then "agenda"
-    when "minutes" then "minutes"
-    else "document"
-    end
-
-    icon_in_circle(icon_name, type: type, size: size)
-  end
 end

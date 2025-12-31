@@ -1,0 +1,18 @@
+<%# Shared stat card component %>
+<%# locals: (icon_name:, title:, value:, subtitle: nil, icon_class: "icon-circle-brand") %>
+<div class="card bg-base-100 border border-base-200 shadow-sm">
+  <div class="card-body p-5">
+    <div class="flex items-center gap-3">
+      <div class="icon-circle icon-circle-md <%= icon_class %>">
+        <%= icon(icon_name, size: "w-5 h-5") %>
+      </div>
+      <div>
+        <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold"><%= title %></div>
+        <div class="text-2xl font-bold"><%= value %></div>
+        <% if subtitle.present? %>
+          <div class="text-xs text-base-content/50"><%= subtitle %></div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

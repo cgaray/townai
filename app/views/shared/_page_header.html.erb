@@ -1,0 +1,15 @@
+<%# Shared page header with gradient title, subtitle, and optional badge %>
+<%# locals: (title:, subtitle: nil, badge: nil) %>
+<div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+  <div>
+    <h1 class="text-4xl font-extrabold tracking-tight">
+      <span class="text-gradient-primary"><%= title %></span>
+    </h1>
+    <% if subtitle.present? %>
+      <p class="text-base-content/60 mt-2 text-lg"><%= subtitle %></p>
+    <% end %>
+  </div>
+  <% if badge.present? %>
+    <%= badge %>
+  <% end %>
+</div>

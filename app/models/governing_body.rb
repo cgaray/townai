@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class GoverningBody < ApplicationRecord
+  include NameNormalizable
+
   has_many :documents, dependent: :nullify
   has_many :attendees, dependent: :nullify
   has_many :people, -> { distinct }, through: :attendees
 
   validates :name, :normalized_name, presence: true
   validates :normalized_name, uniqueness: true
-
-  before_validation :set_normalized_name, if: -> { name.present? && normalized_name.blank? }
 
   scope :by_document_count, -> { order(documents_count: :desc, name: :asc) }
 
@@ -23,15 +23,5 @@ class GoverningBody < ApplicationRecord
     end
   rescue ActiveRecord::RecordNotUnique
     find_by(normalized_name: normalized)
-  end
-
-  def self.normalize_name(name)
-    name.to_s.downcase.squish
-  end
-
-  private
-
-  def set_normalized_name
-    self.normalized_name = self.class.normalize_name(name)
   end
 end
