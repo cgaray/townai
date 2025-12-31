@@ -10,6 +10,13 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
     unless File.exist?(@test_pdf_path)
       File.write(@test_pdf_path, "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>")
     end
+    sign_in users(:user)
+  end
+
+  test "redirects to login when not authenticated" do
+    sign_out :user
+    get documents_url
+    assert_redirected_to new_user_session_url
   end
 
   test "should get index" do

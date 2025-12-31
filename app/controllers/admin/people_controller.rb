@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
-# TODO: Add authentication before deploying to production
-# Options: HTTP Basic Auth, Devise admin user, or IP restriction
-class Admin::PeopleController < ApplicationController
+class Admin::PeopleController < Admin::BaseController
   def merge
     source = Person.find(params[:source_id])
     target = Person.find(params[:target_id])

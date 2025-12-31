@@ -6,6 +6,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   setup do
     @town = towns(:arlington)
     SearchEntry.clear_all!
+    sign_in users(:user)
   end
 
   test "global search renders search page" do

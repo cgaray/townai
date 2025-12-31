@@ -1,0 +1,50 @@
+<%# locals: (user:) %>
+<%= form_with model: [:admin, user], class: "space-y-6" do |form| %>
+  <% if user.errors.any? %>
+    <div class="alert alert-error">
+      <div>
+        <%= icon("exclamation-circle", size: "w-5 h-5") %>
+        <div>
+          <h3 class="font-bold">Please fix the following errors:</h3>
+          <ul class="list-disc list-inside text-sm mt-1">
+            <% user.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="form-control">
+    <%= form.label :email, class: "label" do %>
+      <span class="label-text font-medium">Email address</span>
+    <% end %>
+    <%= form.email_field :email,
+                         class: "input input-bordered w-full",
+                         placeholder: "user@example.com",
+                         required: true,
+                         autofocus: user.new_record? %>
+    <% if user.new_record? %>
+      <label class="label">
+        <span class="label-text-alt text-base-content/60">A login link will be sent to this email address.</span>
+      </label>
+    <% end %>
+  </div>
+
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <%= form.check_box :admin, class: "checkbox checkbox-primary" %>
+      <div>
+        <span class="label-text font-medium">Administrator</span>
+        <p class="text-sm text-base-content/60">Admins can manage users, view API costs, and merge people.</p>
+      </div>
+    </label>
+  </div>
+
+  <div class="flex items-center gap-3 pt-4">
+    <%= form.submit user.new_record? ? "Send Invitation" : "Update User",
+                    class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_users_path, class: "btn btn-ghost" %>
+  </div>
+<% end %>

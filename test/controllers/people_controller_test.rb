@@ -6,6 +6,7 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
   setup do
     @town = towns(:arlington)
     @person = people(:john_smith)
+    sign_in users(:user)
   end
 
   test "should get index" do

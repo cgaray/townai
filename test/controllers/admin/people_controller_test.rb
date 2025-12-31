@@ -11,6 +11,8 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
 
     # Clean up any existing document_attendees to avoid uniqueness conflicts
     DocumentAttendee.where(document: @document).delete_all
+
+    sign_in users(:admin)
   end
 
   test "merge redirects to target person on success" do

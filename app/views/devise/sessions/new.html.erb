@@ -1,0 +1,51 @@
+<div class="min-h-screen flex items-center justify-center bg-base-200 px-4">
+  <div class="card w-full max-w-md bg-base-100 shadow-xl">
+    <div class="card-body">
+      <div class="text-center mb-6">
+        <div class="icon-circle icon-circle-xl icon-circle-brand mx-auto mb-4">
+          <%= icon("building-library", size: "w-10 h-10") %>
+        </div>
+        <h1 class="text-2xl font-bold">Welcome Back</h1>
+        <p class="text-base-content/60 mt-2">Enter your email to receive a magic login link</p>
+      </div>
+
+      <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-4" }) do |f| %>
+        <% if flash[:alert].present? %>
+          <div class="alert alert-error">
+            <%= icon("exclamation-circle", size: "w-5 h-5") %>
+            <span><%= flash[:alert] %></span>
+          </div>
+        <% end %>
+
+        <% if flash[:notice].present? %>
+          <div class="alert alert-success">
+            <%= icon("check-circle", size: "w-5 h-5") %>
+            <span><%= flash[:notice] %></span>
+          </div>
+        <% end %>
+
+        <div class="form-control">
+          <%= f.label :email, class: "label" do %>
+            <span class="label-text font-medium">Email address</span>
+          <% end %>
+          <%= f.email_field :email,
+                            autofocus: true,
+                            autocomplete: "email",
+                            class: "input input-bordered w-full",
+                            placeholder: "you@example.com" %>
+        </div>
+
+        <div class="form-control mt-6">
+          <%= f.submit "Send Magic Link", class: "btn btn-primary w-full" %>
+        </div>
+      <% end %>
+
+      <div class="divider text-xs text-base-content/50 my-6">SECURE LOGIN</div>
+
+      <p class="text-center text-sm text-base-content/60">
+        We'll send you a secure link to log in. No password needed.
+        The link will expire in 15 minutes.
+      </p>
+    </div>
+  </div>
+</div>

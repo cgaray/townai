@@ -57,6 +57,9 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # Preview emails via web interface at /letter_opener
+  gem "letter_opener_web", "~> 3.0"
 end
 
 group :test do
@@ -77,3 +80,10 @@ gem "pdf-reader", "~> 2.15"
 gem "pagy", "~> 9.0"
 
 gem "text", "~> 1.3"
+
+# Authentication
+gem "devise", "~> 4.9"
+gem "devise-passwordless", "~> 1.0"
+
+# Rate limiting
+gem "rack-attack", "~> 6.7"

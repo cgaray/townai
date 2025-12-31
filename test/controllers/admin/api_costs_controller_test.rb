@@ -4,6 +4,21 @@ module Admin
   class ApiCostsControllerTest < ActionDispatch::IntegrationTest
     setup do
       @document = documents(:complete_agenda)
+      sign_in users(:admin)
+    end
+
+    test "redirects non-admin users to root" do
+      sign_out :user
+      sign_in users(:user)
+      get admin_api_costs_url
+      assert_redirected_to root_url
+      assert_match(/not authorized/, flash[:alert])
+    end
+
+    test "redirects unauthenticated users to login" do
+      sign_out :user
+      get admin_api_costs_url
+      assert_redirected_to new_user_session_url
     end
 
     test "should get index" do
