@@ -19,7 +19,7 @@
           <h1 class="text-2xl font-extrabold tracking-tight"><%= @person.name %></h1>
           <p class="text-base-content/60 mt-1 flex items-center gap-2">
             <%= icon("building-library", size: "w-4 h-4") %>
-            <%= @person.primary_governing_body %>
+            <%= @person.primary_governing_body&.name || @person.governing_body_names.first %>
           </p>
 
           <div class="flex flex-wrap items-center gap-3 mt-4">
@@ -50,7 +50,9 @@
               <p class="text-sm text-base-content/60 mb-2">Governing bodies:</p>
               <div class="flex flex-wrap gap-2">
                 <% bodies.each do |body| %>
-                  <span class="badge badge-outline badge-sm"><%= body %></span>
+                  <%= link_to body, class: "badge badge-outline badge-sm hover:badge-primary" do %>
+                    <%= body.name %>
+                  <% end %>
                 <% end %>
               </div>
             </div>
@@ -61,69 +63,13 @@
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <%# Main content: Document Timeline %>
-    <div class="lg:col-span-2 space-y-4">
-      <h2 class="text-xl font-bold flex items-center gap-2">
-        <%= icon("clock", size: "w-5 h-5", class: "text-primary") %>
-        Document Timeline
-        <span class="badge badge-ghost badge-sm font-normal"><%= @document_attendees.size %></span>
-      </h2>
-
-      <% if @document_attendees.any? %>
-        <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
-          <div class="divide-y divide-base-200">
-            <% @document_attendees.each do |da| %>
-              <% doc = da.document %>
-              <% meta = doc.extracted_metadata.present? ? (JSON.parse(doc.extracted_metadata) rescue {}) : {} %>
-              <% doc_type = meta["document_type"] %>
-
-              <%= link_to document_path(doc), class: "block px-5 py-4 hover:bg-base-50 transition-colors duration-150" do %>
-                <div class="flex items-start gap-4">
-                  <%= document_type_icon(doc_type, size: :md) %>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <h3 class="font-bold text-base-content"><%= meta["governing_body"] || "Unknown" %></h3>
-                      <% if doc_type %>
-                        <span class="badge badge-outline badge-sm"><%= doc_type.capitalize %></span>
-                      <% end %>
-                    </div>
-
-                    <% if meta["meeting_date"] %>
-                      <p class="text-sm text-base-content/60 mt-1 flex items-center gap-1.5">
-                        <%= icon("calendar", size: "w-3.5 h-3.5") %>
-                        <%= Date.parse(meta["meeting_date"]).strftime("%B %d, %Y") rescue meta["meeting_date"] %>
-                      </p>
-                    <% end %>
-
-                    <div class="flex flex-wrap items-center gap-2 mt-2">
-                      <% if da.role %>
-                        <%= role_badge(da.role) %>
-                      <% end %>
-                      <% if da.status %>
-                        <span class="badge badge-sm <%= da.status == 'present' ? 'badge-success' : da.status == 'remote' ? 'badge-info' : 'badge-warning' %> badge-outline">
-                          <%= da.status.capitalize %>
-                        </span>
-                      <% end %>
-                    </div>
-
-                    <% if da.source_text.present? %>
-                      <p class="text-xs text-base-content/50 mt-2 line-clamp-2">
-                        "<%= da.source_text.truncate(150) %>"
-                      </p>
-                    <% end %>
-                  </div>
-                </div>
-              <% end %>
-            <% end %>
-          </div>
-        </div>
-      <% else %>
-        <div class="card bg-base-200/50 border border-base-300">
-          <div class="card-body items-center text-center py-8">
-            <p class="text-base-content/60">No documents found for this person.</p>
-          </div>
-        </div>
-      <% end %>
+    <%# Main content: Meeting Timeline %>
+    <div class="lg:col-span-2">
+      <%= render "shared/meeting_timeline",
+                 meetings_by_year: @meetings_by_year,
+                 title: "Meeting History",
+                 count_label: "appearances",
+                 item_partial: "people/timeline_item" %>
     </div>
 
     <%# Sidebar %>
@@ -151,7 +97,7 @@
                       <div class="min-w-0">
                         <p class="font-medium text-sm truncate"><%= attendee.name %></p>
                         <p class="text-xs text-base-content/50 truncate">
-                          <%= attendee.governing_body %> &middot; <%= attendee.document_attendees.count %> doc<%= attendee.document_attendees.count == 1 ? "" : "s" %>
+                          <%= attendee.governing_body&.name || attendee.governing_body_extracted %> &middot; <%= attendee.document_attendees.count %> doc<%= attendee.document_attendees.count == 1 ? "" : "s" %>
                         </p>
                       </div>
                     </div>
@@ -186,7 +132,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                       <p class="font-medium text-sm truncate"><%= co.name %></p>
-                      <p class="text-xs text-base-content/50 truncate"><%= co.primary_governing_body %></p>
+                      <p class="text-xs text-base-content/50 truncate"><%= co.primary_governing_body&.name %></p>
                     </div>
                   <% end %>
                 <% end %>
@@ -220,7 +166,7 @@
                             </div>
                             <div class="min-w-0">
                               <p class="font-medium text-sm truncate"><%= dup.name %></p>
-                              <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body %></p>
+                              <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body&.name %></p>
                             </div>
                           </div>
                           <%= button_to admin_people_merge_path(source_id: dup.id, target_id: @person.id),
@@ -247,7 +193,7 @@
                             </div>
                             <div class="min-w-0">
                               <p class="font-medium text-sm truncate"><%= dup.name %></p>
-                              <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body %></p>
+                              <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body&.name %></p>
                             </div>
                           </div>
                           <%= button_to admin_people_merge_path(source_id: dup.id, target_id: @person.id),

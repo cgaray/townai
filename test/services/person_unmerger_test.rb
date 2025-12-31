@@ -76,7 +76,7 @@ class PersonUnmergerTest < ActiveSupport::TestCase
     orphan_attendee = Attendee.new(
       name: "Orphan",
       normalized_name: "orphan",
-      governing_body: "Test Board"
+      governing_body_extracted: "Test Board"
     )
     # Don't save - just test the validation
     unmerger = PersonUnmerger.new(attendee: orphan_attendee)

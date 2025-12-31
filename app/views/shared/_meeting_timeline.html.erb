@@ -1,0 +1,65 @@
+<%# Shared meeting timeline component %>
+<%# locals: (meetings_by_year:, title: "Meeting History", count_label: "meetings", item_partial:) %>
+
+<div class="space-y-4">
+  <h2 class="text-xl font-bold flex items-center gap-2">
+    <%= icon("calendar", size: "w-5 h-5", class: "text-primary") %>
+    <%= title %>
+    <span class="badge badge-ghost badge-sm font-normal"><%= meetings_by_year.sum { |_, data| data[:count] } %> <%= count_label %></span>
+  </h2>
+
+  <% if meetings_by_year.any? %>
+    <div class="space-y-3">
+      <% meetings_by_year.each_with_index do |(year, year_data), year_index| %>
+        <%# Year Section - Collapsible %>
+        <div class="collapse collapse-arrow bg-base-100 border border-base-200 rounded-xl shadow-sm">
+          <input type="checkbox" <%= "checked" if year_index == 0 %> />
+          
+          <%# Year Header %>
+          <div class="collapse-title py-4 pr-12">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl font-bold text-base-content"><%= year %></span>
+              <span class="badge badge-primary badge-outline"><%= pluralize(year_data[:count], count_label.singularize) %></span>
+            </div>
+          </div>
+          
+          <%# Year Content %>
+          <div class="collapse-content px-6 pb-6">
+            <div class="space-y-6">
+              <% year_data[:months].each do |_month_num, month_data| %>
+                <%# Month Section %>
+                <div>
+                  <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">
+                    <%= month_data[:name] %>
+                  </h3>
+                  
+                  <%# Day Rows %>
+                  <div class="space-y-1">
+                    <% month_data[:days].each do |day, items| %>
+                      <div class="flex items-center gap-4 py-2 px-3 rounded-lg hover:bg-base-200/50 transition-colors group">
+                        <%# Day Number %>
+                        <span class="w-8 text-right font-mono text-lg font-medium text-base-content/70 group-hover:text-base-content transition-colors">
+                          <%= day %>
+                        </span>
+                        
+                        <%# Vertical Separator %>
+                        <div class="w-px h-6 bg-base-300"></div>
+                        
+                        <%# Items - rendered via partial %>
+                        <div class="flex-1 flex flex-wrap gap-2 items-center">
+                          <%= render partial: item_partial, collection: items, as: :item %>
+                        </div>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-base-content/50 italic">No meetings recorded yet</div>
+  <% end %>
+</div>

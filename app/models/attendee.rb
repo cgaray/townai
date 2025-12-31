@@ -5,11 +5,12 @@
 # This model holds the immutable extraction data.
 class Attendee < ApplicationRecord
   belongs_to :person
+  belongs_to :governing_body, optional: true
   has_many :document_attendees, dependent: :destroy
   has_many :documents, through: :document_attendees
 
-  validates :name, :normalized_name, :governing_body, presence: true
-  validates :normalized_name, uniqueness: { scope: :governing_body }
+  validates :name, :normalized_name, :governing_body_extracted, presence: true
+  validates :normalized_name, uniqueness: { scope: :governing_body_extracted }
 
   before_validation :set_normalized_name, if: -> { name.present? && normalized_name.blank? }
 

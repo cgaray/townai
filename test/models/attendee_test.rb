@@ -2,25 +2,25 @@ require "test_helper"
 
 class AttendeeTest < ActiveSupport::TestCase
   test "should require name" do
-    attendee = Attendee.new(governing_body: "Finance Committee", person: people(:john_smith))
+    attendee = Attendee.new(governing_body_extracted: "Finance Committee", person: people(:john_smith))
     assert_not attendee.valid?
     assert_includes attendee.errors[:name], "can't be blank"
   end
 
-  test "should require governing_body" do
+  test "should require governing_body_extracted" do
     attendee = Attendee.new(name: "Test Person", person: people(:john_smith))
     assert_not attendee.valid?
-    assert_includes attendee.errors[:governing_body], "can't be blank"
+    assert_includes attendee.errors[:governing_body_extracted], "can't be blank"
   end
 
   test "should require person" do
-    attendee = Attendee.new(name: "Test Person", governing_body: "Finance Committee")
+    attendee = Attendee.new(name: "Test Person", governing_body_extracted: "Finance Committee")
     assert_not attendee.valid?
     assert_includes attendee.errors[:person], "must exist"
   end
 
   test "should auto-set normalized_name from name" do
-    attendee = Attendee.new(name: "Dr. John Smith Jr.", governing_body: "Finance Committee", person: people(:john_smith))
+    attendee = Attendee.new(name: "Dr. John Smith Jr.", governing_body_extracted: "Finance Committee", person: people(:john_smith))
     attendee.valid?
     assert_equal "john smith", attendee.normalized_name
   end
@@ -44,12 +44,12 @@ class AttendeeTest < ActiveSupport::TestCase
     assert_equal 3, Attendee.levenshtein_distance("john", "jane")
   end
 
-  test "uniqueness constraint on normalized_name + governing_body" do
+  test "uniqueness constraint on normalized_name + governing_body_extracted" do
     existing = attendees(:john_smith_finance)
     duplicate = Attendee.new(
       name: "John Smith",
       normalized_name: existing.normalized_name,
-      governing_body: existing.governing_body,
+      governing_body_extracted: existing.governing_body_extracted,
       person: people(:jane_doe)
     )
     assert_not duplicate.valid?

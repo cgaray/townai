@@ -24,15 +24,21 @@ class AttendeeLinker
     attendees_data = extract_attendees_from_metadata
     return true if attendees_data.empty?
 
-    governing_body = document.metadata_field("governing_body")
-    if governing_body.blank?
+    governing_body_name = document.metadata_field("governing_body")
+    if governing_body_name.blank?
       @errors << "Document has no governing_body in metadata"
       return false
     end
 
+    # Find or create the GoverningBody record
+    governing_body = GoverningBody.find_or_create_by_name(governing_body_name)
+
     affected_people = Set.new
 
     ActiveRecord::Base.transaction do
+      # Link document to governing body
+      document.update!(governing_body: governing_body) if document.governing_body_id.nil?
+
       # Clear existing links for this document (for re-extraction scenarios)
       # Track affected people before clearing
       document.document_attendees.includes(attendee: :person).each do |da|
@@ -41,7 +47,7 @@ class AttendeeLinker
       document.document_attendees.destroy_all
 
       attendees_data.each do |attendee_data|
-        attendee = link_single_attendee(attendee_data, governing_body)
+        attendee = link_single_attendee(attendee_data, governing_body_name, governing_body)
         affected_people << attendee.person if attendee&.person
       end
 
@@ -95,7 +101,7 @@ class AttendeeLinker
     end
   end
 
-  def link_single_attendee(attendee_data, governing_body)
+  def link_single_attendee(attendee_data, governing_body_name, governing_body)
     name = attendee_data["name"].to_s.strip
     return if name.blank?
 
@@ -103,7 +109,7 @@ class AttendeeLinker
     return if normalized.blank?
 
     # Find or create attendee by normalized name + governing body
-    attendee = find_or_create_attendee(name, normalized, governing_body)
+    attendee = find_or_create_attendee(name, normalized, governing_body_name, governing_body)
 
     # Create the document-attendee link
     create_document_attendee(attendee, attendee_data)
@@ -111,18 +117,24 @@ class AttendeeLinker
     attendee
   end
 
-  def find_or_create_attendee(name, normalized_name, governing_body)
+  def find_or_create_attendee(name, normalized_name, governing_body_name, governing_body)
     # Use find_or_create_by! to handle race conditions from concurrent jobs
-    # The unique index on (normalized_name, governing_body) ensures uniqueness
+    # The unique index on (normalized_name, governing_body_extracted) ensures uniqueness
     created = false
     attendee = Attendee.find_or_create_by!(
       normalized_name: normalized_name,
-      governing_body: governing_body
+      governing_body_extracted: governing_body_name
     ) do |a|
       a.name = name
+      a.governing_body = governing_body
       # Create a new Person for this new attendee
       a.person = Person.create!(name: name, normalized_name: normalized_name)
       created = true
+    end
+
+    # Backfill governing_body_id if missing (for existing records)
+    if attendee.governing_body_id.nil? && governing_body
+      attendee.update!(governing_body: governing_body)
     end
 
     if created

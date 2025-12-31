@@ -1,0 +1,28 @@
+<%# Timeline item for person: document with role/status %>
+<% doc = item[:document] %>
+<% extra = item[:extra] || {} %>
+<% doc_type = doc.metadata_field("document_type")&.downcase %>
+<% governing_body = doc.metadata_field("governing_body") %>
+
+<%= link_to doc, class: "inline-flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-base-200 transition-colors group" do %>
+  <%# Document Type Badge %>
+  <span class="badge px-2.5 py-2.5 gap-1.5 <%= doc_type == 'agenda' ? 'badge-primary' : doc_type == 'minutes' ? 'badge-secondary' : 'badge-ghost' %>">
+    <%= icon(doc_type == "minutes" ? "document-text" : "list-bullet", size: "w-3 h-3") %>
+    <%= doc_type&.capitalize || "Document" %>
+  </span>
+  
+  <%# Governing Body %>
+  <span class="text-sm text-base-content/60 group-hover:text-base-content transition-colors"><%= governing_body %></span>
+  
+  <%# Role Badge %>
+  <% if extra[:role] %>
+    <%= role_badge(extra[:role]) %>
+  <% end %>
+  
+  <%# Status Badge %>
+  <% if extra[:status] %>
+    <span class="badge badge-sm <%= extra[:status] == 'present' ? 'badge-success' : extra[:status] == 'remote' ? 'badge-info' : 'badge-warning' %> badge-outline">
+      <%= extra[:status].capitalize %>
+    </span>
+  <% end %>
+<% end %>
