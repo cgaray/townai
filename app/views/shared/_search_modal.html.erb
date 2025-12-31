@@ -1,0 +1,119 @@
+<%# Search modal - triggered by Cmd+K %>
+<dialog id="search-modal" class="modal" data-controller="search" data-action="keydown.esc->search#close">
+  <div class="modal-box max-w-2xl p-0">
+    <%# Search input %>
+    <div class="p-4 border-b border-base-300">
+      <div class="relative">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40">
+          <%= icon("magnifying-glass", size: "w-5 h-5") %>
+        </span>
+        <input type="text"
+               data-search-target="input"
+               data-action="input->search#onInput keydown->search#handleKeydown"
+               placeholder="Search documents, topics, people..."
+               aria-label="Search documents, topics, people, and governing bodies"
+               class="input input-bordered w-full pl-10 pr-20"
+               autocomplete="off">
+        <div class="absolute right-3 top-1/2 -translate-y-1/2">
+          <kbd class="kbd kbd-sm">esc</kbd>
+        </div>
+      </div>
+    </div>
+
+    <%# Filter tabs %>
+    <div class="px-4 pt-3 pb-2 border-b border-base-300 bg-base-200/50">
+      <div class="flex gap-2" role="tablist" aria-label="Filter search results by type" data-search-target="tabs">
+        <button type="button" 
+                role="tab"
+                aria-selected="true"
+                aria-label="Show all results"
+                data-action="click->search#setType" 
+                data-type=""
+                class="btn btn-xs btn-primary search-tab-active">
+          All
+          <span class="badge badge-xs ml-1" data-search-target="countAll">0</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by documents"
+                data-action="click->search#setType"
+                data-type="document"
+                class="btn btn-xs btn-ghost">
+          Documents
+          <span class="badge badge-xs ml-1" data-search-target="countDocuments">0</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by topics"
+                data-action="click->search#setType"
+                data-type="topic"
+                class="btn btn-xs btn-ghost">
+          Topics
+          <span class="badge badge-xs ml-1" data-search-target="countTopics">0</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by people"
+                data-action="click->search#setType"
+                data-type="person"
+                class="btn btn-xs btn-ghost">
+          People
+          <span class="badge badge-xs ml-1" data-search-target="countPeople">0</span>
+        </button>
+        <button type="button"
+                role="tab"
+                aria-selected="false"
+                aria-label="Filter by governing bodies"
+                data-action="click->search#setType"
+                data-type="governing_body"
+                class="btn btn-xs btn-ghost">
+          Bodies
+          <span class="badge badge-xs ml-1" data-search-target="countBodies">0</span>
+        </button>
+      </div>
+    </div>
+
+    <%# Results area %>
+    <div class="max-h-96 overflow-y-auto" data-search-target="results">
+      <%# Empty state %>
+      <div class="p-8 text-center text-base-content/50" data-search-target="emptyState">
+        <p>Start typing to search...</p>
+        <p class="text-sm mt-1">Use <kbd class="kbd kbd-xs">Up</kbd> <kbd class="kbd kbd-xs">Down</kbd> to navigate, <kbd class="kbd kbd-xs">Enter</kbd> to select</p>
+      </div>
+
+      <%# Loading state %>
+      <div class="p-8 text-center hidden" role="status" aria-live="polite" data-search-target="loading">
+        <span class="loading loading-spinner loading-md" aria-label="Loading search results"></span>
+        <span class="sr-only">Loading search results...</span>
+      </div>
+
+      <%# No results state %>
+      <div class="p-8 text-center hidden" data-search-target="noResults">
+        <p class="text-base-content/50">No results found</p>
+      </div>
+
+      <%# Results list %>
+      <div class="divide-y divide-base-200" data-search-target="resultsList">
+      </div>
+    </div>
+
+    <%# Footer %>
+    <div class="p-3 border-t border-base-300 bg-base-200/50 flex justify-between items-center text-xs text-base-content/50">
+      <div class="flex items-center gap-3">
+        <span><kbd class="kbd kbd-xs">Up</kbd> <kbd class="kbd kbd-xs">Down</kbd> Navigate</span>
+        <span><kbd class="kbd kbd-xs">Enter</kbd> Open</span>
+        <span><kbd class="kbd kbd-xs" data-hotkey-modifier>Ctrl</kbd><kbd class="kbd kbd-xs">Enter</kbd> View all</span>
+      </div>
+      <a href="#" 
+         class="link link-primary"
+         data-search-target="viewAllLink"
+         data-action="click->search#close">View all results</a>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

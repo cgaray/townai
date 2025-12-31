@@ -11,6 +11,9 @@ class Person < ApplicationRecord
 
   scope :by_appearances, -> { order(document_appearances_count: :desc, name: :asc) }
 
+  after_save :reindex_for_search, if: :saved_change_to_name?
+  after_destroy :remove_from_search_index
+
   # Strip titles (Mr., Dr., Jr., etc.) when normalizing person names
   def self.strip_titles_on_normalize?
     true
@@ -129,5 +132,13 @@ class Person < ApplicationRecord
 
     first, last = dates.minmax
     { first: first, last: last }
+  end
+
+  def reindex_for_search
+    ReindexSearchJob.perform_later("person", id)
+  end
+
+  def remove_from_search_index
+    SearchIndexer.remove_person(id)
   end
 end

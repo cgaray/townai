@@ -1,0 +1,84 @@
+CREATE TABLE IF NOT EXISTS "active_storage_blobs" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "byte_size" bigint NOT NULL, "checksum" varchar, "content_type" varchar, "created_at" datetime(6) NOT NULL, "filename" varchar NOT NULL, "key" varchar NOT NULL, "metadata" text, "service_name" varchar NOT NULL);
+CREATE UNIQUE INDEX "index_active_storage_blobs_on_key" ON "active_storage_blobs" ("key") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "governing_bodies" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "documents_count" integer DEFAULT 0, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE INDEX "index_governing_bodies_on_name" ON "governing_bodies" ("name") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_governing_bodies_on_normalized_name" ON "governing_bodies" ("normalized_name") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "people" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "document_appearances_count" integer DEFAULT 0, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE INDEX "index_people_on_document_appearances_count" ON "people" ("document_appearances_count") /*application='Townai'*/;
+CREATE INDEX "index_people_on_name" ON "people" ("name") /*application='Townai'*/;
+CREATE INDEX "index_people_on_normalized_name" ON "people" ("normalized_name") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "active_storage_attachments" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "blob_id" bigint NOT NULL, "created_at" datetime(6) NOT NULL, "name" varchar NOT NULL, "record_id" bigint NOT NULL, "record_type" varchar NOT NULL, CONSTRAINT "fk_rails_c3b3935057"
+FOREIGN KEY ("blob_id")
+  REFERENCES "active_storage_blobs" ("id")
+);
+CREATE INDEX "index_active_storage_attachments_on_blob_id" ON "active_storage_attachments" ("blob_id") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_active_storage_attachments_uniqueness" ON "active_storage_attachments" ("record_type", "record_id", "name", "blob_id") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "active_storage_variant_records" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "blob_id" bigint NOT NULL, "variation_digest" varchar NOT NULL, CONSTRAINT "fk_rails_993965df05"
+FOREIGN KEY ("blob_id")
+  REFERENCES "active_storage_blobs" ("id")
+);
+CREATE UNIQUE INDEX "index_active_storage_variant_records_uniqueness" ON "active_storage_variant_records" ("blob_id", "variation_digest") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "api_calls" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "completion_tokens" integer, "cost_credits" decimal(12,6), "created_at" datetime(6) NOT NULL, "document_id" integer, "error_message" text, "model" varchar NOT NULL, "operation" varchar NOT NULL, "prompt_tokens" integer, "provider" varchar NOT NULL, "response_time_ms" integer, "status" varchar NOT NULL, "total_tokens" integer, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_833f30121c"
+FOREIGN KEY ("document_id")
+  REFERENCES "documents" ("id")
+);
+CREATE INDEX "index_api_calls_on_created_at" ON "api_calls" ("created_at") /*application='Townai'*/;
+CREATE INDEX "index_api_calls_on_document_id" ON "api_calls" ("document_id") /*application='Townai'*/;
+CREATE INDEX "index_api_calls_on_model" ON "api_calls" ("model") /*application='Townai'*/;
+CREATE INDEX "index_api_calls_on_provider" ON "api_calls" ("provider") /*application='Townai'*/;
+CREATE INDEX "index_api_calls_on_status" ON "api_calls" ("status") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "attendees" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "governing_body_extracted" varchar NOT NULL, "governing_body_id" integer, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "person_id" integer, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_705838fd59"
+FOREIGN KEY ("governing_body_id")
+  REFERENCES "governing_bodies" ("id")
+, CONSTRAINT "fk_rails_4ff535fe1d"
+FOREIGN KEY ("person_id")
+  REFERENCES "people" ("id")
+);
+CREATE INDEX "index_attendees_on_governing_body_id" ON "attendees" ("governing_body_id") /*application='Townai'*/;
+CREATE INDEX "index_attendees_on_name" ON "attendees" ("name") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_attendees_on_normalized_name_and_governing_body_extracted" ON "attendees" ("normalized_name", "governing_body_extracted") /*application='Townai'*/;
+CREATE INDEX "index_attendees_on_person_id" ON "attendees" ("person_id") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "document_attendees" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "attendee_id" integer NOT NULL, "created_at" datetime(6) NOT NULL, "document_id" integer NOT NULL, "role" varchar, "source_text" text, "status" varchar, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_967e60c1ed"
+FOREIGN KEY ("attendee_id")
+  REFERENCES "attendees" ("id")
+, CONSTRAINT "fk_rails_96bf242bb6"
+FOREIGN KEY ("document_id")
+  REFERENCES "documents" ("id")
+);
+CREATE INDEX "index_document_attendees_on_attendee_id" ON "document_attendees" ("attendee_id") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_document_attendees_on_document_id_and_attendee_id" ON "document_attendees" ("document_id", "attendee_id") /*application='Townai'*/;
+CREATE INDEX "index_document_attendees_on_document_id" ON "document_attendees" ("document_id") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "documents" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "extracted_metadata" text, "governing_body_id" integer, "raw_text" text, "source_file_hash" varchar, "source_file_name" varchar, "status" integer DEFAULT 0, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_d8dcddfde2"
+FOREIGN KEY ("governing_body_id")
+  REFERENCES "governing_bodies" ("id")
+);
+CREATE INDEX "index_documents_on_governing_body_id" ON "documents" ("governing_body_id") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_documents_on_source_file_hash" ON "documents" ("source_file_hash") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY);
+CREATE TABLE IF NOT EXISTS "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE INDEX "index_documents_on_status" ON "documents" ("status") /*application='Townai'*/;
+CREATE VIRTUAL TABLE search_entries USING fts5(
+  entity_type,
+  entity_id UNINDEXED,
+  title,
+  subtitle,
+  content,
+  url UNINDEXED,
+  tokenize='porter unicode61'
+)
+/* search_entries(entity_type,entity_id,title,subtitle,content,url) */;
+CREATE TABLE IF NOT EXISTS 'search_entries_data'(id INTEGER PRIMARY KEY, block BLOB);
+CREATE TABLE IF NOT EXISTS 'search_entries_idx'(segid, term, pgno, PRIMARY KEY(segid, term)) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS 'search_entries_content'(id INTEGER PRIMARY KEY, c0, c1, c2, c3, c4, c5);
+CREATE TABLE IF NOT EXISTS 'search_entries_docsize'(id INTEGER PRIMARY KEY, sz BLOB);
+CREATE TABLE IF NOT EXISTS 'search_entries_config'(k PRIMARY KEY, v) WITHOUT ROWID;
+INSERT INTO "schema_migrations" (version) VALUES
+('20251231025933'),
+('20251231024801'),
+('20251230184307'),
+('20251230182934'),
+('20251229125336'),
+('20251228192040'),
+('20251226194717'),
+('20251226194547');
+

@@ -7,6 +7,9 @@ class Document < ApplicationRecord
 
   enum :status, [ :pending, :extracting_text, :extracting_metadata, :complete, :failed ]
 
+  after_save :reindex_for_search, if: :should_reindex?
+  after_destroy :remove_from_search_index
+
   def parsed_metadata
     return {} unless extracted_metadata.present?
 
@@ -20,5 +23,19 @@ class Document < ApplicationRecord
 
   def metadata_field(field)
     parsed_metadata[field]
+  end
+
+  private
+
+  def should_reindex?
+    complete? && (saved_change_to_status? || saved_change_to_extracted_metadata?)
+  end
+
+  def reindex_for_search
+    ReindexSearchJob.perform_later("document", id)
+  end
+
+  def remove_from_search_index
+    SearchIndexer.remove_document(id)
   end
 end

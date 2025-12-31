@@ -12,6 +12,9 @@ class GoverningBody < ApplicationRecord
 
   scope :by_document_count, -> { order(documents_count: :desc, name: :asc) }
 
+  after_save :reindex_for_search, if: :saved_change_to_name?
+  after_destroy :remove_from_search_index
+
   # Find or create by name (used during extraction)
   # Handles race conditions when multiple processes try to create the same governing body
   def self.find_or_create_by_name(name)
@@ -23,5 +26,15 @@ class GoverningBody < ApplicationRecord
     end
   rescue ActiveRecord::RecordNotUnique
     find_by(normalized_name: normalized)
+  end
+
+  private
+
+  def reindex_for_search
+    ReindexSearchJob.perform_later("governing_body", id)
+  end
+
+  def remove_from_search_index
+    SearchIndexer.remove_governing_body(id)
   end
 end
