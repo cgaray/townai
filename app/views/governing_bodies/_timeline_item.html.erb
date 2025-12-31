@@ -2,7 +2,6 @@
 <% doc = item[:document] %>
 <% doc_type = doc.metadata_field("document_type")&.downcase %>
 
-<%= link_to doc, class: "badge px-3 py-3 gap-1.5 #{doc_type == 'agenda' ? 'badge-primary' : doc_type == 'minutes' ? 'badge-secondary' : 'badge-ghost'} hover:shadow-md transition-shadow" do %>
-  <%= icon(doc_type == "minutes" ? "document-text" : "list-bullet", size: "w-3 h-3") %>
-  <%= doc_type&.capitalize || "Document" %>
+<%= link_to doc, class: "hover:shadow-md transition-shadow" do %>
+  <%= document_type_badge(doc_type) %>
 <% end %>

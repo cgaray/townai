@@ -1,0 +1,8 @@
+<%# Shared back navigation link %>
+<%# locals: (path:, text:) %>
+<div>
+  <%= link_to path, class: "inline-flex items-center gap-2 text-base-content/60 hover:text-primary font-medium transition-colors" do %>
+    <%= icon("chevron-left", size: "w-5 h-5") %>
+    <span><%= text %></span>
+  <% end %>
+</div>

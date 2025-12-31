@@ -1,15 +1,20 @@
 # frozen_string_literal: true
 
 class Person < ApplicationRecord
+  include NameNormalizable
+
   has_many :attendees, dependent: :restrict_with_error
   has_many :document_attendees, through: :attendees
   has_many :documents, -> { distinct }, through: :document_attendees
 
   validates :name, :normalized_name, presence: true
 
-  before_validation :set_normalized_name, if: -> { name.present? && normalized_name.blank? }
-
   scope :by_appearances, -> { order(document_appearances_count: :desc, name: :asc) }
+
+  # Strip titles (Mr., Dr., Jr., etc.) when normalizing person names
+  def self.strip_titles_on_normalize?
+    true
+  end
 
   # Get all governing bodies this person has been seen in (as GoverningBody records)
   def governing_bodies
@@ -91,10 +96,6 @@ class Person < ApplicationRecord
   end
 
   private
-
-  def set_normalized_name
-    self.normalized_name = Attendee.normalize_name(name)
-  end
 
   def compute_seen_dates
     dates = []

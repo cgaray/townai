@@ -1,0 +1,27 @@
+<%# Shared pagination component %>
+<%# locals: (pagy:, url_builder:) %>
+<%# url_builder should be a lambda that takes a page number and returns the URL %>
+<% return unless pagy.pages > 1 %>
+<div class="flex justify-center mt-8">
+  <div class="join">
+    <% if pagy.prev %>
+      <%= link_to url_builder.call(pagy.prev), class: "join-item btn btn-sm" do %>
+        <%= icon("chevron-left", size: "w-4 h-4") %>
+      <% end %>
+    <% else %>
+      <span class="join-item btn btn-sm btn-disabled"><%= icon("chevron-left", size: "w-4 h-4") %></span>
+    <% end %>
+
+    <span class="join-item btn btn-sm btn-ghost pointer-events-none">
+      Page <%= pagy.page %> of <%= pagy.pages %>
+    </span>
+
+    <% if pagy.next %>
+      <%= link_to url_builder.call(pagy.next), class: "join-item btn btn-sm" do %>
+        <%= icon("chevron-right", size: "w-4 h-4") %>
+      <% end %>
+    <% else %>
+      <span class="join-item btn btn-sm btn-disabled"><%= icon("chevron-right", size: "w-4 h-4") %></span>
+    <% end %>
+  </div>
+</div>

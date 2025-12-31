@@ -24,7 +24,7 @@ class DocumentsHelperTest < ActionView::TestCase
   test "status_badge returns warning badge for extracting statuses" do
     result = status_badge("extracting_text")
     assert_match(/badge-warning/, result)
-    assert_match(/animate-spin-slow/, result)
+    assert_match(/loading loading-spinner/, result)
   end
 
   test "status_icon_name returns check-circle for complete" do
@@ -42,38 +42,6 @@ class DocumentsHelperTest < ActionView::TestCase
   test "status_icon_name returns arrow-path for extracting statuses" do
     assert_equal "arrow-path", status_icon_name("extracting_text")
     assert_equal "arrow-path", status_icon_name("extracting_metadata")
-  end
-
-  test "status_color returns text-success for complete" do
-    assert_equal "text-success", status_color("complete")
-  end
-
-  test "status_color returns text-error for failed" do
-    assert_equal "text-error", status_color("failed")
-  end
-
-  test "status_color returns text-base-content/50 for pending" do
-    assert_equal "text-base-content/50", status_color("pending")
-  end
-
-  test "status_color returns text-warning for extracting statuses" do
-    assert_equal "text-warning", status_color("extracting_text")
-  end
-
-  test "status_bg returns success background for complete" do
-    assert_equal "bg-success/10", status_bg("complete")
-  end
-
-  test "status_bg returns error background for failed" do
-    assert_equal "bg-error/10", status_bg("failed")
-  end
-
-  test "status_bg returns base background for pending" do
-    assert_equal "bg-base-200", status_bg("pending")
-  end
-
-  test "status_bg returns warning background for extracting statuses" do
-    assert_equal "bg-warning/10", status_bg("extracting_text")
   end
 
   test "document_type_border_class returns agenda border for agenda" do

@@ -1,81 +1,40 @@
 <%# app/views/admin/api_costs/index.html.erb %>
 <div class="space-y-8">
   <%# Page Header %>
-  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-    <div>
-      <h1 class="text-4xl font-extrabold tracking-tight">
-        <span class="text-gradient-primary">API Costs</span>
-      </h1>
-      <p class="text-base-content/60 mt-2 text-lg">OpenRouter API usage and cost tracking</p>
-    </div>
-  </div>
+  <%= render "shared/page_header",
+             title: "API Costs",
+             subtitle: "OpenRouter API usage and cost tracking" %>
 
   <%# Stats Cards %>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <%# Total Cost %>
-    <div class="card bg-base-100 border border-base-200 shadow-sm">
-      <div class="card-body p-5">
-        <div class="flex items-center gap-3">
-          <div class="icon-circle icon-circle-md icon-circle-brand">
-            <%= icon("building-library", size: "w-5 h-5") %>
-          </div>
-          <div>
-            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">Total Cost</div>
-            <div class="text-2xl font-bold"><%= number_to_currency(@total_cost, precision: 4) %></div>
-            <div class="text-xs text-base-content/50"><%= number_with_precision(@total_cost, precision: 4) %> credits</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <%= render "shared/stat_card",
+               icon_name: "currency-dollar",
+               title: "Total Cost",
+               value: number_to_currency(@total_cost, precision: 4),
+               subtitle: "#{number_with_precision(@total_cost, precision: 4)} credits",
+               icon_class: "icon-circle-brand" %>
 
-    <%# This Month %>
-    <div class="card bg-base-100 border border-base-200 shadow-sm">
-      <div class="card-body p-5">
-        <div class="flex items-center gap-3">
-          <div class="icon-circle icon-circle-md icon-circle-agenda">
-            <%= icon("calendar", size: "w-5 h-5") %>
-          </div>
-          <div>
-            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">This Month</div>
-            <div class="text-2xl font-bold"><%= number_to_currency(@total_cost_this_month, precision: 4) %></div>
-            <div class="text-xs text-base-content/50"><%= number_with_precision(@total_cost_this_month, precision: 4) %> credits</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <%= render "shared/stat_card",
+               icon_name: "calendar",
+               title: "This Month",
+               value: number_to_currency(@total_cost_this_month, precision: 4),
+               subtitle: "#{number_with_precision(@total_cost_this_month, precision: 4)} credits",
+               icon_class: "icon-circle-agenda" %>
 
-    <%# Avg Per Document %>
-    <div class="card bg-base-100 border border-base-200 shadow-sm">
-      <div class="card-body p-5">
-        <div class="flex items-center gap-3">
-          <div class="icon-circle icon-circle-md icon-circle-minutes">
-            <%= icon("document", size: "w-5 h-5") %>
-          </div>
-          <div>
-            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">Avg Per Document</div>
-            <div class="text-2xl font-bold"><%= number_to_currency(@average_cost_per_document, precision: 4) %></div>
-            <div class="text-xs text-base-content/50"><%= number_with_precision(@average_cost_per_document, precision: 4) %> credits</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <%= render "shared/stat_card",
+               icon_name: "document",
+               title: "Avg Per Document",
+               value: number_to_currency(@average_cost_per_document, precision: 4),
+               subtitle: "#{number_with_precision(@average_cost_per_document, precision: 4)} credits",
+               icon_class: "icon-circle-minutes" %>
 
-    <%# Success Rate %>
-    <div class="card bg-base-100 border border-base-200 shadow-sm">
-      <div class="card-body p-5">
-        <div class="flex items-center gap-3">
-          <div class="icon-circle icon-circle-md <%= @failed_calls > 0 ? 'bg-warning/20 text-warning' : 'bg-success/20 text-success' %>">
-            <%= icon("check-circle", size: "w-5 h-5") %>
-          </div>
-          <div>
-            <div class="text-xs text-base-content/50 uppercase tracking-wide font-semibold">Success Rate</div>
-            <% success_rate = @total_calls > 0 ? (@successful_calls.to_f / @total_calls * 100) : 0 %>
-            <div class="text-2xl font-bold"><%= number_to_percentage(success_rate, precision: 1) %></div>
-            <div class="text-xs text-base-content/50"><%= @successful_calls %>/<%= @total_calls %> calls</div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <% success_rate = @total_calls > 0 ? (@successful_calls.to_f / @total_calls * 100) : 0 %>
+    <%= render "shared/stat_card",
+               icon_name: "check-circle",
+               title: "Success Rate",
+               value: number_to_percentage(success_rate, precision: 1),
+               subtitle: "#{@successful_calls}/#{@total_calls} calls",
+               icon_class: @failed_calls > 0 ? "bg-warning/20 text-warning" : "bg-success/20 text-success" %>
   </div>
 
   <%# Cost by Model %>
