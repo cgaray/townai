@@ -1,0 +1,11 @@
+# frozen_string_literal: true
+
+arlington:
+  name: Arlington
+  normalized_name: arlington
+  slug: arlington
+
+medford:
+  name: Medford
+  normalized_name: medford
+  slug: medford

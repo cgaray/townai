@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
 class PeopleController < ApplicationController
+  include TownScoped
   include MeetingTimeline
 
   def index
     @pagy, @people = pagy(
-      Person
+      current_town.people
         .includes(attendees: :governing_body)
         .includes(:document_attendees)
         .by_appearances,
@@ -14,7 +15,7 @@ class PeopleController < ApplicationController
   end
 
   def show
-    @person = Person.find(params[:id])
+    @person = current_town.people.find(params[:id])
     @attendees = @person.attendees.includes(:governing_body, :document_attendees).order(:name)
     @document_attendees = @person.document_attendees
                                   .includes(:attendee, document: :pdf_attachment)

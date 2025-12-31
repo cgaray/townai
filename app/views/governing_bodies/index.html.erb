@@ -17,7 +17,7 @@
   <% if @governing_bodies.any? %>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       <% @governing_bodies.each do |gb| %>
-        <%= link_to gb, class: "card bg-base-100 border border-base-200 card-hover border-t-brand group" do %>
+        <%= link_to town_governing_body_path(current_town, gb), class: "card bg-base-100 border border-base-200 card-hover border-t-brand group" do %>
           <div class="card-body p-5">
             <div class="flex items-start gap-3">
               <%= icon_in_circle("building-library", type: :brand, size: :lg) %>

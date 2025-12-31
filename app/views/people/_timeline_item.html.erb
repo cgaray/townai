@@ -4,7 +4,7 @@
 <% doc_type = doc.metadata_field("document_type")&.downcase %>
 <% governing_body = doc.metadata_field("governing_body") %>
 
-<%= link_to doc, class: "inline-flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-base-200 transition-colors group" do %>
+<%= link_to town_document_path(current_town, doc), class: "inline-flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-base-200 transition-colors group" do %>
   <%# Document Type Badge %>
   <%= document_type_badge(doc_type) %>
   

@@ -1,16 +1,17 @@
 # frozen_string_literal: true
 
 class GoverningBodiesController < ApplicationController
+  include TownScoped
   include MeetingTimeline
 
   def index
-    @governing_bodies = GoverningBody
+    @governing_bodies = current_town.governing_bodies
       .by_document_count
       .select("governing_bodies.*, (SELECT COUNT(DISTINCT person_id) FROM attendees WHERE attendees.governing_body_id = governing_bodies.id) AS people_count")
   end
 
   def show
-    @governing_body = GoverningBody
+    @governing_body = current_town.governing_bodies
       .select("governing_bodies.*, (SELECT COUNT(DISTINCT person_id) FROM attendees WHERE attendees.governing_body_id = governing_bodies.id) AS people_count")
       .find(params[:id])
 

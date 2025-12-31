@@ -6,8 +6,11 @@
 class AttendeeLinker
   attr_reader :document, :linked_count, :created_count, :errors
 
-  def initialize(document)
+  # @param document [Document] The document to process
+  # @param town [Town, nil] The town to associate with new governing bodies and people
+  def initialize(document, town: nil)
     @document = document
+    @town = town
     @linked_count = 0
     @created_count = 0
     @errors = []
@@ -21,6 +24,11 @@ class AttendeeLinker
       return false
     end
 
+    if @town.nil?
+      @errors << "Town is required to link attendees"
+      return false
+    end
+
     attendees_data = extract_attendees_from_metadata
     return true if attendees_data.empty?
 
@@ -31,7 +39,7 @@ class AttendeeLinker
     end
 
     # Find or create the GoverningBody record
-    governing_body = GoverningBody.find_or_create_by_name(governing_body_name)
+    governing_body = GoverningBody.find_or_create_by_name(governing_body_name, town: @town)
 
     affected_people = Set.new
 
@@ -128,7 +136,7 @@ class AttendeeLinker
       a.name = name
       a.governing_body = governing_body
       # Create a new Person for this new attendee
-      a.person = Person.create!(name: name, normalized_name: normalized_name)
+      a.person = Person.create!(name: name, normalized_name: normalized_name, town: @town)
       created = true
     end
 

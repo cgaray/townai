@@ -1,18 +1,36 @@
 # frozen_string_literal: true
 
 namespace :attendees do
-  desc "Link attendees from all existing complete documents"
-  task link_existing: :environment do
-    puts "Linking attendees from existing documents..."
+  desc "Link attendees from complete documents for a specific town"
+  task :link_existing, [ :town_slug ] => :environment do |_t, args|
+    if args[:town_slug].blank?
+      puts "Usage: bin/rails attendees:link_existing[TOWN_SLUG]"
+      puts "Example: bin/rails attendees:link_existing[arlington]"
+      puts ""
+      puts "Available towns:"
+      Town.order(:name).each { |t| puts "  - #{t.slug} (#{t.name})" }
+      exit 1
+    end
 
-    documents = Document.complete.where.not(extracted_metadata: nil)
+    town = Town.find_by(slug: args[:town_slug])
+    unless town
+      puts "Error: Town '#{args[:town_slug]}' not found."
+      puts ""
+      puts "Available towns:"
+      Town.order(:name).each { |t| puts "  - #{t.slug} (#{t.name})" }
+      exit 1
+    end
+
+    puts "Linking attendees from existing documents for #{town.name}..."
+
+    documents = town.documents.complete.where.not(extracted_metadata: nil)
     total = documents.count
     linked = 0
     skipped = 0
     errors = 0
 
     documents.find_each.with_index do |document, index|
-      linker = AttendeeLinker.new(document)
+      linker = AttendeeLinker.new(document, town: town)
 
       if linker.link_attendees
         linked += 1
@@ -31,26 +49,52 @@ namespace :attendees do
     puts "  Successfully processed: #{linked}"
     puts "  Skipped: #{skipped}"
     puts "  Errors: #{errors}"
-    puts "  Total attendees: #{Attendee.count}"
-    puts "  Total people: #{Person.count}"
+    puts "  Total attendees in #{town.name}: #{Attendee.joins(:governing_body).where(governing_bodies: { town_id: town.id }).count}"
+    puts "  Total people in #{town.name}: #{town.people.count}"
   end
 
   desc "Show attendee and people statistics"
-  task stats: :environment do
-    puts "People & Attendee Statistics"
-    puts "============================"
-    puts "Total people: #{Person.count}"
-    puts "Total attendees (raw extractions): #{Attendee.count}"
-    puts "Document-attendee links: #{DocumentAttendee.count}"
-    puts ""
-    puts "By governing body:"
-    Attendee.group(:governing_body).count.sort_by { |_, v| -v }.each do |body, count|
-      puts "  #{body}: #{count}"
-    end
-    puts ""
-    puts "Top 10 people by appearances:"
-    Person.by_appearances.limit(10).each do |person|
-      puts "  #{person.name} (#{person.primary_governing_body}): #{person.document_appearances_count} docs"
+  task :stats, [ :town_slug ] => :environment do |_t, args|
+    if args[:town_slug].present?
+      town = Town.find_by(slug: args[:town_slug])
+      unless town
+        puts "Error: Town '#{args[:town_slug]}' not found."
+        puts "Available towns:"
+        Town.order(:name).each { |t| puts "  - #{t.slug} (#{t.name})" }
+        exit 1
+      end
+
+      puts "People & Attendee Statistics for #{town.name}"
+      puts "=" * 50
+      puts "Total people: #{town.people.count}"
+      puts "Total attendees (raw extractions): #{Attendee.joins(:governing_body).where(governing_bodies: { town_id: town.id }).count}"
+      puts "Document-attendee links: #{DocumentAttendee.joins(document: :governing_body).where(governing_bodies: { town_id: town.id }).count}"
+      puts ""
+      puts "By governing body:"
+      town.governing_bodies.includes(:attendees).each do |gb|
+        puts "  #{gb.name}: #{gb.attendees.count} attendees"
+      end
+      puts ""
+      puts "Top 10 people by appearances:"
+      town.people.by_appearances.limit(10).each do |person|
+        puts "  #{person.name} (#{person.primary_governing_body&.name}): #{person.document_appearances_count} docs"
+      end
+    else
+      puts "People & Attendee Statistics (All Towns)"
+      puts "=" * 50
+      puts "Total people: #{Person.count}"
+      puts "Total attendees (raw extractions): #{Attendee.count}"
+      puts "Document-attendee links: #{DocumentAttendee.count}"
+      puts ""
+
+      Town.order(:name).each do |town|
+        puts "#{town.name}:"
+        puts "  People: #{town.people.count}"
+        puts "  Governing bodies: #{town.governing_bodies.count}"
+        puts "  Documents: #{town.documents.count}"
+        puts ""
+      end
+
     end
   end
 

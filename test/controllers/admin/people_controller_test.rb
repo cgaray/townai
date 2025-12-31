@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
   setup do
+    @town = towns(:arlington)
     @source_person = people(:jon_smith)
     @target_person = people(:john_smith)
     @document = documents(:complete_agenda)
@@ -13,7 +16,7 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
   test "merge redirects to target person on success" do
     post admin_people_merge_url(source_id: @source_person.id, target_id: @target_person.id)
 
-    assert_redirected_to person_url(@target_person)
+    assert_redirected_to town_person_url(@town, @target_person)
     follow_redirect!
     assert_match(/Successfully merged/, flash[:notice])
   end
@@ -42,14 +45,14 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
   test "merge redirects with error when source not found" do
     post admin_people_merge_url(source_id: 999999, target_id: @target_person.id)
 
-    assert_redirected_to people_url
+    assert_redirected_to towns_url
     assert_match(/not found/, flash[:alert])
   end
 
   test "merge redirects with error when target not found" do
     post admin_people_merge_url(source_id: @source_person.id, target_id: 999999)
 
-    assert_redirected_to people_url
+    assert_redirected_to towns_url
     assert_match(/not found/, flash[:alert])
   end
 
@@ -77,7 +80,7 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     post admin_people_unmerge_url(attendee_id: second_attendee.id)
 
     second_attendee.reload
-    assert_redirected_to person_url(second_attendee.person)
+    assert_redirected_to town_person_url(@town, second_attendee.person)
     follow_redirect!
     assert_match(/Successfully unmerged/, flash[:notice])
   end
@@ -87,14 +90,14 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
 
     post admin_people_unmerge_url(attendee_id: single_attendee.id)
 
-    assert_redirected_to person_url(@target_person)
+    assert_redirected_to town_person_url(@town, @target_person)
     assert_match(/Unmerge failed/, flash[:alert])
   end
 
   test "unmerge redirects with error when attendee not found" do
     post admin_people_unmerge_url(attendee_id: 999999)
 
-    assert_redirected_to people_url
+    assert_redirected_to towns_url
     assert_match(/not found/, flash[:alert])
   end
 end

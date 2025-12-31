@@ -15,7 +15,7 @@
       <div class="card-body p-4">
         <div class="space-y-3">
           <% people.each do |person| %>
-            <%= link_to person_path(person), class: "flex items-center gap-3 p-2 rounded-lg hover:bg-base-200 transition-colors" do %>
+            <%= link_to town_person_path(current_town, person), class: "flex items-center gap-3 p-2 rounded-lg hover:bg-base-200 transition-colors" do %>
               <%= avatar(person.name) %>
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-sm truncate"><%= person.name %></p>

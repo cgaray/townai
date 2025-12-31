@@ -4,31 +4,37 @@ john_smith:
   name: "John Smith"
   normalized_name: "john smith"
   document_appearances_count: 5
+  town: arlington
 
 jane_doe:
   name: "Jane Doe"
   normalized_name: "jane doe"
   document_appearances_count: 3
+  town: arlington
 
 alice_johnson:
   name: "Alice Johnson"
   normalized_name: "alice johnson"
   document_appearances_count: 10
+  town: arlington
 
 # For duplicate detection testing - same normalized name as john_smith
 john_smith_planning_person:
   name: "John Smith"
   normalized_name: "john smith"
   document_appearances_count: 4
+  town: arlington
 
 # Similar name to John Smith
 jon_smith:
   name: "Jon Smith"
   normalized_name: "jon smith"
   document_appearances_count: 1
+  town: arlington
 
 # Person that was merged (now has 2 attendees)
 j_smith:
   name: "J. Smith"
   normalized_name: "j smith"
   document_appearances_count: 0
+  town: arlington

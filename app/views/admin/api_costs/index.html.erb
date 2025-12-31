@@ -101,7 +101,12 @@
                   </td>
                   <td>
                     <% if call.document %>
-                      <%= link_to call.document.source_file_name.truncate(30), document_path(call.document), class: "link link-primary text-sm" %>
+                      <% town = call.document.governing_body&.town %>
+                      <% if town %>
+                        <%= link_to call.document.source_file_name.truncate(30), town_document_path(town, call.document), class: "link link-primary text-sm" %>
+                      <% else %>
+                        <span class="text-sm"><%= call.document.source_file_name.truncate(30) %></span>
+                      <% end %>
                     <% else %>
                       <span class="text-base-content/50 text-sm">-</span>
                     <% end %>

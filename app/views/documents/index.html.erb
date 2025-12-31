@@ -30,7 +30,7 @@
       <% @documents.each do |doc| %>
         <% doc_type = doc.metadata_field("document_type") %>
         <% card_opacity = doc.complete? ? "" : "opacity-60 hover:opacity-100" %>
-        <%= link_to doc, class: "card bg-base-100 border border-base-200 card-hover #{document_type_border_class(doc_type)} #{card_opacity} group transition-opacity" do %>
+        <%= link_to town_document_path(current_town, doc), class: "card bg-base-100 border border-base-200 card-hover #{document_type_border_class(doc_type)} #{card_opacity} group transition-opacity" do %>
           <div class="card-body p-5">
             <%# Document type icon and governing body %>
             <div class="flex items-start justify-between gap-3">

@@ -6,7 +6,7 @@
   <%# Search form %>
   <div class="card bg-base-100 shadow-sm border border-base-300">
     <div class="card-body">
-      <%= form_with url: search_path, method: :get, local: true, class: "flex gap-4 items-end" do |f| %>
+      <%= form_with url: search_path_for, method: :get, local: true, class: "flex gap-4 items-end" do |f| %>
         <div class="form-control flex-1">
           <label class="label">
             <span class="label-text font-medium">Search</span>
@@ -33,14 +33,14 @@
   <% if @query.present? %>
     <%# Filter tabs %>
     <div class="tabs tabs-boxed bg-base-200 p-1">
-      <%= link_to search_path(q: @query), 
+      <%= link_to search_path_for(q: @query), 
           class: "tab #{@type.blank? ? 'tab-active' : ''}" do %>
         All
         <span class="badge badge-sm ml-1"><%= @total_count %></span>
       <% end %>
       
       <% if @counts["document"].to_i > 0 %>
-        <%= link_to search_path(q: @query, type: "document"), 
+        <%= link_to search_path_for(q: @query, type: "document"), 
             class: "tab #{@type == 'document' ? 'tab-active' : ''}" do %>
           Documents
           <span class="badge badge-sm ml-1"><%= @counts["document"] %></span>
@@ -48,7 +48,7 @@
       <% end %>
       
       <% if @counts["topic"].to_i > 0 %>
-        <%= link_to search_path(q: @query, type: "topic"), 
+        <%= link_to search_path_for(q: @query, type: "topic"), 
             class: "tab #{@type == 'topic' ? 'tab-active' : ''}" do %>
           Topics
           <span class="badge badge-sm ml-1"><%= @counts["topic"] %></span>
@@ -56,7 +56,7 @@
       <% end %>
       
       <% if @counts["person"].to_i > 0 %>
-        <%= link_to search_path(q: @query, type: "person"), 
+        <%= link_to search_path_for(q: @query, type: "person"), 
             class: "tab #{@type == 'person' ? 'tab-active' : ''}" do %>
           People
           <span class="badge badge-sm ml-1"><%= @counts["person"] %></span>
@@ -64,7 +64,7 @@
       <% end %>
       
       <% if @counts["governing_body"].to_i > 0 %>
-        <%= link_to search_path(q: @query, type: "governing_body"), 
+        <%= link_to search_path_for(q: @query, type: "governing_body"), 
             class: "tab #{@type == 'governing_body' ? 'tab-active' : ''}" do %>
           Governing Bodies
           <span class="badge badge-sm ml-1"><%= @counts["governing_body"] %></span>

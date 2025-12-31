@@ -3,7 +3,8 @@
 john_smith_finance:
   name: "John Smith"
   normalized_name: "john smith"
-  governing_body_extracted: "Finance Committee"
+  governing_body_extracted: "Select Board"
+  governing_body: select_board
   person: john_smith
 
 john_smith_select_board:
@@ -16,32 +17,37 @@ john_smith_select_board:
 jane_doe_finance:
   name: "Jane Doe"
   normalized_name: "jane doe"
-  governing_body_extracted: "Finance Committee"
+  governing_body_extracted: "Select Board"
+  governing_body: select_board
   person: jane_doe
 
 alice_johnson_conservation:
   name: "Alice Johnson"
   normalized_name: "alice johnson"
-  governing_body_extracted: "Conservation Commission"
+  governing_body_extracted: "Redevelopment Board"
+  governing_body: redevelopment_board
   person: alice_johnson
 
 # Same name as john_smith_finance but different governing body
 john_smith_planning:
   name: "John Smith"
-  normalized_name: "john smith"
-  governing_body_extracted: "Planning Board"
+  normalized_name: "john smith planning"
+  governing_body_extracted: "Redevelopment Board"
+  governing_body: redevelopment_board
   person: john_smith_planning_person
 
 # Similar name to John Smith (for duplicate detection testing)
 jon_smith_finance:
   name: "Jon Smith"
   normalized_name: "jon smith"
-  governing_body_extracted: "Finance Committee"
+  governing_body_extracted: "Select Board"
+  governing_body: select_board
   person: jon_smith
 
 # Example of an attendee that could be merged with john_smith_finance
 j_smith_finance:
   name: "J. Smith"
   normalized_name: "j smith"
-  governing_body_extracted: "Finance Committee"
+  governing_body_extracted: "Select Board"
+  governing_body: select_board
   person: j_smith

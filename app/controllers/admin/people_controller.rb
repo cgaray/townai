@@ -10,12 +10,12 @@ class Admin::PeopleController < ApplicationController
     merger = ::PersonMerger.new(source: source, target: target)
 
     if merger.merge!
-      redirect_to person_path(target), notice: "Successfully merged #{source.name} into #{target.name}"
+      redirect_to person_redirect_path(target), notice: "Successfully merged #{source.name} into #{target.name}"
     else
-      redirect_to person_path(target), alert: "Merge failed: #{merger.errors.join(', ')}"
+      redirect_to person_redirect_path(target), alert: "Merge failed: #{merger.errors.join(', ')}"
     end
   rescue ActiveRecord::RecordNotFound
-    redirect_to people_path, alert: "Person not found"
+    redirect_to towns_path, alert: "Person not found"
   end
 
   def unmerge
@@ -25,13 +25,23 @@ class Admin::PeopleController < ApplicationController
     unmerger = ::PersonUnmerger.new(attendee: attendee)
 
     if unmerger.unmerge!
-      redirect_to person_path(unmerger.new_person),
+      redirect_to person_redirect_path(unmerger.new_person),
                   notice: "Successfully unmerged #{attendee.name} into a new person"
     else
-      redirect_to person_path(original_person),
+      redirect_to person_redirect_path(original_person),
                   alert: "Unmerge failed: #{unmerger.errors.join(', ')}"
     end
   rescue ActiveRecord::RecordNotFound
-    redirect_to people_path, alert: "Attendee not found"
+    redirect_to towns_path, alert: "Attendee not found"
+  end
+
+  private
+
+  def person_redirect_path(person)
+    if person.town
+      town_person_path(person.town, person)
+    else
+      towns_path
+    end
   end
 end

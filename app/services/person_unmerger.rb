@@ -23,7 +23,8 @@ class PersonUnmerger
       # Create a new Person for this attendee
       @new_person = Person.create!(
         name: attendee.name,
-        normalized_name: attendee.normalized_name
+        normalized_name: attendee.normalized_name,
+        town: old_person.town
       )
 
       # Move attendee to new person

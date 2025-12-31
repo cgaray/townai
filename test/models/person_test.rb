@@ -44,27 +44,22 @@ class PersonTest < ActiveSupport::TestCase
     person = people(:john_smith)
     bodies = person.governing_body_names
 
-    assert_includes bodies, "Finance Committee"
+    assert_includes bodies, "Select Board"
   end
 
   test "governing_bodies returns GoverningBody records" do
     person = people(:john_smith)
-    # Create governing body for the attendee
-    gb = GoverningBody.find_or_create_by_name("Finance Committee")
-    attendees(:john_smith_finance).update!(governing_body: gb)
 
     bodies = person.governing_bodies
     assert bodies.all? { |b| b.is_a?(GoverningBody) }
-    assert_includes bodies.map(&:name), "Finance Committee"
+    assert_includes bodies.map(&:name), "Select Board"
   end
 
   test "primary_governing_body returns most common GoverningBody" do
     person = people(:john_smith)
-    # Create governing body and link attendee
-    gb = GoverningBody.find_or_create_by_name("Finance Committee")
-    attendees(:john_smith_finance).update!(governing_body: gb)
+    expected_gb = attendees(:john_smith_finance).governing_body
 
-    assert_equal gb, person.primary_governing_body
+    assert_equal expected_gb, person.primary_governing_body
   end
 
   test "roles_held returns unique roles from document_attendees" do

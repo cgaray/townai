@@ -1,0 +1,37 @@
+<%# app/views/towns/index.html.erb %>
+<div class="space-y-8">
+  <%# Header %>
+  <div class="text-center py-8">
+    <div class="flex justify-center mb-4">
+      <%= icon_in_circle("building-library", type: :brand, size: :xl) %>
+    </div>
+    <h1 class="text-4xl font-extrabold tracking-tight text-gradient-primary">TownAI</h1>
+    <p class="text-lg text-base-content/60 mt-2">Town Meeting Document Manager</p>
+  </div>
+
+  <%# Towns Grid %>
+  <% if @towns.any? %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <% @towns.each do |town| %>
+        <%= link_to town_path(town), class: "card bg-base-100 border border-base-200 shadow-sm card-hover" do %>
+          <div class="card-body p-6">
+            <div class="flex items-center gap-4">
+              <%= icon_in_circle("building-library", type: :brand, size: :lg) %>
+              <div>
+                <h2 class="text-xl font-bold"><%= town.name %></h2>
+                <p class="text-sm text-base-content/60">
+                  <%= pluralize(town.governing_bodies.size, "governing body", "governing bodies") %>
+                </p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "shared/empty_state",
+               icon_name: "building-library",
+               title: "No Towns Yet",
+               description: "Add a town to get started managing meeting documents." %>
+  <% end %>
+</div>

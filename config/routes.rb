@@ -9,26 +9,34 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  # Search
-  get "search", to: "search#show"
-  get "search/quick", to: "search#quick"
-
-  # Defines the root path route ("/")
-  resources :documents, only: [ :index, :show ] do
-    member do
-      post :retry
+  # Towns index (home page)
+  resources :towns, only: [ :index, :show ], param: :slug do
+    # Town-scoped resources
+    resources :documents, only: [ :index, :show ] do
+      member do
+        post :retry
+      end
     end
+
+    resources :governing_bodies, only: [ :index, :show ]
+    resources :people, only: [ :index, :show ]
+
+    # Town-scoped search
+    get "search", to: "search#show"
+    get "search/quick", to: "search#quick"
   end
 
-  resources :governing_bodies, only: [ :index, :show ]
-  resources :people, only: [ :index, :show ]
+  # Global search (across all towns)
+  get "search", to: "search#show", as: :global_search
+  get "search/quick", to: "search#quick", as: :global_search_quick
 
-  root "documents#index"
-
-  # Admin routes
+  # Admin routes (global)
   namespace :admin do
     resources :api_costs, only: [ :index ]
     post "people/merge", to: "people#merge", as: :people_merge
     post "people/unmerge", to: "people#unmerge", as: :people_unmerge
   end
+
+  # Root redirects to towns index
+  root "towns#index"
 end
