@@ -71,7 +71,7 @@ end
 
 def random_time
   hour = rand(17..19) # 5 PM to 7 PM
-  minute = [0, 30].sample
+  minute = [ 0, 30 ].sample
   format("%02d:%02d", hour, minute)
 end
 
