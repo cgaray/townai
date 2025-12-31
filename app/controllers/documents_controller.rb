@@ -26,7 +26,7 @@ class DocumentsController < ApplicationController
 
     if @document.failed?
       @document.update!(status: :pending, extracted_metadata: nil)
-      ExtractMetadataJob.perform_later(@document.id)
+      ExtractMetadataJob.perform_later(@document.id, current_town.id)
       redirect_to town_document_path(current_town, @document), notice: "Document queued for re-extraction."
     else
       redirect_to town_document_path(current_town, @document), alert: "Only failed documents can be retried."

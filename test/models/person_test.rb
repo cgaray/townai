@@ -49,8 +49,6 @@ class PersonTest < ActiveSupport::TestCase
 
   test "governing_bodies returns GoverningBody records" do
     person = people(:john_smith)
-    # Use the governing body from the attendee fixture
-    gb = attendees(:john_smith_finance).governing_body
 
     bodies = person.governing_bodies
     assert bodies.all? { |b| b.is_a?(GoverningBody) }
@@ -59,10 +57,9 @@ class PersonTest < ActiveSupport::TestCase
 
   test "primary_governing_body returns most common GoverningBody" do
     person = people(:john_smith)
-    # Use the governing body from the attendee fixture
-    gb = attendees(:john_smith_finance).governing_body
+    expected_gb = attendees(:john_smith_finance).governing_body
 
-    assert_equal gb, person.primary_governing_body
+    assert_equal expected_gb, person.primary_governing_body
   end
 
   test "roles_held returns unique roles from document_attendees" do

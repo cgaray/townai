@@ -181,6 +181,21 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
     assert linker.errors.any? { |e| e.include?("not complete") }
   end
 
+  test "link_attendees populates errors when town missing" do
+    doc = Document.create!(
+      source_file_name: "test_no_town.pdf",
+      source_file_hash: "unique_no_town_#{SecureRandom.hex(8)}",
+      status: :complete,
+      extracted_metadata: '{"attendees":[{"name":"Test Person"}]}'
+    )
+
+    linker = AttendeeLinker.new(doc)
+
+    assert_not linker.link_attendees
+    assert_not linker.success?
+    assert linker.errors.any? { |e| e.include?("Town is required") }
+  end
+
   test "link_attendees populates errors when governing_body missing" do
     doc = Document.create!(
       source_file_name: "test_no_body.pdf",
@@ -189,7 +204,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
       extracted_metadata: '{"attendees":[{"name":"Test Person"}]}'
     )
 
-    linker = AttendeeLinker.new(doc)
+    linker = AttendeeLinker.new(doc, town: @town)
 
     assert_not linker.link_attendees
     assert_not linker.success?

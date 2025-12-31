@@ -19,10 +19,15 @@ class GoverningBody < ApplicationRecord
 
   # Find or create by name (used during extraction)
   # Handles race conditions when multiple processes try to create the same governing body
+  #
   # @param name [String] The governing body name
-  # @param town [Town] The town to associate with (required)
+  # @param town [Town] The town to associate with. Required because governing body
+  #   uniqueness is scoped to town (same name can exist in different towns).
+  # @return [GoverningBody, nil] The found or created governing body, or nil if name is blank
+  # @raise [ArgumentError] if town is nil
   def self.find_or_create_by_name(name, town:)
     return nil if name.blank?
+    raise ArgumentError, "town is required" if town.nil?
 
     normalized = normalize_name(name)
     find_or_create_by(normalized_name: normalized, town: town) do |gb|

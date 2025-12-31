@@ -24,6 +24,11 @@ class AttendeeLinker
       return false
     end
 
+    if @town.nil?
+      @errors << "Town is required to link attendees"
+      return false
+    end
+
     attendees_data = extract_attendees_from_metadata
     return true if attendees_data.empty?
 

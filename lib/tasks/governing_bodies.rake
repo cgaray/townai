@@ -23,10 +23,10 @@ namespace :governing_bodies do
 
     puts "Backfilling GoverningBody records for #{town.name}..."
 
-    # From Documents (extracted metadata) - documents without governing_body
-    # that have a governing body name in their metadata
+    # From Documents - only process documents that belong to this town's governing bodies
+    # or documents without a governing body that we'll assign to this town
     doc_count = 0
-    Document.where(governing_body_id: nil).find_each do |doc|
+    town.documents.where(governing_body_id: nil).find_each do |doc|
       name = doc.metadata_field("governing_body")
       next if name.blank?
 
@@ -36,9 +36,12 @@ namespace :governing_bodies do
     end
     puts "  Updated #{doc_count} documents"
 
-    # From Attendees (governing_body_extracted string column)
+    # From Attendees - only process attendees linked to this town's governing bodies
     attendee_count = 0
-    Attendee.where(governing_body_id: nil).find_each do |attendee|
+    Attendee.joins(:governing_body)
+            .where(governing_bodies: { town_id: town.id })
+            .where(governing_body_id: nil)
+            .find_each do |attendee|
       name = attendee.governing_body_extracted
       next if name.blank?
 

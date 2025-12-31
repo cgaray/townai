@@ -44,7 +44,7 @@ class Document < ApplicationRecord
     date_str = metadata_field("meeting_date")
     return nil unless date_str.present?
     Date.parse(date_str).strftime("%B %d, %Y")
-  rescue ArgumentError
+  rescue ArgumentError, TypeError
     date_str
   end
 
