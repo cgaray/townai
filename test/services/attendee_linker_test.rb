@@ -3,6 +3,7 @@ require "test_helper"
 class AttendeeLinkerTest < ActiveSupport::TestCase
   setup do
     @complete_doc = documents(:complete_agenda)
+    @town = towns(:arlington)
     # Clean up any existing document_attendees for this document
     DocumentAttendee.where(document: @complete_doc).delete_all
   end
@@ -13,7 +14,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
     Attendee.delete_all
     Person.delete_all
 
-    linker = AttendeeLinker.new(@complete_doc)
+    linker = AttendeeLinker.new(@complete_doc, town: @town)
     result = linker.link_attendees
 
     assert result, "link_attendees should succeed: #{linker.errors.inspect}"
@@ -45,7 +46,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
     )
 
     # First run creates attendees
-    linker1 = AttendeeLinker.new(doc)
+    linker1 = AttendeeLinker.new(doc, town: @town)
     assert linker1.link_attendees, "First link should succeed"
     assert_equal 2, linker1.created_count
 
@@ -55,7 +56,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
     doc.reload
 
     # Second run should link to existing
-    linker2 = AttendeeLinker.new(doc)
+    linker2 = AttendeeLinker.new(doc, town: @town)
 
     assert_no_difference "Attendee.count" do
       assert_difference "DocumentAttendee.count", 2 do
@@ -75,14 +76,14 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
   end
 
   test "link_attendees clears existing links on re-run" do
-    linker = AttendeeLinker.new(@complete_doc)
+    linker = AttendeeLinker.new(@complete_doc, town: @town)
     linker.link_attendees
 
     original_count = @complete_doc.document_attendees.count
     assert_equal 2, original_count
 
     # Re-running should replace links, not duplicate
-    linker2 = AttendeeLinker.new(@complete_doc)
+    linker2 = AttendeeLinker.new(@complete_doc, town: @town)
     linker2.link_attendees
 
     @complete_doc.reload
@@ -94,7 +95,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
     Attendee.delete_all
     Person.delete_all
 
-    linker = AttendeeLinker.new(@complete_doc)
+    linker = AttendeeLinker.new(@complete_doc, town: @town)
     result = linker.link_attendees
     assert result, "link_attendees should succeed: #{linker.errors.inspect}"
 
@@ -129,7 +130,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
       extracted_metadata: '{"governing_body":"Test Board","attendees":[{"name":""},{"name":"Valid Person"}]}'
     )
 
-    linker = AttendeeLinker.new(doc)
+    linker = AttendeeLinker.new(doc, town: @town)
 
     assert_difference "Attendee.count", 1 do
       linker.link_attendees
@@ -196,7 +197,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
   end
 
   test "success? returns true when no errors" do
-    linker = AttendeeLinker.new(@complete_doc)
+    linker = AttendeeLinker.new(@complete_doc, town: @town)
     linker.link_attendees
 
     assert linker.success?
@@ -220,7 +221,7 @@ class AttendeeLinkerTest < ActiveSupport::TestCase
       }.to_json
     )
 
-    linker = AttendeeLinker.new(doc)
+    linker = AttendeeLinker.new(doc, town: @town)
 
     # Should create only 2 attendees, not 4
     assert_difference "Attendee.count", 2 do

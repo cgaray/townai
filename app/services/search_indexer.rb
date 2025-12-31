@@ -21,6 +21,9 @@ class SearchIndexer
     def index_document(document)
       return unless document.complete?
 
+      town = document.governing_body&.town
+      return unless town # Skip indexing documents without a town
+
       SearchEntry.clear_entity!("document", document.id)
       SearchEntry.clear_entity!("topic", document.id) # Topics use document.id as entity_id
 
@@ -31,11 +34,11 @@ class SearchIndexer
         title: document_title(document),
         subtitle: document_subtitle(document),
         content: document_content(document),
-        url: url_helpers.document_path(document)
+        url: document_url(document, town)
       )
 
       # Index each topic separately for granular search
-      index_document_topics(document)
+      index_document_topics(document, town)
     end
 
     # Index a single person
@@ -48,7 +51,7 @@ class SearchIndexer
         title: person.name,
         subtitle: person_subtitle(person),
         content: person_content(person),
-        url: url_helpers.person_path(person)
+        url: person_url(person)
       )
     end
 
@@ -62,7 +65,7 @@ class SearchIndexer
         title: governing_body.name,
         subtitle: governing_body_subtitle(governing_body),
         content: governing_body_content(governing_body),
-        url: url_helpers.governing_body_path(governing_body)
+        url: governing_body_url(governing_body)
       )
     end
 
@@ -86,7 +89,7 @@ class SearchIndexer
 
     def index_all_documents
       count = 0
-      Document.complete.find_each do |document|
+      Document.complete.includes(governing_body: :town).find_each do |document|
         index_document(document)
         count += 1
       end
@@ -95,7 +98,7 @@ class SearchIndexer
 
     def index_all_people
       count = 0
-      Person.includes(attendees: :governing_body).find_each do |person|
+      Person.includes(:town, attendees: :governing_body).find_each do |person|
         index_person(person)
         count += 1
       end
@@ -104,14 +107,14 @@ class SearchIndexer
 
     def index_all_governing_bodies
       count = 0
-      GoverningBody.find_each do |governing_body|
+      GoverningBody.includes(:town).find_each do |governing_body|
         index_governing_body(governing_body)
         count += 1
       end
       Rails.logger.info "[SearchIndexer] Indexed #{count} governing bodies"
     end
 
-    def index_document_topics(document)
+    def index_document_topics(document, town)
       topics = document.metadata_field("topics") || []
       return if topics.empty?
 
@@ -129,7 +132,7 @@ class SearchIndexer
           title: title,
           subtitle: "#{document_type_label(document)} - #{document.governing_body&.name || 'Unknown Body'}",
           content: content_parts.join(" "),
-          url: "#{url_helpers.document_path(document)}#topic-#{index}"
+          url: "#{document_url(document, town)}#topic-#{index}"
         )
       end
     end
@@ -226,6 +229,19 @@ class SearchIndexer
       end
 
       parts.compact.uniq.join(" ")
+    end
+
+    # URL helpers for town-scoped resources
+    def document_url(document, town)
+      url_helpers.town_document_path(town, document)
+    end
+
+    def person_url(person)
+      url_helpers.town_person_path(person.town, person)
+    end
+
+    def governing_body_url(governing_body)
+      url_helpers.town_governing_body_path(governing_body.town, governing_body)
     end
 
     def url_helpers

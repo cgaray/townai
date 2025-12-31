@@ -1,7 +1,7 @@
 <div class="space-y-8">
   <%# Page Header %>
   <div class="flex flex-col gap-4">
-    <%= render "shared/back_link", path: governing_bodies_path, text: "All Governing Bodies" %>
+    <%= render "shared/back_link", path: town_governing_bodies_path(current_town), text: "All Governing Bodies" %>
 
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
       <div class="flex items-center gap-4">
@@ -42,7 +42,7 @@
                  icon_class: "text-primary",
                  subtitle_type: :appearances,
                  pagy: @pagy_people,
-                 url_builder: ->(page) { governing_body_path(@governing_body, people_page: page) },
+                 url_builder: ->(page) { town_governing_body_path(current_town, @governing_body, people_page: page) },
                  empty_message: "No members recorded yet" %>
     </div>
   </div>

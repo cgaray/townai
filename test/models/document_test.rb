@@ -38,7 +38,7 @@ class DocumentTest < ActiveSupport::TestCase
   test "metadata_field returns field value for complete document" do
     doc = documents(:complete_agenda)
     assert_equal "agenda", doc.metadata_field("document_type")
-    assert_equal "Finance Committee", doc.metadata_field("governing_body")
+    assert_equal "Select Board", doc.metadata_field("governing_body")
     assert_equal "2025-01-10", doc.metadata_field("meeting_date")
   end
 

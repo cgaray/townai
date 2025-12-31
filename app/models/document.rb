@@ -25,6 +25,29 @@ class Document < ApplicationRecord
     parsed_metadata[field]
   end
 
+  def display_title
+    # Try to build a meaningful title from metadata, fallback to source file name
+    doc_type = metadata_field("document_type")&.titleize
+    body = governing_body&.name || metadata_field("governing_body")
+    date = meeting_date_formatted
+
+    if body && date
+      "#{body} #{doc_type || 'Document'} - #{date}"
+    elsif body
+      "#{body} #{doc_type || 'Document'}"
+    else
+      source_file_name
+    end
+  end
+
+  def meeting_date_formatted
+    date_str = metadata_field("meeting_date")
+    return nil unless date_str.present?
+    Date.parse(date_str).strftime("%B %d, %Y")
+  rescue ArgumentError
+    date_str
+  end
+
   private
 
   def should_reindex?

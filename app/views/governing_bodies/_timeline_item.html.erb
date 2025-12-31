@@ -2,6 +2,6 @@
 <% doc = item[:document] %>
 <% doc_type = doc.metadata_field("document_type")&.downcase %>
 
-<%= link_to doc, class: "hover:shadow-md transition-shadow" do %>
+<%= link_to town_document_path(current_town, doc), class: "hover:shadow-md transition-shadow" do %>
   <%= document_type_badge(doc_type) %>
 <% end %>

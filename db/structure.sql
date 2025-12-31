@@ -1,12 +1,5 @@
 CREATE TABLE IF NOT EXISTS "active_storage_blobs" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "byte_size" bigint NOT NULL, "checksum" varchar, "content_type" varchar, "created_at" datetime(6) NOT NULL, "filename" varchar NOT NULL, "key" varchar NOT NULL, "metadata" text, "service_name" varchar NOT NULL);
 CREATE UNIQUE INDEX "index_active_storage_blobs_on_key" ON "active_storage_blobs" ("key") /*application='Townai'*/;
-CREATE TABLE IF NOT EXISTS "governing_bodies" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "documents_count" integer DEFAULT 0, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "updated_at" datetime(6) NOT NULL);
-CREATE INDEX "index_governing_bodies_on_name" ON "governing_bodies" ("name") /*application='Townai'*/;
-CREATE UNIQUE INDEX "index_governing_bodies_on_normalized_name" ON "governing_bodies" ("normalized_name") /*application='Townai'*/;
-CREATE TABLE IF NOT EXISTS "people" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "document_appearances_count" integer DEFAULT 0, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "updated_at" datetime(6) NOT NULL);
-CREATE INDEX "index_people_on_document_appearances_count" ON "people" ("document_appearances_count") /*application='Townai'*/;
-CREATE INDEX "index_people_on_name" ON "people" ("name") /*application='Townai'*/;
-CREATE INDEX "index_people_on_normalized_name" ON "people" ("normalized_name") /*application='Townai'*/;
 CREATE TABLE IF NOT EXISTS "active_storage_attachments" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "blob_id" bigint NOT NULL, "created_at" datetime(6) NOT NULL, "name" varchar NOT NULL, "record_id" bigint NOT NULL, "record_type" varchar NOT NULL, CONSTRAINT "fk_rails_c3b3935057"
 FOREIGN KEY ("blob_id")
   REFERENCES "active_storage_blobs" ("id")
@@ -72,7 +65,28 @@ CREATE TABLE IF NOT EXISTS 'search_entries_idx'(segid, term, pgno, PRIMARY KEY(s
 CREATE TABLE IF NOT EXISTS 'search_entries_content'(id INTEGER PRIMARY KEY, c0, c1, c2, c3, c4, c5);
 CREATE TABLE IF NOT EXISTS 'search_entries_docsize'(id INTEGER PRIMARY KEY, sz BLOB);
 CREATE TABLE IF NOT EXISTS 'search_entries_config'(k PRIMARY KEY, v) WITHOUT ROWID;
+CREATE TABLE IF NOT EXISTS "towns" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "slug" varchar NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE UNIQUE INDEX "index_towns_on_normalized_name" ON "towns" ("normalized_name") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_towns_on_slug" ON "towns" ("slug") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "governing_bodies" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "documents_count" integer DEFAULT 0, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "updated_at" datetime(6) NOT NULL, "town_id" integer, CONSTRAINT "fk_rails_3a54026665"
+FOREIGN KEY ("town_id")
+  REFERENCES "towns" ("id")
+);
+CREATE INDEX "index_governing_bodies_on_name" ON "governing_bodies" ("name") /*application='Townai'*/;
+CREATE INDEX "index_governing_bodies_on_town_id" ON "governing_bodies" ("town_id") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "people" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "document_appearances_count" integer DEFAULT 0, "name" varchar NOT NULL, "normalized_name" varchar NOT NULL, "updated_at" datetime(6) NOT NULL, "town_id" integer, CONSTRAINT "fk_rails_6d6cdfea37"
+FOREIGN KEY ("town_id")
+  REFERENCES "towns" ("id")
+);
+CREATE INDEX "index_people_on_document_appearances_count" ON "people" ("document_appearances_count") /*application='Townai'*/;
+CREATE INDEX "index_people_on_name" ON "people" ("name") /*application='Townai'*/;
+CREATE INDEX "index_people_on_normalized_name" ON "people" ("normalized_name") /*application='Townai'*/;
+CREATE INDEX "index_people_on_town_id" ON "people" ("town_id") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_governing_bodies_on_normalized_name_and_town_id" ON "governing_bodies" ("normalized_name", "town_id") /*application='Townai'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20251231122803'),
+('20251231114742'),
+('20251231114720'),
 ('20251231025933'),
 ('20251231024801'),
 ('20251230184307'),

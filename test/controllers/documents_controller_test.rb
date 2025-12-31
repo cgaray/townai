@@ -1,7 +1,10 @@
+# frozen_string_literal: true
+
 require "test_helper"
 
 class DocumentsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    @town = towns(:arlington)
     @test_pdf_path = Rails.root.join("test/fixtures/files/test_document.pdf")
     FileUtils.mkdir_p(File.dirname(@test_pdf_path))
     unless File.exist?(@test_pdf_path)
@@ -10,45 +13,45 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get index" do
-    get documents_url
+    get town_documents_url(@town)
     assert_response :success
   end
 
   test "index should display documents" do
-    get documents_url
+    get town_documents_url(@town)
     assert_response :success
     assert_select "body"
   end
 
   test "index should set status_counts" do
-    get documents_url
+    get town_documents_url(@town)
     assert_response :success
   end
 
   test "should get show for complete document" do
     doc = documents(:complete_agenda)
-    get document_url(doc)
+    get town_document_url(@town, doc)
     assert_response :success
   end
 
   test "should get show for pending document" do
     doc = documents(:pending_document)
-    get document_url(doc)
+    get town_document_url(@town, doc)
     assert_response :success
   end
 
   test "should get show for failed document" do
     doc = documents(:failed_document)
-    get document_url(doc)
+    get town_document_url(@town, doc)
     assert_response :success
   end
 
   test "show should return 404 for non-existent document" do
-    get document_url(id: 999999)
+    get town_document_url(@town, id: 999999)
     assert_response :not_found
   end
 
-  test "root path should route to documents index" do
+  test "root path should route to towns index" do
     get root_url
     assert_response :success
   end
@@ -57,7 +60,7 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
     doc = documents(:complete_agenda)
     doc.pdf.attach(io: File.open(@test_pdf_path), filename: "test.pdf", content_type: "application/pdf")
 
-    get document_url(doc)
+    get town_document_url(@town, doc)
     assert_response :success
     assert_select "a.btn-primary", text: /View PDF/
   end
@@ -66,7 +69,7 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
     doc = documents(:complete_agenda)
     doc.pdf.purge if doc.pdf.attached?
 
-    get document_url(doc)
+    get town_document_url(@town, doc)
     assert_response :success
     assert_select "a.btn-primary", text: /View PDF/, count: 0
   end
@@ -75,7 +78,7 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
     doc = documents(:complete_agenda)
     doc.pdf.attach(io: File.open(@test_pdf_path), filename: "test.pdf", content_type: "application/pdf")
 
-    get document_url(doc)
+    get town_document_url(@town, doc)
     assert_response :success
     assert_select "a.btn-primary[target='_blank'][rel='noopener']", text: /View PDF/
   end
@@ -84,10 +87,10 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
     doc = documents(:failed_document)
 
     assert_enqueued_with(job: ExtractMetadataJob) do
-      post retry_document_url(doc)
+      post retry_town_document_url(@town, doc)
     end
 
-    assert_redirected_to document_url(doc)
+    assert_redirected_to town_document_url(@town, doc)
     doc.reload
     assert doc.pending?
   end
@@ -95,9 +98,9 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
   test "retry action only works for failed documents" do
     doc = documents(:complete_agenda)
 
-    post retry_document_url(doc)
+    post retry_town_document_url(@town, doc)
 
-    assert_redirected_to document_url(doc)
+    assert_redirected_to town_document_url(@town, doc)
     assert_equal "Only failed documents can be retried.", flash[:alert]
     doc.reload
     assert doc.complete?

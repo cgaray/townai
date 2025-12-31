@@ -1,7 +1,7 @@
 <%# app/views/people/show.html.erb %>
 <div class="space-y-8">
   <%# Back navigation %>
-  <%= render "shared/back_link", path: people_path, text: "Back to People" %>
+  <%= render "shared/back_link", path: town_people_path(current_town), text: "Back to People" %>
 
   <%# Profile Header %>
   <div class="card bg-base-100 border border-base-200 shadow-sm">
@@ -43,7 +43,7 @@
               <p class="text-sm text-base-content/60 mb-2">Governing bodies:</p>
               <div class="flex flex-wrap gap-2">
                 <% bodies.each do |body| %>
-                  <%= link_to body, class: "badge badge-outline badge-sm hover:badge-primary" do %>
+                  <%= link_to town_governing_body_path(current_town, body), class: "badge badge-outline badge-sm hover:badge-primary" do %>
                     <%= body.name %>
                   <% end %>
                 <% end %>

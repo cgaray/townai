@@ -4,8 +4,9 @@ class ExtractMetadataJob < ApplicationJob
   MODEL = "google/gemini-2.0-flash-001"
   PROVIDER = "openrouter"
 
-  def perform(document_id)
+  def perform(document_id, town_id = nil)
     document = Document.find(document_id)
+    @town = Town.find_by(id: town_id)
     return unless document.pending?
 
     start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
@@ -55,7 +56,7 @@ class ExtractMetadataJob < ApplicationJob
         document.update!(extracted_metadata: normalized, status: :complete)
 
         # Link attendees after successful extraction
-        linker = AttendeeLinker.new(document)
+        linker = AttendeeLinker.new(document, town: @town)
         if linker.link_attendees
           Rails.logger.info("AttendeeLinker: created=#{linker.created_count}, linked=#{linker.linked_count}")
         else

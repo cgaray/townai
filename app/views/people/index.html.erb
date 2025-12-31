@@ -9,7 +9,7 @@
   <% if @people.any? %>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       <% @people.each do |person| %>
-        <%= link_to person_path(person), class: "card bg-base-100 border border-base-200 shadow-sm card-hover" do %>
+        <%= link_to town_person_path(current_town, person), class: "card bg-base-100 border border-base-200 shadow-sm card-hover" do %>
           <div class="card-body p-4">
             <div class="flex items-start gap-3">
               <%= avatar(person.name, size: :lg) %>
@@ -51,7 +51,7 @@
     <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { pagy_url_for(@pagy, page) } %>
   <% else %>
     <% action_content = capture do %>
-      <%= link_to documents_path, class: "btn btn-primary" do %>
+      <%= link_to town_documents_path(current_town), class: "btn btn-primary" do %>
         <%= icon("document", size: "w-4 h-4") %>
         View Documents
       <% end %>

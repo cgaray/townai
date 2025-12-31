@@ -1,7 +1,7 @@
 class ImportDocumentJob < ApplicationJob
   queue_as :default
 
-  def perform(file_path)
+  def perform(file_path, town_id = nil)
     hash = Digest::SHA256.file(file_path).hexdigest
     return if Document.exists?(source_file_hash: hash)
 
@@ -12,6 +12,6 @@ class ImportDocumentJob < ApplicationJob
     )
     doc.pdf.attach(io: File.open(file_path), filename: File.basename(file_path))
 
-    ExtractMetadataJob.perform_later(doc.id)
+    ExtractMetadataJob.perform_later(doc.id, town_id)
   end
 end

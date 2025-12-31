@@ -1,0 +1,94 @@
+<%# app/views/towns/show.html.erb %>
+<div class="space-y-8">
+  <%# Header %>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <%= icon_in_circle("building-library", type: :brand, size: :xl) %>
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight">Dashboard</h1>
+          <div class="flex items-center gap-4 mt-1 text-base-content/60">
+            <span class="flex items-center gap-1">
+              <%= icon("document-text", size: "w-4 h-4") %>
+              <%= pluralize(@documents_count, "document") %>
+            </span>
+            <span class="flex items-center gap-1">
+              <%= icon("building-library", size: "w-4 h-4") %>
+              <%= pluralize(@governing_bodies_count, "governing body", "governing bodies") %>
+            </span>
+            <span class="flex items-center gap-1">
+              <%= icon("users", size: "w-4 h-4") %>
+              <%= pluralize(@people_count, "person", "people") %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Quick Links %>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <%= link_to town_documents_path(@town), class: "card bg-base-100 border border-base-200 shadow-sm card-hover" do %>
+      <div class="card-body p-4 flex-row items-center gap-4">
+        <%= icon_in_circle("document-text", type: :agenda, size: :lg) %>
+        <div>
+          <h3 class="font-bold">Documents</h3>
+          <p class="text-sm text-base-content/60"><%= @documents_count %> total</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%= link_to town_governing_bodies_path(@town), class: "card bg-base-100 border border-base-200 shadow-sm card-hover" do %>
+      <div class="card-body p-4 flex-row items-center gap-4">
+        <%= icon_in_circle("building-library", type: :brand, size: :lg) %>
+        <div>
+          <h3 class="font-bold">Governing Bodies</h3>
+          <p class="text-sm text-base-content/60"><%= @governing_bodies_count %> total</p>
+        </div>
+      </div>
+    <% end %>
+
+    <%= link_to town_people_path(@town), class: "card bg-base-100 border border-base-200 shadow-sm card-hover" do %>
+      <div class="card-body p-4 flex-row items-center gap-4">
+        <%= icon_in_circle("users", type: :brand, size: :lg) %>
+        <div>
+          <h3 class="font-bold">People</h3>
+          <p class="text-sm text-base-content/60"><%= @people_count %> total</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Recent Documents %>
+  <% if @recent_documents.any? %>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          <%= icon("document-text", size: "w-5 h-5", class: "text-primary") %>
+          Recent Documents
+        </h2>
+        <%= link_to town_documents_path(@town), class: "btn btn-ghost btn-sm" do %>
+          View all
+          <%= icon("chevron-right", size: "w-4 h-4") %>
+        <% end %>
+      </div>
+
+      <div class="space-y-2">
+        <% @recent_documents.each do |doc| %>
+          <%= link_to town_document_path(@town, doc), class: "card bg-base-100 border border-base-200 card-hover" do %>
+            <div class="card-body p-4 flex-row items-center gap-4">
+              <%= document_type_icon(doc.metadata_field("document_type")) %>
+              <div class="flex-1 min-w-0">
+                <h3 class="font-medium truncate"><%= doc.display_title %></h3>
+                <p class="text-sm text-base-content/60">
+                  <%= doc.governing_body&.name %> &middot; <%= doc.meeting_date_formatted || "Date unknown" %>
+                </p>
+              </div>
+              <%= status_badge(doc.status) %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

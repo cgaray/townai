@@ -1,7 +1,7 @@
 <%# app/views/documents/show.html.erb %>
 <div class="space-y-8">
   <%# Back navigation %>
-  <%= render "shared/back_link", path: documents_path, text: "Back to Documents" %>
+  <%= render "shared/back_link", path: town_documents_path(current_town), text: "Back to Documents" %>
 
   <% if @document.extracted_metadata.present? %>
     <% meta = JSON.parse(@document.extracted_metadata) rescue {} %>
@@ -71,7 +71,7 @@
                 <% @document.document_attendees.each do |da| %>
                   <div class="space-y-1">
                     <div class="flex items-center gap-3">
-                      <%= link_to person_path(da.attendee.person), class: "flex items-center gap-3 hover:opacity-80 transition-opacity" do %>
+                      <%= link_to town_person_path(current_town, da.attendee.person), class: "flex items-center gap-3 hover:opacity-80 transition-opacity" do %>
                         <%= avatar(da.attendee.person.name) %>
                         <div>
                           <div class="font-semibold text-sm hover:text-primary"><%= da.attendee.person.name %></div>
@@ -157,7 +157,7 @@
             We couldn't extract metadata from this document. The file may be corrupted or in an unsupported format.
           </p>
           <div class="mt-6 flex flex-wrap gap-3 justify-center">
-            <%= button_to retry_document_path(@document), method: :post, class: "btn btn-secondary gap-2" do %>
+            <%= button_to retry_town_document_path(current_town, @document), method: :post, class: "btn btn-secondary gap-2" do %>
               <%= icon("arrow-path", size: "w-4 h-4") %>
               Retry Extraction
             <% end %>
