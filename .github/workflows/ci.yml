@@ -145,7 +145,6 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
-
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v6
         if: failure()

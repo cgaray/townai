@@ -8,10 +8,11 @@ SimpleCov.start "rails" do
   if ENV["CI"]
     formatter SimpleCov::Formatter::CoberturaFormatter
   else
-    formatter SimpleCov::Formatter::MultiFormatter.new([
+    multi_formatter = SimpleCov::Formatter::MultiFormatter.new([
       SimpleCov::Formatter::HTMLFormatter,
       SimpleCov::Formatter::CoberturaFormatter
     ])
+    formatter multi_formatter
   end
 
   # Exclude test files and configuration from coverage
