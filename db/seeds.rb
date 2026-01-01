@@ -46,27 +46,29 @@ module Seeds
 
   STATUSES = %w[present present present present present remote absent].freeze
 
+  # Raw action values as they might appear in actual meeting documents
+  # These get normalized to our enum values (approved, denied, tabled, continued, none)
   TOPIC_TEMPLATES = [
-    { title: "Approval of Minutes", summary: "Review and approval of minutes from the previous meeting.", action: "approved" },
+    { title: "Approval of Minutes", summary: "Review and approval of minutes from the previous meeting.", action: "motion carried unanimously" },
     { title: "Public Comment Period", summary: "Opportunity for residents to address the board on items not on the agenda.", action: nil },
-    { title: "Budget Review", summary: "Discussion of the proposed fiscal year budget and department allocations.", action: "continued" },
-    { title: "Zoning Amendment Proposal", summary: "Consideration of proposed changes to residential zoning requirements.", action: "tabled" },
-    { title: "Site Plan Review", summary: "Review of site plans for proposed commercial development.", action: "approved" },
-    { title: "Liquor License Application", summary: "Application for new liquor license for local restaurant.", action: "approved" },
+    { title: "Budget Review", summary: "Discussion of the proposed fiscal year budget and department allocations.", action: "deferred to next meeting" },
+    { title: "Zoning Amendment Proposal", summary: "Consideration of proposed changes to residential zoning requirements.", action: "laid on the table" },
+    { title: "Site Plan Review", summary: "Review of site plans for proposed commercial development.", action: "approved 4-1" },
+    { title: "Liquor License Application", summary: "Application for new liquor license for local restaurant.", action: "passed" },
     { title: "Road Improvement Project", summary: "Discussion of upcoming road reconstruction and maintenance schedule.", action: nil },
     { title: "School Renovation Update", summary: "Progress report on elementary school renovation project.", action: nil },
-    { title: "Conservation Restriction", summary: "Review of proposed conservation restriction on town-owned land.", action: "approved" },
-    { title: "Tax Classification Hearing", summary: "Annual hearing to set residential and commercial tax rates.", action: "approved" },
+    { title: "Conservation Restriction", summary: "Review of proposed conservation restriction on town-owned land.", action: "accepted" },
+    { title: "Tax Classification Hearing", summary: "Annual hearing to set residential and commercial tax rates.", action: "adopted" },
     { title: "Personnel Appointment", summary: "Appointment of new department head position.", action: "approved" },
-    { title: "Grant Application", summary: "Authorization to apply for state infrastructure grant.", action: "approved" },
-    { title: "Special Permit Request", summary: "Request for special permit for home-based business.", action: "denied" },
-    { title: "Warrant Article Review", summary: "Review of proposed warrant articles for Town Meeting.", action: "continued" },
+    { title: "Grant Application", summary: "Authorization to apply for state infrastructure grant.", action: "motion passed 5-0" },
+    { title: "Special Permit Request", summary: "Request for special permit for home-based business.", action: "rejected 3-2" },
+    { title: "Warrant Article Review", summary: "Review of proposed warrant articles for Town Meeting.", action: "continued to March 15" },
     { title: "Emergency Management Update", summary: "Update on emergency preparedness and response plans.", action: nil },
-    { title: "Tree Removal Request", summary: "Request to remove protected trees from private property.", action: "tabled" },
-    { title: "Historic District Proposal", summary: "Proposal to expand local historic district boundaries.", action: "continued" },
-    { title: "Recreation Program Fees", summary: "Discussion of proposed fee changes for recreation programs.", action: "approved" },
+    { title: "Tree Removal Request", summary: "Request to remove protected trees from private property.", action: "postponed indefinitely" },
+    { title: "Historic District Proposal", summary: "Proposal to expand local historic district boundaries.", action: "referred to subcommittee" },
+    { title: "Recreation Program Fees", summary: "Discussion of proposed fee changes for recreation programs.", action: "approved as amended" },
     { title: "Stormwater Management", summary: "Review of stormwater management regulations and compliance.", action: nil },
-    { title: "Sidewalk Construction", summary: "Proposal for new sidewalk construction on Main Street.", action: "approved" }
+    { title: "Sidewalk Construction", summary: "Proposal for new sidewalk construction on Main Street.", action: "voted in favor" }
   ].freeze
 
   class << self
@@ -202,6 +204,7 @@ module Seeds
             )
 
             create_document_attendees(doc, attendees_by_body[body.id], attendees_data)
+            create_document_topics(doc, topics)
             documents_created += 1
           end
         end
@@ -239,6 +242,21 @@ module Seeds
           da.status = att_data["status"]
           da.source_text = att_data["source_text"]
         end
+      end
+    end
+
+    def create_document_topics(doc, topics_data)
+      topics_data.each_with_index do |topic_data, position|
+        raw_action = topic_data[:action_taken]
+        Topic.create!(
+          document: doc,
+          title: topic_data[:title],
+          summary: topic_data[:summary],
+          action_taken: Topic.normalize_action(raw_action),
+          action_taken_raw: raw_action,
+          source_text: topic_data[:source_text],
+          position: position
+        )
       end
     end
 
@@ -311,6 +329,7 @@ module Seeds
       puts "  - #{Person.count} people"
       puts "  - #{Attendee.count} attendees"
       puts "  - #{Document.count} documents"
+      puts "  - #{Topic.count} topics"
       puts "  - #{DocumentAttendee.count} document attendees"
       puts "  - #{ApiCall.count} API calls"
       puts ""

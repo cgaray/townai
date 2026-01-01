@@ -74,6 +74,13 @@ bun test
 bun build
 ```
 
+**Bun API Preferences** (when writing TypeScript):
+- `Bun.serve()` instead of Express (supports WebSockets, HTTPS, routes)
+- `bun:sqlite` instead of `better-sqlite3`
+- `Bun.file()` instead of `node:fs` readFile/writeFile
+- `Bun.$\`cmd\`` instead of execa
+- Bun auto-loads `.env` files, no need for dotenv
+
 ### Full CI Pipeline
 ```bash
 # Run complete CI suite locally

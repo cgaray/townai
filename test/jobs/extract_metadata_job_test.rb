@@ -127,16 +127,19 @@ class ExtractMetadataJobTest < ActiveJob::TestCase
     assert_equal "approved", result[0][:action_taken]
   end
 
-  test "normalize_topics validates action_taken" do
+  test "normalize_topics preserves raw action_taken for Topic model to normalize" do
     job = ExtractMetadataJob.new
     topics = [
-      { "title" => "Topic 1", "action_taken" => "invalid_action" }
+      { "title" => "Topic 1", "action_taken" => "motion passed 4-1" },
+      { "title" => "Topic 2", "action_taken" => "custom terminology" }
     ]
 
     result = job.send(:normalize_topics, topics)
 
-    assert_equal 1, result.length
-    assert_nil result[0][:action_taken]
+    assert_equal 2, result.length
+    # Raw values are preserved; Topic.normalize_action handles normalization
+    assert_equal "motion passed 4-1", result[0][:action_taken]
+    assert_equal "custom terminology", result[1][:action_taken]
   end
 
   test "normalize_topics skips topics without title" do

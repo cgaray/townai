@@ -27,15 +27,10 @@ class SearchIndexerTest < ActiveSupport::TestCase
 
   test "index_document indexes topics separately" do
     doc = documents(:complete_agenda)
-    # Ensure document has topics in metadata
-    metadata = {
-      "document_type" => "agenda",
-      "topics" => [
-        { "title" => "Budget Discussion", "summary" => "Review annual budget" },
-        { "title" => "Zoning Changes", "summary" => "Discuss proposed changes" }
-      ]
-    }
-    doc.update_column(:extracted_metadata, metadata.to_json)
+    # Clear existing topics and create new ones for this test
+    doc.topics.destroy_all
+    doc.topics.create!(title: "Budget Discussion", summary: "Review annual budget", position: 0)
+    doc.topics.create!(title: "Zoning Changes", summary: "Discuss proposed changes", position: 1)
 
     SearchIndexer.index_document(doc)
 

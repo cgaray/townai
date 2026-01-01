@@ -62,6 +62,10 @@ class ExtractMetadataJob < ApplicationJob
         else
           Rails.logger.warn("AttendeeLinker failed for document #{document.id}: #{linker.errors.join(', ')}")
         end
+
+        # Create Topic records from extracted metadata
+        topic_count = Topic.create_from_metadata(document)
+        Rails.logger.info("Created #{topic_count} topics for document #{document.id}") if topic_count > 0
       rescue StandardError => e
         # API call succeeded but document update failed - don't re-record as error
         document.update!(status: :failed)
@@ -215,7 +219,8 @@ class ExtractMetadataJob < ApplicationJob
       {
         title: t["title"].to_s.presence,
         summary: t["summary"].to_s.presence,
-        action_taken: validate_enum(t["action_taken"], %w[approved denied tabled continued none]),
+        # Preserve raw action_taken from LLM; Topic.normalize_action handles normalization
+        action_taken: t["action_taken"].to_s.strip.presence,
         source_text: t["source_text"].to_s.presence
       }.compact
     end.compact.reject { |t| t[:title].nil? }

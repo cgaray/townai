@@ -4,10 +4,12 @@ class Document < ApplicationRecord
   has_many :api_calls, dependent: :nullify
   has_many :document_attendees, dependent: :destroy
   has_many :attendees, through: :document_attendees
+  has_many :topics, dependent: :destroy
 
   enum :status, [ :pending, :extracting_text, :extracting_metadata, :complete, :failed ]
 
   after_save :reindex_for_search, if: :should_reindex?
+  before_destroy :cache_topic_ids_for_cleanup
   after_destroy :remove_from_search_index
 
   def parsed_metadata
@@ -58,7 +60,13 @@ class Document < ApplicationRecord
     ReindexSearchJob.perform_later("document", id)
   end
 
+  # Cache topic IDs before destroy so we can clean up search entries
+  # (topics are destroyed first due to dependent: :destroy)
+  def cache_topic_ids_for_cleanup
+    @topic_ids_for_cleanup = topics.pluck(:id)
+  end
+
   def remove_from_search_index
-    SearchIndexer.remove_document(id)
+    SearchIndexer.remove_document(id, topic_ids: @topic_ids_for_cleanup || [])
   end
 end

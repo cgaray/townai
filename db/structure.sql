@@ -85,7 +85,17 @@ CREATE INDEX "index_people_on_town_id" ON "people" ("town_id") /*application='To
 CREATE UNIQUE INDEX "index_governing_bodies_on_normalized_name_and_town_id" ON "governing_bodies" ("normalized_name", "town_id") /*application='Townai'*/;
 CREATE TABLE IF NOT EXISTS "users" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar DEFAULT '' NOT NULL, "admin" boolean DEFAULT FALSE NOT NULL, "remember_created_at" datetime(6), "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
 CREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "topics" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "document_id" integer NOT NULL, "title" varchar NOT NULL, "summary" text, "action_taken" integer DEFAULT 0, "source_text" text, "position" integer DEFAULT 0, "category" varchar, "amount_cents" integer, "amount_type" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, "action_taken_raw" varchar /*application='Townai'*/, CONSTRAINT "fk_rails_9cac59730d"
+FOREIGN KEY ("document_id")
+  REFERENCES "documents" ("id")
+);
+CREATE INDEX "index_topics_on_document_id" ON "topics" ("document_id") /*application='Townai'*/;
+CREATE INDEX "index_topics_on_document_id_and_position" ON "topics" ("document_id", "position") /*application='Townai'*/;
+CREATE INDEX "index_topics_on_action_taken" ON "topics" ("action_taken") /*application='Townai'*/;
+CREATE INDEX "index_topics_on_category" ON "topics" ("category") /*application='Townai'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20260101134241'),
+('20260101124059'),
 ('20251231173616'),
 ('20251231122803'),
 ('20251231114742'),

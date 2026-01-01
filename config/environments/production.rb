@@ -57,23 +57,21 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
 
   # Set host to be used by links generated in mailer templates.
-  # TODO: Update this to your actual production domain
-  config.action_mailer.default_url_options = { host: "example.com", protocol: "https" }
+  # Set APP_HOST environment variable in production (e.g., "townai.example.com")
+  config.action_mailer.default_url_options = {
+    host: ENV.fetch("APP_HOST", "localhost"),
+    protocol: "https"
+  }
 
-  # SMTP configuration - credentials should be set via Rails credentials or environment variables
-  # Run `bin/rails credentials:edit` to add:
-  #   smtp:
-  #     user_name: your_username
-  #     password: your_password
-  #     address: smtp.example.com
-  #     domain: example.com
+  # SMTP configuration - use environment variables or Rails credentials
+  # Required env vars: SMTP_ADDRESS, SMTP_DOMAIN, SMTP_USERNAME, SMTP_PASSWORD
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    user_name: Rails.application.credentials.dig(:smtp, :user_name),
-    password: Rails.application.credentials.dig(:smtp, :password),
-    address: Rails.application.credentials.dig(:smtp, :address) || "smtp.example.com",
-    domain: Rails.application.credentials.dig(:smtp, :domain) || "example.com",
-    port: 587,
+    user_name: ENV["SMTP_USERNAME"] || Rails.application.credentials.dig(:smtp, :user_name),
+    password: ENV["SMTP_PASSWORD"] || Rails.application.credentials.dig(:smtp, :password),
+    address: ENV["SMTP_ADDRESS"] || Rails.application.credentials.dig(:smtp, :address),
+    domain: ENV["SMTP_DOMAIN"] || Rails.application.credentials.dig(:smtp, :domain),
+    port: ENV.fetch("SMTP_PORT", 587).to_i,
     authentication: :plain,
     enable_starttls_auto: true
   }

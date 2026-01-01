@@ -59,58 +59,7 @@ class DocumentsHelperTest < ActionView::TestCase
     assert_equal "border-t-default", document_type_border_class(nil)
   end
 
-  test "action_badge returns nil for blank action" do
-    assert_nil action_badge(nil)
-    assert_nil action_badge("")
-  end
-
-  test "action_badge returns success badge for approved" do
-    result = action_badge("approved")
-    assert_match(/badge-success/, result)
-    assert_match(/Approved/, result)
-  end
-
-  test "action_badge returns error badge for denied" do
-    result = action_badge("denied")
-    assert_match(/badge-error/, result)
-    assert_match(/Denied/, result)
-  end
-
-  test "action_badge returns warning badge for tabled" do
-    result = action_badge("tabled")
-    assert_match(/badge-warning/, result)
-    assert_match(/Tabled/, result)
-  end
-
-  test "action_badge returns warning badge for continued" do
-    result = action_badge("continued")
-    assert_match(/badge-warning/, result)
-    assert_match(/Continued/, result)
-  end
-
-  test "action_badge returns ghost badge for unknown action" do
-    result = action_badge("none")
-    assert_match(/badge-ghost/, result)
-    assert_match(/None/, result)
-  end
-
-  test "action_border_class returns approved border for approved" do
-    assert_equal "border-l-approved", action_border_class("approved")
-  end
-
-  test "action_border_class returns denied border for denied" do
-    assert_equal "border-l-denied", action_border_class("denied")
-  end
-
-  test "action_border_class returns tabled border for tabled and continued" do
-    assert_equal "border-l-tabled", action_border_class("tabled")
-    assert_equal "border-l-tabled", action_border_class("continued")
-  end
-
-  test "action_border_class returns empty string for unknown action" do
-    assert_equal "", action_border_class("none")
-    assert_equal "", action_border_class("")
-  end
+  # action_badge and action_border_class tests moved to TopicsHelperTest
 
   test "role_badge returns nil for blank role" do
     assert_nil role_badge(nil)

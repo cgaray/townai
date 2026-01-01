@@ -108,36 +108,14 @@
     <% end %>
 
     <%# Agenda Items %>
-    <% if meta["topics"].present? && meta["topics"].any? %>
+    <% if @document.topics.any? %>
       <div class="space-y-4">
-        <%= section_header("Agenda Items", icon_name: "list-bullet", count: meta["topics"].size) %>
+        <%= section_header("Agenda Items", icon_name: "list-bullet", count: @document.topics.size) %>
 
         <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
           <div class="divide-y divide-base-200">
-            <% meta["topics"].each_with_index do |topic, i| %>
-              <% action = topic["action_taken"] %>
-              <% has_action = action.present? && action.downcase != "none" %>
-              <div class="px-5 py-4 hover:bg-base-50 transition-colors duration-150 <%= action_border_class(action) if has_action %>">
-                <div class="flex items-start gap-4">
-                  <div class="flex-none">
-                    <span class="number-circle bg-primary/10 text-primary">
-                      <%= i + 1 %>
-                    </span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <h3 class="text-base font-bold text-base-content"><%= topic["title"] %></h3>
-                      <% if has_action %>
-                        <%= action_badge(action) %>
-                      <% end %>
-                    </div>
-                    <% if topic["summary"].present? %>
-                      <p class="text-sm text-base-content/60 mt-2 leading-relaxed"><%= topic["summary"] %></p>
-                    <% end %>
-                    <%= render "shared/source_text_details", source_text: topic["source_text"], margin_class: "mt-3" %>
-                  </div>
-                </div>
-              </div>
+            <% @document.topics.ordered.each do |topic| %>
+              <%= render "documents/topic_item", topic: topic %>
             <% end %>
           </div>
         </div>
