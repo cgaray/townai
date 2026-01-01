@@ -27,7 +27,7 @@ class ReindexSearchJobTest < ActiveJob::TestCase
   end
 
   test "handles non-existent document gracefully" do
-    non_existent_id = Document.maximum(:id).to_i + 1
+    non_existent_id = 999_999
     
     # Should not raise an error when document doesn't exist
     assert_nothing_raised do
@@ -36,7 +36,7 @@ class ReindexSearchJobTest < ActiveJob::TestCase
   end
 
   test "handles non-existent person gracefully" do
-    non_existent_id = Person.maximum(:id).to_i + 1
+    non_existent_id = 999_999
     
     assert_nothing_raised do
       ReindexSearchJob.perform_now("person", non_existent_id)
@@ -44,7 +44,7 @@ class ReindexSearchJobTest < ActiveJob::TestCase
   end
 
   test "handles non-existent governing_body gracefully" do
-    non_existent_id = GoverningBody.maximum(:id).to_i + 1
+    non_existent_id = 999_999
     
     assert_nothing_raised do
       ReindexSearchJob.perform_now("governing_body", non_existent_id)
