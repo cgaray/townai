@@ -35,6 +35,22 @@ class PeopleController < ApplicationController
     documents = @document_attendees.map(&:document).uniq
     @meetings_by_year = build_meetings_hierarchy(documents, extra_data)
 
+    # Load topics for Activity section with pagination
+    @topics_pagy, @topics = pagy(
+      @person.topics
+             .includes(document: :governing_body)
+             .complete
+             .recent,
+      limit: 20,
+      page_param: :topics_page
+    )
+
+    # Build role lookup by document_id for showing person's role in each meeting
+    @role_by_document_id = extra_data.transform_values { |v| v[:role] }
+
+    # Calculate total topics count for display
+    @activity_stats = { total_topics: @person.topics.complete.count }
+
     @co_people = @person.co_people(limit: 10)
     @potential_duplicates = @person.potential_duplicates
   end
