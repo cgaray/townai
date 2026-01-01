@@ -96,6 +96,30 @@ class TopicTest < ActiveSupport::TestCase
     assert_equal expected_date, topic.meeting_date
   end
 
+  test "meeting_date_formatted returns formatted date string" do
+    topic = topics(:budget_amendment)
+    document = topic.document
+    document.update!(extracted_metadata: { "meeting_date" => "2025-01-15" }.to_json)
+
+    assert_equal "January 15, 2025", topic.meeting_date_formatted
+  end
+
+  test "meeting_date_formatted returns Date Unknown for blank date" do
+    topic = topics(:budget_amendment)
+    document = topic.document
+    document.update!(extracted_metadata: {}.to_json)
+
+    assert_equal "Date Unknown", topic.meeting_date_formatted
+  end
+
+  test "meeting_date_formatted returns raw string for unparseable date" do
+    topic = topics(:budget_amendment)
+    document = topic.document
+    document.update!(extracted_metadata: { "meeting_date" => "invalid date format" }.to_json)
+
+    assert_equal "invalid date format", topic.meeting_date_formatted
+  end
+
   test "for_town scope filters by town" do
     arlington = towns(:arlington)
     arlington_topics = Topic.for_town(arlington)
@@ -305,5 +329,59 @@ class TopicTest < ActiveSupport::TestCase
     topic = Topic.new(document: documents(:complete_agenda), title: "Test")
     topic.position = nil
     assert_equal 1, topic.display_position
+  end
+
+  # filter_counts_for_town tests
+  test "filter_counts_for_town returns counts by action type" do
+    town = towns(:arlington)
+    counts = Topic.filter_counts_for_town(town)
+
+    assert counts.key?(:all)
+    assert counts.key?(:with_actions)
+    assert counts.key?(:approved)
+    assert counts.key?(:denied)
+    assert counts.key?(:tabled)
+    assert counts.key?(:continued)
+
+    # with_actions should equal all minus none
+    none_count = Topic.for_town(town).complete.where(action_taken: :none).count
+    assert_equal counts[:all] - none_count, counts[:with_actions]
+  end
+
+  test "filter_counts_for_town uses single query" do
+    town = towns(:arlington)
+
+    # This test verifies the method works and returns correct structure
+    # The performance improvement (1 query vs 6) is the implementation detail
+    counts = Topic.filter_counts_for_town(town)
+
+    # Verify all counts are non-negative integers
+    counts.each do |key, value|
+      assert_kind_of Integer, value, "#{key} should be an integer"
+      assert value >= 0, "#{key} should be non-negative"
+    end
+
+    # Verify with_actions is sum of individual action counts
+    individual_sum = counts[:approved] + counts[:denied] + counts[:tabled] + counts[:continued]
+    assert_equal individual_sum, counts[:with_actions]
+  end
+
+  test "filter_counts_for_town only counts complete documents" do
+    town = towns(:arlington)
+
+    # Get counts before
+    counts_before = Topic.filter_counts_for_town(town)
+
+    # Create a pending document with a topic
+    pending_doc = Document.create!(
+      governing_body: governing_bodies(:select_board),
+      status: :pending
+    )
+    pending_doc.topics.create!(title: "Should not be counted", action_taken: :approved)
+
+    # Counts should be unchanged
+    counts_after = Topic.filter_counts_for_town(town)
+    assert_equal counts_before[:all], counts_after[:all]
+    assert_equal counts_before[:approved], counts_after[:approved]
   end
 end

@@ -27,6 +27,7 @@ Rails.application.routes.draw do
 
     resources :governing_bodies, only: [ :index, :show ]
     resources :people, only: [ :index, :show ]
+    resources :topics, only: [ :index ]
 
     # Town-scoped search
     get "search", to: "search#show"

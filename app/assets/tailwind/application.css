@@ -238,12 +238,7 @@ h1 {
   background: var(--gradient-sidebar);
 }
 
-/* Badge with icon spacing */
-.badge-with-icon {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-}
+
 
 
 

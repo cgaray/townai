@@ -11,7 +11,7 @@
         <% pending_count = @status_counts["pending"] || 0 %>
         <% processing_count = (@status_counts["extracting_text"] || 0) + (@status_counts["extracting_metadata"] || 0) %>
         <% if pending_count > 0 || processing_count > 0 %>
-          <div class="badge badge-lg badge-warning badge-with-icon font-semibold animate-pulse-subtle">
+          <div class="badge badge-lg badge-warning font-semibold animate-pulse-subtle">
             <span class="loading loading-spinner loading-xs"></span>
             <span><%= pending_count + processing_count %> processing</span>
           </div>

@@ -29,6 +29,7 @@ module TownScoped
       documents_count: @current_town.documents.count,
       governing_bodies_count: @current_town.governing_bodies.count,
       people_count: @current_town.people.count,
+      topics_count: Topic.for_town(@current_town).with_actions.count,
       complete_count: @current_town.documents.complete.count,
       processing_count: @current_town.documents.where(status: [ :extracting_text, :extracting_metadata ]).count
     }

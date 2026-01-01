@@ -25,6 +25,33 @@ class Topic < ApplicationRecord
   scope :ordered, -> { order(:position) }
   scope :recent, -> { joins(:document).merge(Document.order(created_at: :desc)) }
   scope :for_town, ->(town) { joins(:town).where(towns: { id: town.id }) }
+  scope :complete, -> { joins(:document).merge(Document.complete) }
+
+  # Calculate filter counts with a single GROUP BY query instead of 6 separate COUNT queries
+  # Returns hash with :all, :with_actions, :approved, :denied, :tabled, :continued keys
+  def self.filter_counts_for_town(town)
+    base = for_town(town).complete
+
+    # Single query to get counts by action_taken
+    # group(:enum).count returns integer keys (0, 1, 2, etc.) for enums
+    raw_counts = base.group(:action_taken).count
+
+    # Convert integer keys to string keys for consistent access
+    counts_by_action = Hash.new(0)
+    raw_counts.each { |k, v| counts_by_action[k.to_s] = v }
+
+    all_count = counts_by_action.values.sum
+    with_actions_count = all_count - counts_by_action["none"]
+
+    {
+      all: all_count,
+      with_actions: with_actions_count,
+      approved: counts_by_action["approved"],
+      denied: counts_by_action["denied"],
+      tabled: counts_by_action["tabled"],
+      continued: counts_by_action["continued"]
+    }
+  end
 
   class << self
     # Create Topic records from document's extracted metadata
@@ -88,6 +115,23 @@ class Topic < ApplicationRecord
   # Get the meeting date from the parent document
   def meeting_date
     document.metadata_field("meeting_date")
+  end
+
+  # Returns formatted meeting date string for display
+  # Returns "Date Unknown" if date is nil or can't be parsed
+  # Memoized to avoid repeated JSON parsing in views
+  def meeting_date_formatted
+    return @meeting_date_formatted if defined?(@meeting_date_formatted)
+
+    @meeting_date_formatted = if meeting_date.blank?
+      "Date Unknown"
+    else
+      begin
+        Date.parse(meeting_date).strftime("%B %d, %Y")
+      rescue ArgumentError
+        meeting_date
+      end
+    end
   end
 
   # Returns true if this topic has a meaningful action (not "none")

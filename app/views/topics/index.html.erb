@@ -1,0 +1,82 @@
+<%# app/views/topics/index.html.erb %>
+<div class="space-y-6">
+  <%# Page Header %>
+  <% header_badge = capture do %>
+    <div class="badge badge-lg badge-ghost font-semibold">
+      <%= icon("list-bullet", size: "w-4 h-4") %>
+      <span class="ml-1"><%= pluralize(@pagy.count, "topic") %></span>
+    </div>
+  <% end %>
+  <%= render "shared/page_header",
+             title: "Action Timeline",
+             subtitle: "Track decisions and actions across all meetings",
+             badge: header_badge %>
+
+  <%# Filters %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-base-content/70">Filter:</span>
+
+        <%# Action type filter pills %>
+        <div class="flex flex-wrap gap-2">
+          <%= topic_filter_pills(
+                town: current_town,
+                current_action: params[:action_taken],
+                governing_body_id: params[:governing_body_id],
+                filter_counts: @filter_counts
+              ) %>
+        </div>
+
+        <%# Governing body dropdown %>
+        <div class="ml-auto">
+          <select class="select select-bordered select-sm"
+                  onchange="window.location.href = this.value">
+            <option value="<%= town_topics_path(current_town, action_taken: params[:action_taken]) %>"
+                    <%= 'selected' if params[:governing_body_id].blank? %>>
+              All Boards
+            </option>
+            <% current_town.governing_bodies.order(:name).each do |body| %>
+              <option value="<%= town_topics_path(current_town, action_taken: params[:action_taken], governing_body_id: body.id) %>"
+                      <%= 'selected' if params[:governing_body_id].to_s == body.id.to_s %>>
+                <%= body.name %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Topics List %>
+  <% if @topics.any? %>
+    <div class="space-y-4">
+      <% @topics.group_by(&:meeting_date_formatted).each do |date_label, topics| %>
+        <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
+          <%= render "topics/date_header", date_label: date_label, topics_count: topics.size %>
+
+          <%# Topics for this date %>
+          <div class="divide-y divide-base-200">
+            <% topics.each do |topic| %>
+              <%= render "topics/topic_row", topic: topic %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { town_topics_path(current_town, page: page, action_taken: params[:action_taken], governing_body_id: params[:governing_body_id]) } %>
+  <% else %>
+    <% action_content = capture do %>
+      <%= link_to town_documents_path(current_town), class: "btn btn-primary" do %>
+        <%= icon("document", size: "w-4 h-4") %>
+        View Documents
+      <% end %>
+    <% end %>
+    <%= render "shared/empty_state",
+               icon_name: "list-bullet",
+               title: "No Topics Found",
+               description: "Topics will appear here as documents are processed. Each agenda item and discussion topic will be tracked with its action status.",
+               action: action_content %>
+  <% end %>
+</div>
