@@ -14,9 +14,9 @@ class DocumentsController < ApplicationController
   end
 
   def show
-    # Eager load document_attendees with their attendees and people to avoid N+1
+    # Eager load topics and document_attendees to avoid N+1
     @document = current_town.documents
-      .includes(document_attendees: { attendee: :person })
+      .includes(:topics, document_attendees: { attendee: :person })
       .with_attached_pdf
       .find(params[:id])
   end

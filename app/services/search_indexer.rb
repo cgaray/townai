@@ -25,7 +25,11 @@ class SearchIndexer
       return unless town # Skip indexing documents without a town
 
       SearchEntry.clear_entity!("document", document.id)
-      SearchEntry.clear_entity!("topic", document.id) # Topics use document.id as entity_id
+
+      # Clear topic entries for this document
+      document.topics.pluck(:id).each do |topic_id|
+        SearchEntry.clear_entity!("topic", topic_id)
+      end
 
       # Index the document itself
       SearchEntry.insert_entry!(
@@ -70,9 +74,17 @@ class SearchIndexer
     end
 
     # Remove a document from the index
-    def remove_document(document_id)
+    # @param document_id [Integer] the document ID to remove
+    # @param topic_ids [Array<Integer>] topic IDs to remove (pass these when topics are already destroyed)
+    def remove_document(document_id, topic_ids: nil)
       SearchEntry.clear_entity!("document", document_id)
-      SearchEntry.clear_entity!("topic", document_id)
+
+      # Use provided topic_ids if available (when called from after_destroy callback),
+      # otherwise query for them (when called directly)
+      ids_to_clear = topic_ids || Topic.where(document_id: document_id).pluck(:id)
+      ids_to_clear.each do |topic_id|
+        SearchEntry.clear_entity!("topic", topic_id)
+      end
     end
 
     # Remove a person from the index
@@ -89,7 +101,7 @@ class SearchIndexer
 
     def index_all_documents
       count = 0
-      Document.complete.includes(governing_body: :town).find_each do |document|
+      Document.complete.includes(:topics, governing_body: :town).find_each do |document|
         index_document(document)
         count += 1
       end
@@ -115,24 +127,17 @@ class SearchIndexer
     end
 
     def index_document_topics(document, town)
-      topics = document.metadata_field("topics") || []
-      return if topics.empty?
-
-      topics.each_with_index do |topic, index|
-        title = topic["title"] || topic["name"] || "Topic #{index + 1}"
-        summary = topic["summary"] || topic["description"] || ""
-        action = topic["action"]
-
-        content_parts = [ summary ]
-        content_parts << "Action: #{action}" if action.present?
+      document.topics.ordered.each do |topic|
+        content_parts = [ topic.summary ]
+        content_parts << "Action: #{topic.action_taken}" if topic.has_action?
 
         SearchEntry.insert_entry!(
           entity_type: "topic",
-          entity_id: document.id,
-          title: title,
+          entity_id: topic.id,
+          title: topic.title,
           subtitle: "#{document_type_label(document)} - #{document.governing_body&.name || 'Unknown Body'}",
-          content: content_parts.join(" "),
-          url: "#{document_url(document, town)}#topic-#{index}"
+          content: content_parts.compact.join(" "),
+          url: "#{document_url(document, town)}#topic-#{topic.id}"
         )
       end
     end
@@ -165,10 +170,9 @@ class SearchIndexer
       end
 
       # Add topic titles and summaries
-      topics = document.metadata_field("topics") || []
-      topics.each do |topic|
-        parts << topic["title"] if topic["title"]
-        parts << topic["summary"] if topic["summary"]
+      document.topics.each do |topic|
+        parts << topic.title
+        parts << topic.summary if topic.summary.present?
       end
 
       # Add attendee names

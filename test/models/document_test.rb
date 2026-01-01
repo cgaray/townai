@@ -74,8 +74,8 @@ class DocumentTest < ActiveSupport::TestCase
     doc = documents(:complete_agenda)
     topics = doc.metadata_field("topics")
     assert_kind_of Array, topics
-    assert_equal 2, topics.length
-    assert_equal "Budget Review", topics.first["title"]
+    assert_equal 3, topics.length
+    assert_equal "Budget Amendment for FY2025", topics.first["title"]
   end
 
   test "source_file_hash must be unique at database level" do

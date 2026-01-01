@@ -1,0 +1,46 @@
+# Topics fixtures for testing
+
+budget_amendment:
+  document: complete_agenda
+  title: "Budget Amendment for FY2025"
+  summary: "Proposed amendment to increase parks department funding by $50,000"
+  action_taken: 1  # approved
+  action_taken_raw: "motion passed 4-1"
+  source_text: "Motion to approve budget amendment passed 4-1"
+  position: 0
+
+zoning_variance:
+  document: complete_agenda
+  title: "Zoning Variance Request - 123 Main St"
+  summary: "Request for setback variance for residential addition"
+  action_taken: 2  # denied
+  action_taken_raw: "rejected 3-2"
+  source_text: "After discussion, the variance request was denied 3-2"
+  position: 1
+
+public_comment:
+  document: complete_agenda
+  title: "Public Comment Period"
+  summary: "Opportunity for residents to address the board"
+  action_taken: 0  # none
+  action_taken_raw:
+  source_text: "Public comment period opened at 7:15 PM"
+  position: 2
+
+road_repair:
+  document: complete_minutes
+  title: "Road Repair Contract Award"
+  summary: "Award of contract for Main Street reconstruction"
+  action_taken: 1  # approved
+  action_taken_raw: "approved unanimously"
+  source_text: "Motion to award contract to ABC Construction approved unanimously"
+  position: 0
+
+tabled_item:
+  document: complete_minutes
+  title: "Historic District Expansion"
+  summary: "Proposal to expand local historic district boundaries"
+  action_taken: 3  # tabled
+  action_taken_raw: "laid on the table"
+  source_text: "Item tabled pending additional information from planning staff"
+  position: 1

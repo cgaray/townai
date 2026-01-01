@@ -27,15 +27,10 @@ class SearchIndexerTest < ActiveSupport::TestCase
 
   test "index_document indexes topics separately" do
     doc = documents(:complete_agenda)
-    # Ensure document has topics in metadata
-    metadata = {
-      "document_type" => "agenda",
-      "topics" => [
-        { "title" => "Budget Discussion", "summary" => "Review annual budget" },
-        { "title" => "Zoning Changes", "summary" => "Discuss proposed changes" }
-      ]
-    }
-    doc.update_column(:extracted_metadata, metadata.to_json)
+    # Clear existing topics and create new ones for this test
+    doc.topics.destroy_all
+    doc.topics.create!(title: "Budget Discussion", summary: "Review annual budget", position: 0)
+    doc.topics.create!(title: "Zoning Changes", summary: "Discuss proposed changes", position: 1)
 
     SearchIndexer.index_document(doc)
 
@@ -87,5 +82,37 @@ class SearchIndexerTest < ActiveSupport::TestCase
     # Should still have people indexed after rebuild
     results = SearchEntry.search("smith")
     assert_kind_of Array, results
+  end
+
+  test "document destruction cleans up search entries for document and topics" do
+    doc = documents(:complete_agenda)
+
+    # Create topics and index the document
+    doc.topics.destroy_all
+    topic1 = doc.topics.create!(title: "UniqueXyzAlpha123", summary: "Unique content", position: 0)
+    topic2 = doc.topics.create!(title: "UniqueXyzBeta456", summary: "More content", position: 1)
+    topic1_id = topic1.id
+    topic2_id = topic2.id
+    SearchIndexer.index_document(doc)
+
+    # Verify topics are indexed
+    topic_results = SearchEntry.search("UniqueXyzAlpha123")
+    assert topic_results.any? { |r| r[:entity_type] == "topic" && r[:entity_id] == topic1_id },
+           "Topic should be indexed"
+
+    # Destroy the document (triggers before_destroy callback to cache topic IDs)
+    doc.destroy
+
+    # Verify document search entry is removed
+    doc_results_after = SearchEntry.search("finance")
+    assert doc_results_after.none? { |r| r[:entity_type] == "document" && r[:entity_id] == doc.id },
+           "Document search entry should be removed"
+
+    # Verify topic search entries are removed (this tests the before_destroy fix)
+    # Use direct query since topics no longer exist
+    topic1_entries = SearchEntry.where(entity_type: "topic", entity_id: topic1_id)
+    topic2_entries = SearchEntry.where(entity_type: "topic", entity_id: topic2_id)
+    assert_empty topic1_entries, "Topic 1 search entry should be removed"
+    assert_empty topic2_entries, "Topic 2 search entry should be removed"
   end
 end

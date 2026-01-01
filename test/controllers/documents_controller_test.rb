@@ -112,4 +112,27 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
     doc.reload
     assert doc.complete?
   end
+
+  test "topic titles and summaries are HTML escaped to prevent XSS" do
+    doc = documents(:complete_agenda)
+    doc.topics.destroy_all
+
+    # Create topic with potentially malicious content
+    doc.topics.create!(
+      title: "<script>alert('xss')</script>Malicious Title",
+      summary: "<img src=x onerror=alert('xss')>Malicious Summary",
+      position: 0
+    )
+
+    get town_document_url(@town, doc)
+    assert_response :success
+
+    # Verify the response body contains escaped HTML, not raw script tags
+    assert_no_match(/<script>alert/, response.body)
+    assert_no_match(/<img src=x onerror/, response.body)
+
+    # Verify the escaped versions are present
+    assert_match(/&lt;script&gt;/, response.body)
+    assert_match(/&lt;img src=x/, response.body)
+  end
 end

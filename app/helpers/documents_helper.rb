@@ -33,16 +33,6 @@ module DocumentsHelper
 
   DEFAULT_STATUS_CONFIG = { badge: "badge-warning", icon: "arrow-path" }.freeze
 
-  # Action configuration for topic action badges
-  ACTION_CONFIG = {
-    "approved" => { badge: "badge-success", icon: "check-circle", border: "border-l-approved" },
-    "denied" => { badge: "badge-error", icon: "x-circle", border: "border-l-denied" },
-    "tabled" => { badge: "badge-warning", icon: "pause-circle", border: "border-l-tabled" },
-    "continued" => { badge: "badge-warning", icon: "arrow-path", border: "border-l-tabled" }
-  }.freeze
-
-  DEFAULT_ACTION_CONFIG = { badge: "badge-ghost", icon: nil, border: "" }.freeze
-
   def status_badge(status)
     config = STATUS_CONFIG[status.to_s] || DEFAULT_STATUS_CONFIG
     is_extracting = status.to_s.match?(/extracting/)
@@ -78,22 +68,6 @@ module DocumentsHelper
     when "minutes" then "border-t-minutes"
     else "border-t-default"
     end
-  end
-
-  def action_badge(action)
-    return nil if action.blank?
-
-    config = ACTION_CONFIG[action.to_s.downcase] || DEFAULT_ACTION_CONFIG
-
-    content_tag :span, class: "badge badge-sm badge-with-icon #{config[:badge]}" do
-      concat icon(config[:icon], size: "w-3 h-3") if config[:icon]
-      concat content_tag(:span, action.to_s.capitalize)
-    end
-  end
-
-  def action_border_class(action)
-    config = ACTION_CONFIG[action.to_s.downcase] || DEFAULT_ACTION_CONFIG
-    config[:border]
   end
 
   def role_badge(role)
