@@ -121,22 +121,7 @@ class ComputeDuplicatesJobTest < ActiveJob::TestCase
     assert_equal 0, DuplicateSuggestion.involving(unique_person).count
   end
 
-  test "job completes successfully" do
-    # Just verify the job runs without errors
-    assert_nothing_raised do
-      ComputeDuplicatesJob.perform_now
-    end
-
-    # Should create some suggestions given our fixture data
-    assert DuplicateSuggestion.count >= 0
-  end
-
-  test "logs job execution" do
-    assert_nothing_raised do
-      ComputeDuplicatesJob.perform_now
-    end
-
-    # Job should complete without errors
-    assert DuplicateSuggestion.count >= 0
+  test "job is enqueued to default queue" do
+    assert_equal "default", ComputeDuplicatesJob.new.queue_name
   end
 end

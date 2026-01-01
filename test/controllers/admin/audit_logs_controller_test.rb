@@ -52,10 +52,11 @@ module Admin
       assert_response :success
     end
 
-    test "admin logs displays logs" do
+    test "admin logs displays created log" do
       get admin_admin_logs_url
       assert_response :success
       assert_select "table"
+      assert_match(/User Created/, response.body)
     end
 
     test "admin logs filters by action category" do
@@ -84,10 +85,11 @@ module Admin
       assert_response :success
     end
 
-    test "authentication logs displays logs" do
+    test "authentication logs displays created log" do
       get admin_authentication_logs_url
       assert_response :success
       assert_select "table"
+      assert_match(/Successful login/, response.body)
     end
 
     test "authentication logs filters by action" do
@@ -101,10 +103,11 @@ module Admin
       assert_response :success
     end
 
-    test "document events displays logs" do
+    test "document events displays created log" do
       get admin_document_events_url
       assert_response :success
       assert_select "table"
+      assert_match(/extraction_completed/, response.body)
     end
 
     test "document events filters by event type" do

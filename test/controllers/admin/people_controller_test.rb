@@ -4,6 +4,8 @@ require "test_helper"
 
 class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
   setup do
+    @admin = users(:admin)
+    @user = users(:user)
     @town = towns(:arlington)
     @source_person = people(:jon_smith)
     @target_person = people(:john_smith)
@@ -12,7 +14,22 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     # Clean up any existing document_attendees to avoid uniqueness conflicts
     DocumentAttendee.where(document: @document).delete_all
 
-    sign_in users(:admin)
+    sign_in @admin
+  end
+
+  # === Authorization ===
+
+  test "redirects non-admin users to root" do
+    sign_out :user
+    sign_in @user
+    get admin_people_url
+    assert_redirected_to root_url
+  end
+
+  test "redirects unauthenticated users to login" do
+    sign_out :user
+    get admin_people_url
+    assert_redirected_to new_user_session_url
   end
 
   # === Index ===
@@ -106,6 +123,12 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_nil Person.find_by(id: source_id)
   end
 
+  test "merge enqueues audit log job" do
+    assert_enqueued_with(job: AuditLogJob) do
+      post merge_admin_people_url(source_id: @source_person.id, target_id: @target_person.id)
+    end
+  end
+
   test "merge deletes stale duplicate suggestions" do
     source_id = @source_person.id
     target_id = @target_person.id
@@ -179,6 +202,16 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to town_person_url(@town, second_attendee.person)
     follow_redirect!
     assert_match(/Successfully unmerged/, flash[:notice])
+  end
+
+  test "unmerge enqueues audit log job" do
+    second_attendee = attendees(:j_smith_finance)
+    second_attendee.update!(person: @target_person)
+    @target_person.update_appearances_count!
+
+    assert_enqueued_with(job: AuditLogJob) do
+      post unmerge_admin_people_url(attendee_id: second_attendee.id)
+    end
   end
 
   test "unmerge fails when person has only one attendee" do
