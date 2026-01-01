@@ -22,10 +22,10 @@ SimpleCov.start "rails" do
 
   # Set minimum coverage threshold (optional)
   # minimum_coverage 90
-  
+
   # Set command name for parallel test merging
   command_name "Test Suite #{$$}"
-  
+
   # Merge timeout for parallel test results
   merge_timeout 3600
 end

@@ -5,7 +5,10 @@ Rails.application.routes.draw do
     mount LetterOpenerWeb::Engine, at: "/letter_opener"
   end
 
-  devise_for :users, controllers: { sessions: "users/sessions" }
+  devise_for :users, controllers: {
+    sessions: "users/sessions",
+    magic_links: "users/magic_links"
+  }
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -40,14 +43,45 @@ Rails.application.routes.draw do
 
   # Admin routes (global)
   namespace :admin do
+    root to: "dashboard#index"
     resources :users, except: [ :show ] do
       member do
         post :send_magic_link
       end
     end
     resources :api_costs, only: [ :index ]
-    post "people/merge", to: "people#merge", as: :people_merge
-    post "people/unmerge", to: "people#unmerge", as: :people_unmerge
+
+    resources :documents, only: [ :index, :destroy ] do
+      member do
+        post :reextract
+      end
+      collection do
+        post :bulk_retry
+      end
+    end
+
+    resources :people, only: [ :index ] do
+      collection do
+        get :duplicates
+        post :merge
+        post :unmerge
+        post :recompute_duplicates
+      end
+    end
+
+    # Audit logs - default to admin logs
+    get "audit_logs", to: redirect("/admin/audit_logs/admin")
+    get "audit_logs/admin", to: "audit_logs#admin_logs", as: :admin_logs
+    get "audit_logs/authentication", to: "audit_logs#authentication_logs", as: :authentication_logs
+    get "audit_logs/documents", to: "audit_logs#document_events", as: :document_events
+
+    # System dashboard
+    resources :system, only: [ :index ] do
+      collection do
+        post :rebuild_search
+        post :clear_cache
+      end
+    end
   end
 
   # Root redirects to towns index

@@ -255,6 +255,35 @@ h1 {
   border-left: 3px solid #F59E0B;
 }
 
+/* Admin audit log action borders */
+.border-l-user-action {
+  border-left: 3px solid #3B82F6;
+}
+
+.border-l-person-action {
+  border-left: 3px solid #8B5CF6;
+}
+
+.border-l-document-action {
+  border-left: 3px solid #10B981;
+}
+
+.border-l-auth-success {
+  border-left: 3px solid #10B981;
+}
+
+.border-l-auth-failed {
+  border-left: 3px solid #EF4444;
+}
+
+.border-l-doc-success {
+  border-left: 3px solid #10B981;
+}
+
+.border-l-doc-failure {
+  border-left: 3px solid #EF4444;
+}
+
 /* Stats card styling */
 .stat-card {
   padding: 0.5rem 0.75rem;

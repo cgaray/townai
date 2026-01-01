@@ -1,0 +1,159 @@
+<%= render "shared/page_header",
+           title: "Document Management",
+           subtitle: "Manage documents, retry extractions, and delete records" %>
+
+<div class="space-y-6">
+  <%# Filters %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap items-center gap-4">
+        <%# Status filter %>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-base-content/70">Status:</span>
+          <div class="flex flex-wrap gap-2">
+            <%= link_to admin_documents_path(params.permit(:governing_body_id)),
+                        class: "btn btn-sm #{params[:status].blank? ? 'btn-primary' : 'btn-ghost'}" do %>
+              All
+              <span class="opacity-70 text-xs"><%= @status_counts.values.sum %></span>
+            <% end %>
+            <% Document.statuses.keys.each do |status| %>
+              <%= link_to admin_documents_path(params.permit(:governing_body_id).merge(status: status)),
+                          class: "btn btn-sm #{params[:status] == status ? 'btn-primary' : 'btn-ghost'}" do %>
+                <%= status.humanize %>
+                <span class="opacity-70 text-xs"><%= @status_counts[status] || 0 %></span>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+
+        <%# Governing body filter %>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-base-content/70">Board:</span>
+          <select class="select select-bordered select-sm" onchange="window.location.href = this.value">
+            <option value="<%= admin_documents_path(params.permit(:status)) %>"
+                    <%= 'selected' if params[:governing_body_id].blank? %>>
+              All Boards
+            </option>
+            <% @governing_bodies.each do |body| %>
+              <option value="<%= admin_documents_path(params.permit(:status).merge(governing_body_id: body.id)) %>"
+                      <%= 'selected' if params[:governing_body_id].to_s == body.id.to_s %>>
+                <%= body.name %>
+              </option>
+            <% end %>
+          </select>
+        </div>
+      </div>
+
+      <%# Bulk actions %>
+      <% if params[:governing_body_id].present? && (@status_counts["failed"] || 0) > 0 %>
+        <div class="mt-3 pt-3 border-t border-base-200">
+          <%= button_to bulk_retry_admin_documents_path(governing_body_id: params[:governing_body_id]),
+                        method: :post,
+                        class: "btn btn-sm btn-warning",
+                        data: { confirm: "Retry all failed documents in this governing body?" } do %>
+            <%= icon("arrow-path", size: "w-4 h-4") %>
+            Retry All Failed
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Documents table %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-0">
+      <% if @documents.any? %>
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr class="bg-base-200/50">
+                <th class="font-semibold">Document</th>
+                <th class="font-semibold">Governing Body</th>
+                <th class="font-semibold">Status</th>
+                <th class="font-semibold">Meeting Date</th>
+                <th class="font-semibold">Created</th>
+                <th class="font-semibold w-32">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @documents.each do |doc| %>
+                <tr class="hover:bg-base-50">
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <%= document_type_icon(doc.metadata_field("document_type"), size: :sm) %>
+                      <div>
+                        <% if doc.governing_body&.town %>
+                          <%= link_to town_document_path(doc.governing_body.town, doc),
+                                      class: "link link-hover font-medium" do %>
+                            <%= truncate(doc.source_file_name, length: 40) %>
+                          <% end %>
+                        <% else %>
+                          <span class="font-medium"><%= truncate(doc.source_file_name, length: 40) %></span>
+                        <% end %>
+                        <div class="text-xs text-base-content/50">
+                          <%= doc.topics.count %> topics, <%= doc.document_attendees.count %> attendees
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <% if doc.governing_body %>
+                      <%= link_to doc.governing_body.name,
+                                  admin_documents_path(governing_body_id: doc.governing_body_id),
+                                  class: "link link-hover text-sm" %>
+                    <% else %>
+                      <span class="text-base-content/50">-</span>
+                    <% end %>
+                  </td>
+                  <td><%= status_badge(doc.status) %></td>
+                  <td class="text-sm">
+                    <% if doc.metadata_field("meeting_date") %>
+                      <%= Date.parse(doc.metadata_field("meeting_date")).strftime("%b %d, %Y") rescue doc.metadata_field("meeting_date") %>
+                    <% else %>
+                      <span class="text-base-content/50">-</span>
+                    <% end %>
+                  </td>
+                  <td class="text-sm text-base-content/70">
+                    <%= doc.created_at.strftime("%b %d, %Y") %>
+                  </td>
+                  <td>
+                    <div class="flex items-center gap-1">
+                      <%# Re-extract button %>
+                      <%= button_to reextract_admin_document_path(doc),
+                                    method: :post,
+                                    class: "btn btn-ghost btn-xs",
+                                    title: "Re-extract metadata",
+                                    data: { confirm: "Re-extract this document? This will clear existing topics and attendees." } do %>
+                        <%= icon("arrow-path", size: "w-4 h-4") %>
+                      <% end %>
+
+                      <%# Delete button %>
+                      <%= button_to admin_document_path(doc),
+                                    method: :delete,
+                                    class: "btn btn-ghost btn-xs text-error",
+                                    title: "Delete document",
+                                    data: { confirm: "Delete this document? This cannot be undone." } do %>
+                        <%= icon("trash", size: "w-4 h-4") %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-4 border-t border-base-200">
+          <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { admin_documents_path(params.permit(:status, :governing_body_id).merge(page: page)) } %>
+        </div>
+      <% else %>
+        <div class="p-8">
+          <%= render "shared/empty_state",
+                     icon_name: "document",
+                     title: "No Documents Found",
+                     description: "No documents match your current filters." %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

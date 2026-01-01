@@ -1,0 +1,10 @@
+<%# Displays the resource type and ID for an audit log entry %>
+<%# locals: (log:) %>
+<%# Note: We intentionally don't link to resources to avoid N+1 queries. %>
+<%# Audit logs are for auditing, not navigation. %>
+<span class="text-sm">
+  <span class="font-medium"><%= log.resource_type %></span>
+  <% if log.resource_id %>
+    <span class="text-base-content/50">#<%= log.resource_id %></span>
+  <% end %>
+</span>

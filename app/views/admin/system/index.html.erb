@@ -1,0 +1,145 @@
+<%= render "shared/page_header", title: "System", subtitle: "Search index, cache, and background jobs" %>
+
+<div class="max-w-4xl space-y-6">
+  <%# Quick Actions %>
+  <div class="flex flex-wrap gap-3">
+    <%= button_to rebuild_search_admin_system_index_path,
+                  method: :post,
+                  class: "btn btn-primary",
+                  data: { confirm: "Rebuild the entire search index? This may take a moment." } do %>
+      <%= icon("arrow-path", size: "w-4 h-4") %>
+      Rebuild Search Index
+    <% end %>
+
+    <%= button_to clear_cache_admin_system_index_path,
+                  method: :post,
+                  class: "btn btn-outline",
+                  data: { confirm: "Clear the application cache?" } do %>
+      <%= icon("trash", size: "w-4 h-4") %>
+      Clear Cache
+    <% end %>
+  </div>
+
+  <%# Stats Grid %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">Search Index</div>
+      <div class="stat-value text-primary"><%= @search_stats["total"] || 0 %></div>
+      <div class="stat-desc">Total records</div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">Cache</div>
+      <div class="stat-value"><%= @cache_stats["entries"] %></div>
+      <div class="stat-desc">Entries</div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">Pending Jobs</div>
+      <div class="stat-value"><%= @queue_stats["pending"] %></div>
+      <div class="stat-desc">In queue</div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">Failed Jobs</div>
+      <div class="stat-value <%= 'text-error' if @queue_stats["failed"].to_i > 0 %>"><%= @queue_stats["failed"] %></div>
+      <div class="stat-desc">Need attention</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <%# Search Index Details %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title text-base">
+          <%= icon("magnifying-glass", size: "w-5 h-5 text-primary") %>
+          Search Index
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <tbody>
+              <% @search_stats.except("total").sort.each do |type, count| %>
+                <tr>
+                  <td class="capitalize"><%= type.tr("_", " ") %></td>
+                  <td class="text-right font-mono"><%= count %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <%# Environment Info %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title text-base">
+          <%= icon("cog-6-tooth", size: "w-5 h-5 text-primary") %>
+          Environment
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <tbody>
+              <tr>
+                <td class="text-base-content/70">Rails</td>
+                <td class="text-right font-mono"><%= Rails.version %></td>
+              </tr>
+              <tr>
+                <td class="text-base-content/70">Ruby</td>
+                <td class="text-right font-mono"><%= RUBY_VERSION %></td>
+              </tr>
+              <tr>
+                <td class="text-base-content/70">Environment</td>
+                <td class="text-right"><span class="badge badge-sm badge-primary"><%= Rails.env %></span></td>
+              </tr>
+              <tr>
+                <td class="text-base-content/70">Queue Workers</td>
+                <td class="text-right font-mono"><%= @queue_stats["processes"] %></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Recent Activity %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title text-base">
+        <%= icon("clock", size: "w-5 h-5 text-primary") %>
+        Recent System Actions
+      </h2>
+
+      <% logs = AdminAuditLog.includes(:user).where(action: %w[search_rebuild cache_clear]).order(created_at: :desc).limit(5) %>
+      <% if logs.any? %>
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>User</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% logs.each do |log| %>
+                <tr>
+                  <td class="text-base-content/70"><%= time_ago_in_words(log.created_at) %> ago</td>
+                  <td><%= log.user&.email || "System" %></td>
+                  <td>
+                    <span class="badge badge-sm <%= log.action == 'search_rebuild' ? 'badge-primary' : 'badge-ghost' %>">
+                      <%= log.action.humanize %>
+                    </span>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-base-content/50 text-sm py-4">No system actions recorded yet.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

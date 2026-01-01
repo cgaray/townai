@@ -16,10 +16,10 @@ class DocumentAttendeeTest < ActiveSupport::TestCase
   test "should validate uniqueness of document_id scoped to attendee_id" do
     doc = documents(:complete_minutes)
     attendee = attendees(:john_smith_finance)
-    
+
     DocumentAttendee.create!(document: doc, attendee: attendee, status: "present")
     duplicate = DocumentAttendee.new(document: doc, attendee: attendee, status: "absent")
-    
+
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:document_id], "has already been taken"
   end
@@ -42,7 +42,7 @@ class DocumentAttendeeTest < ActiveSupport::TestCase
       documents(:extracting_metadata_document)
     ]
     attendee = attendees(:john_smith_finance)
-    
+
     DocumentAttendee::STATUSES.each_with_index do |status, index|
       doc = docs[index % docs.length]
       doc_attendee = DocumentAttendee.new(document: doc, attendee: attendee, status: status, role: "member #{status}")
@@ -71,7 +71,7 @@ class DocumentAttendeeTest < ActiveSupport::TestCase
       documents(:failed_document)
     ]
     attendee = attendees(:jane_doe_finance)
-    
+
     roles = [ "chair", "vice-chair", "associate member", "clerk", "member" ]
     roles.each_with_index do |role, index|
       doc = docs[index % docs.length]

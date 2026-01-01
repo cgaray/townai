@@ -9,6 +9,13 @@ class ExtractMetadataJob < ApplicationJob
     @town = Town.find_by(id: town_id)
     return unless document.pending?
 
+    # Log extraction started
+    DocumentEventLogJob.perform_later(
+      document_id: document.id,
+      event_type: "extraction_started",
+      metadata: { started_at: Time.current.iso8601 }
+    )
+
     start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
     # Extract primary content from PDF (agenda/minutes only, not attachments)
@@ -55,6 +62,17 @@ class ExtractMetadataJob < ApplicationJob
       begin
         document.update!(extracted_metadata: normalized, status: :complete)
 
+        # Log extraction completed
+        DocumentEventLogJob.perform_later(
+          document_id: document.id,
+          event_type: "extraction_completed",
+          metadata: {
+            duration_ms: response_time_ms,
+            prompt_tokens: usage["prompt_tokens"],
+            completion_tokens: usage["completion_tokens"]
+          }
+        )
+
         # Link attendees after successful extraction
         linker = AttendeeLinker.new(document, town: @town)
         if linker.link_attendees
@@ -66,14 +84,37 @@ class ExtractMetadataJob < ApplicationJob
         # Create Topic records from extracted metadata
         topic_count = Topic.create_from_metadata(document)
         Rails.logger.info("Created #{topic_count} topics for document #{document.id}") if topic_count > 0
+
+        # Log metadata extracted event
+        DocumentEventLogJob.perform_later(
+          document_id: document.id,
+          event_type: "metadata_extracted",
+          metadata: { topic_count: topic_count }
+        )
       rescue StandardError => e
         # API call succeeded but document update failed - don't re-record as error
         document.update!(status: :failed)
+
+        # Log the failure
+        DocumentEventLogJob.perform_later(
+          document_id: document.id,
+          event_type: "extraction_failed",
+          metadata: { error: e.message, phase: "document_update" }
+        )
+
         raise "Document update failed after successful API call: #{e.message}"
       end
     else
       record_api_call(document, usage, response_time_ms, "error", "Failed to parse metadata")
       document.update!(status: :failed)
+
+      # Log the failure
+      DocumentEventLogJob.perform_later(
+        document_id: document.id,
+        event_type: "extraction_failed",
+        metadata: { error: "Failed to parse metadata", phase: "llm_response" }
+      )
+
       raise "Failed to parse metadata: #{raw_response.to_s.first(500)}"
     end
   rescue ActiveRecord::RecordNotFound
@@ -85,7 +126,16 @@ class ExtractMetadataJob < ApplicationJob
     if usage.nil? || usage.empty?
       record_api_call(document, {}, response_time_ms || 0, "error", e.message) if document
     end
-    document&.update!(status: :failed) if document&.persisted? && !document&.failed?
+
+    # Log the failure and update status if document exists and isn't already failed
+    if document&.persisted? && !document.failed?
+      DocumentEventLogJob.perform_later(
+        document_id: document.id,
+        event_type: "extraction_failed",
+        metadata: { error: e.message, phase: "extraction" }
+      )
+      document.update!(status: :failed)
+    end
     raise
   end
 
