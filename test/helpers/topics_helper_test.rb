@@ -12,24 +12,28 @@ class TopicsHelperTest < ActionView::TestCase
 
   test "action_badge renders approved badge with success style" do
     result = action_badge("approved")
+    assert_includes result, "badge-soft"
     assert_includes result, "badge-success"
     assert_includes result, "Approved"
   end
 
   test "action_badge renders denied badge with error style" do
     result = action_badge("denied")
+    assert_includes result, "badge-soft"
     assert_includes result, "badge-error"
     assert_includes result, "Denied"
   end
 
   test "action_badge renders tabled badge with warning style" do
     result = action_badge("tabled")
+    assert_includes result, "badge-soft"
     assert_includes result, "badge-warning"
     assert_includes result, "Tabled"
   end
 
   test "action_badge renders continued badge with warning style" do
     result = action_badge("continued")
+    assert_includes result, "badge-soft"
     assert_includes result, "badge-warning"
     assert_includes result, "Continued"
   end
@@ -60,6 +64,7 @@ class TopicsHelperTest < ActionView::TestCase
   # Real usage passes symbols from enum, not strings
   test "action_badge handles symbol input from enum" do
     result = action_badge(:approved)
+    assert_includes result, "badge-soft"
     assert_includes result, "badge-success"
     assert_includes result, "Approved"
   end

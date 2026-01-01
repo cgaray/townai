@@ -111,8 +111,8 @@ class TopicsControllerTest < ActionDispatch::IntegrationTest
   test "index shows action badges for topics with actions" do
     get town_topics_url(@town)
     assert_response :success
-    # Should show action badges
-    assert_select ".badge-success", minimum: 1  # approved
+    # Should show action badges (badge-soft badge-success)
+    assert_select ".badge-soft.badge-success", minimum: 1  # approved
   end
 
   test "index shows link to source document" do

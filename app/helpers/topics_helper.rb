@@ -2,11 +2,12 @@
 
 module TopicsHelper
   # Action configuration for topic action badges and borders
+  # Uses DaisyUI badge-soft for subtle colored backgrounds
   ACTION_CONFIG = {
-    "approved" => { badge: "badge-success", icon: "check-circle", border: "border-l-approved" },
-    "denied" => { badge: "badge-error", icon: "x-circle", border: "border-l-denied" },
-    "tabled" => { badge: "badge-warning", icon: "pause-circle", border: "border-l-tabled" },
-    "continued" => { badge: "badge-warning", icon: "arrow-path", border: "border-l-tabled" }
+    "approved" => { badge: "badge-soft badge-success", icon: "check-circle", border: "border-l-approved" },
+    "denied" => { badge: "badge-soft badge-error", icon: "x-circle", border: "border-l-denied" },
+    "tabled" => { badge: "badge-soft badge-warning", icon: "pause-circle", border: "border-l-tabled" },
+    "continued" => { badge: "badge-soft badge-warning", icon: "arrow-path", border: "border-l-tabled" }
   }.freeze
 
   DEFAULT_ACTION_CONFIG = { badge: "badge-ghost", icon: nil, border: "" }.freeze
@@ -28,9 +29,9 @@ module TopicsHelper
 
     config = ACTION_CONFIG[action.to_s.downcase] || DEFAULT_ACTION_CONFIG
 
-    content_tag :span, class: "badge badge-sm badge-with-icon #{config[:badge]}" do
-      concat icon(config[:icon], size: "w-3 h-3") if config[:icon]
-      concat content_tag(:span, action.to_s.capitalize)
+    content_tag :span, class: "badge badge-sm #{config[:badge]}" do
+      concat icon(config[:icon], size: "size-[1em]") if config[:icon]
+      concat action.to_s.capitalize
     end
   end
 
@@ -67,11 +68,10 @@ module TopicsHelper
     btn_class = is_active ? filter[:active_class] : "btn-ghost"
 
     link_to town_topics_path(town, action_taken: filter[:key], governing_body_id: governing_body_id),
-            class: "btn btn-sm #{btn_class}" do
-      concat icon(filter[:icon], size: "w-4 h-4") if filter[:icon]
-      concat filter[:label]
-      concat " "
-      concat content_tag(:span, count, class: "badge badge-xs")
+            class: "btn btn-sm #{btn_class} inline-flex items-center gap-2" do
+      concat icon(filter[:icon], size: "w-4 h-4 shrink-0") if filter[:icon]
+      concat content_tag(:span, filter[:label])
+      concat content_tag(:span, count, class: "opacity-70 text-xs")
     end
   end
 end

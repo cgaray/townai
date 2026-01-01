@@ -5,12 +5,14 @@ class DocumentsHelperTest < ActionView::TestCase
 
   test "status_badge returns badge for complete status" do
     result = status_badge("complete")
+    assert_match(/badge-soft/, result)
     assert_match(/badge-success/, result)
     assert_match(/Complete/, result)
   end
 
   test "status_badge returns badge for failed status" do
     result = status_badge("failed")
+    assert_match(/badge-soft/, result)
     assert_match(/badge-error/, result)
     assert_match(/Failed/, result)
   end
@@ -23,6 +25,7 @@ class DocumentsHelperTest < ActionView::TestCase
 
   test "status_badge returns warning badge for extracting statuses" do
     result = status_badge("extracting_text")
+    assert_match(/badge-soft/, result)
     assert_match(/badge-warning/, result)
     assert_match(/loading loading-spinner/, result)
   end

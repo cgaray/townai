@@ -25,25 +25,26 @@ module DocumentsHelper
   end
 
   # Status configuration for document processing states
+  # Uses DaisyUI badge-soft for subtle colored backgrounds
   STATUS_CONFIG = {
-    "complete" => { badge: "badge-success", icon: "check-circle" },
-    "failed" => { badge: "badge-error", icon: "x-circle" },
+    "complete" => { badge: "badge-soft badge-success", icon: "check-circle" },
+    "failed" => { badge: "badge-soft badge-error", icon: "x-circle" },
     "pending" => { badge: "badge-ghost", icon: "clock-pending" }
   }.freeze
 
-  DEFAULT_STATUS_CONFIG = { badge: "badge-warning", icon: "arrow-path" }.freeze
+  DEFAULT_STATUS_CONFIG = { badge: "badge-soft badge-warning", icon: "arrow-path" }.freeze
 
   def status_badge(status)
     config = STATUS_CONFIG[status.to_s] || DEFAULT_STATUS_CONFIG
     is_extracting = status.to_s.match?(/extracting/)
 
-    content_tag :span, class: "badge badge-with-icon #{config[:badge]}" do
+    content_tag :span, class: "badge badge-sm #{config[:badge]}" do
       if is_extracting
         concat content_tag(:span, "", class: "loading loading-spinner loading-xs")
       else
-        concat icon(config[:icon], size: "w-3.5 h-3.5")
+        concat icon(config[:icon], size: "size-[1em]")
       end
-      concat content_tag(:span, status.to_s.humanize)
+      concat status.to_s.humanize
     end
   end
 
