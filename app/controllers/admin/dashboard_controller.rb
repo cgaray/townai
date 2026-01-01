@@ -10,13 +10,24 @@ module Admin
         people: Person.count,
         users: User.count,
         topics: Topic.count,
-        jobs_pending: SolidQueue::Job.where(finished_at: nil).count,
-        jobs_failed: SolidQueue::FailedExecution.count
+        jobs_pending: queue_stats[:pending],
+        jobs_failed: queue_stats[:failed]
       }
 
       @recent_activity = AdminAuditLog.includes(:user)
                                        .order(created_at: :desc)
                                        .limit(10)
+    end
+
+    private
+
+    def queue_stats
+      {
+        pending: SolidQueue::Job.where(finished_at: nil).count,
+        failed: SolidQueue::FailedExecution.count
+      }
+    rescue ActiveRecord::StatementInvalid
+      { pending: 0, failed: 0 }
     end
   end
 end
