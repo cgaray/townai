@@ -76,21 +76,16 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Extracted Identities/, response.body)
   end
 
-  test "show displays topics discussed section" do
-    get town_person_url(@town, @person)
-    assert_response :success
-    assert_match(/Topics Discussed/, response.body)
-  end
-
-  test "show displays topics from attended meetings" do
+  test "show displays topics inline within meeting timeline" do
     # john_smith has john_smith_finance attendee linked to complete_agenda
     # which has topics including "Budget Amendment for FY2025"
     get town_person_url(@town, @person)
     assert_response :success
+    # Topics should appear inline within the meeting timeline
     assert_match(/Budget Amendment for FY2025/, response.body)
   end
 
-  test "show displays action badges on topics" do
+  test "show displays action badges on topics in timeline" do
     get town_person_url(@town, @person)
     assert_response :success
     # Topics with actions should show action badges
@@ -98,32 +93,12 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_select ".badge", text: /Approved/i
   end
 
-  test "show displays person role for each topic" do
+  test "show displays person role in meeting timeline" do
     # john_at_agenda has role: chair
     get town_person_url(@town, @person)
     assert_response :success
-    # Should show role badge - the "as" prefix indicates it's in the activity topic context
-    assert_match(/as.*Chair/im, response.body)
-  end
-
-  test "show displays governing body for topics" do
-    get town_person_url(@town, @person)
-    assert_response :success
-    assert_match(/Select Board/, response.body)
-  end
-
-  test "show displays topics count badge" do
-    get town_person_url(@town, @person)
-    assert_response :success
-    # Should show total topics count
-    assert_select ".badge", text: /topics/i
-  end
-
-  test "show displays explanatory text about committee decisions" do
-    get town_person_url(@town, @person)
-    assert_response :success
-    # Should clarify that actions reflect committee decisions, not individual votes
-    assert_match(/committee decisions/, response.body)
+    # Should show role badge in the timeline
+    assert_select ".badge", text: /Chair/i
   end
 
   test "show topics link to document with anchor" do
@@ -133,17 +108,12 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href*='#topic-']"
   end
 
-  test "show paginates topics" do
-    get town_person_url(@town, @person, topics_page: 1)
-    assert_response :success
-  end
-
-  test "show handles person with no topics" do
-    # jon_smith has no document_attendees linking to any documents
+  test "show handles person with no meetings" do
+    # jon_smith has an attendee (jon_smith_finance) but no document_attendees linking to documents
     person = people(:jon_smith)
     get town_person_url(@town, person)
     assert_response :success
-    # Should show empty state message
-    assert_match(/No topics yet/, response.body)
+    # Should show the meeting history section but with no meetings
+    assert_match(/Meeting History/, response.body)
   end
 end

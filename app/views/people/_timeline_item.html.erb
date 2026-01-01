@@ -1,25 +1,45 @@
-<%# Timeline item for person: document with role/status %>
+<%# Timeline item for person: document with role/status and topics %>
 <% doc = item[:document] %>
 <% extra = item[:extra] || {} %>
+<% topics = extra[:topics] || [] %>
 <% doc_type = doc.metadata_field("document_type")&.downcase %>
 <% governing_body = doc.metadata_field("governing_body") %>
 
-<%= link_to town_document_path(current_town, doc), class: "inline-flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-base-200 transition-colors group" do %>
-  <%# Document Type Badge %>
-  <%= document_type_badge(doc_type) %>
-  
-  <%# Governing Body %>
-  <span class="text-sm text-base-content/60 group-hover:text-base-content transition-colors"><%= governing_body %></span>
-  
-  <%# Role Badge %>
-  <% if extra[:role] %>
-    <%= role_badge(extra[:role]) %>
+<div class="w-full">
+  <%# Document Header Row %>
+  <%= link_to town_document_path(current_town, doc), class: "inline-flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-base-200 transition-colors group" do %>
+    <%# Document Type Badge %>
+    <%= document_type_badge(doc_type) %>
+    
+    <%# Governing Body %>
+    <span class="text-sm text-base-content/60 group-hover:text-base-content transition-colors"><%= governing_body %></span>
+    
+    <%# Role Badge %>
+    <% if extra[:role] %>
+      <%= role_badge(extra[:role]) %>
+    <% end %>
+    
+    <%# Status Badge %>
+    <% if extra[:status] %>
+      <span class="badge badge-sm <%= extra[:status] == 'present' ? 'badge-success' : extra[:status] == 'remote' ? 'badge-info' : 'badge-warning' %> badge-outline">
+        <%= extra[:status].capitalize %>
+      </span>
+    <% end %>
   <% end %>
-  
-  <%# Status Badge %>
-  <% if extra[:status] %>
-    <span class="badge badge-sm <%= extra[:status] == 'present' ? 'badge-success' : extra[:status] == 'remote' ? 'badge-info' : 'badge-warning' %> badge-outline">
-      <%= extra[:status].capitalize %>
-    </span>
+
+  <%# Topics List %>
+  <% if topics.any? %>
+    <div class="mt-2 ml-2 pl-3 border-l-2 border-base-300 space-y-1">
+      <% topics.each do |topic| %>
+        <%= link_to town_document_path(current_town, doc, anchor: "topic-#{topic.id}"),
+                    class: "flex items-center gap-2 py-0.5 text-sm hover:text-primary transition-colors group/topic" do %>
+          <span class="text-base-content/40 group-hover/topic:text-primary/60">•</span>
+          <span class="text-base-content/70 group-hover/topic:text-base-content truncate"><%= topic.title %></span>
+          <% if topic.has_action? %>
+            <%= action_badge(topic.action_taken) %>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
   <% end %>
-<% end %>
+</div>
