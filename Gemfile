@@ -68,6 +68,9 @@ group :test do
   gem "selenium-webdriver"
   # Pin minitest to 5.x for Rails 8.1 compatibility
   gem "minitest", "~> 5.25"
+  # Code coverage reporting
+  gem "simplecov", require: false
+  gem "simplecov-cobertura", require: false
 end
 
 gem "ruby-openai", "~> 8.3"

@@ -6,6 +6,7 @@
 
 # Ignore bundler config.
 /.bundle
+/vendor/bundle
 
 # Ignore all environment files.
 /.env*
@@ -39,3 +40,6 @@
 
 /node_modules
 cookies.txt
+
+# Ignore code coverage files
+/coverage
