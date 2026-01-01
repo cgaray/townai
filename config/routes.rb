@@ -65,6 +65,7 @@ Rails.application.routes.draw do
         get :duplicates
         post :merge
         post :unmerge
+        post :recompute_duplicates
       end
     end
 

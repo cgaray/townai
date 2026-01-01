@@ -127,16 +127,15 @@ class ExtractMetadataJob < ApplicationJob
       record_api_call(document, {}, response_time_ms || 0, "error", e.message) if document
     end
 
-    # Log the failure
-    if document&.persisted? && !document&.failed?
+    # Log the failure and update status if document exists and isn't already failed
+    if document&.persisted? && !document.failed?
       DocumentEventLogJob.perform_later(
         document_id: document.id,
         event_type: "extraction_failed",
         metadata: { error: e.message, phase: "extraction" }
       )
+      document.update!(status: :failed)
     end
-
-    document&.update!(status: :failed) if document&.persisted? && !document&.failed?
     raise
   end
 

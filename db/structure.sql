@@ -113,7 +113,18 @@ CREATE INDEX "index_authentication_logs_on_user_id" ON "authentication_logs" ("u
 CREATE INDEX "index_authentication_logs_on_user_id_and_created_at" ON "authentication_logs" ("user_id", "created_at") /*application='Townai'*/;
 CREATE INDEX "index_authentication_logs_on_action" ON "authentication_logs" ("action") /*application='Townai'*/;
 CREATE INDEX "index_authentication_logs_on_email_hash" ON "authentication_logs" ("email_hash") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "duplicate_suggestions" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "person_id" integer NOT NULL, "duplicate_person_id" integer NOT NULL, "match_type" varchar DEFAULT 'exact' NOT NULL, "similarity_score" integer DEFAULT 0 NOT NULL, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_c4dd4ff487"
+FOREIGN KEY ("person_id")
+  REFERENCES "people" ("id")
+, CONSTRAINT "fk_rails_700cd4dc14"
+FOREIGN KEY ("duplicate_person_id")
+  REFERENCES "people" ("id")
+);
+CREATE INDEX "index_duplicate_suggestions_on_person_id" ON "duplicate_suggestions" ("person_id") /*application='Townai'*/;
+CREATE INDEX "index_duplicate_suggestions_on_duplicate_person_id" ON "duplicate_suggestions" ("duplicate_person_id") /*application='Townai'*/;
+CREATE UNIQUE INDEX "idx_on_person_id_duplicate_person_id_5606038b71" ON "duplicate_suggestions" ("person_id", "duplicate_person_id") /*application='Townai'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20260101184306'),
 ('20260101134241'),
 ('20260101124059'),
 ('20251231173616'),

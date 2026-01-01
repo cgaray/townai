@@ -15,6 +15,68 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     sign_in users(:admin)
   end
 
+  # === Index ===
+
+  test "index renders successfully" do
+    get admin_people_url
+    assert_response :success
+  end
+
+  test "index filters by town" do
+    get admin_people_url(town_id: @town.id)
+    assert_response :success
+  end
+
+  # === Duplicates ===
+
+  test "duplicates renders successfully" do
+    get duplicates_admin_people_url
+    assert_response :success
+  end
+
+  test "duplicates shows last computed timestamp" do
+    # Run the job to populate suggestions
+    ComputeDuplicatesJob.perform_now
+
+    get duplicates_admin_people_url
+    assert_response :success
+    assert_match(/Last computed/, response.body)
+  end
+
+  test "duplicates shows never computed message when empty" do
+    DuplicateSuggestion.delete_all
+
+    get duplicates_admin_people_url
+    assert_response :success
+    assert_match(/Never computed/, response.body)
+  end
+
+  test "duplicates filters by town" do
+    ComputeDuplicatesJob.perform_now
+
+    get duplicates_admin_people_url(town_id: @town.id)
+    assert_response :success
+  end
+
+  # === Recompute Duplicates ===
+
+  test "recompute_duplicates enqueues job" do
+    assert_enqueued_with(job: ComputeDuplicatesJob) do
+      post recompute_duplicates_admin_people_url
+    end
+
+    assert_redirected_to duplicates_admin_people_url
+    assert_match(/job queued/, flash[:notice])
+  end
+
+  test "recompute_duplicates logs audit event" do
+    assert_enqueued_with(job: AuditLogJob) do
+      post recompute_duplicates_admin_people_url
+    end
+  end
+
+  # === Merge ===
+
   test "merge redirects to target person on success" do
     post merge_admin_people_url(source_id: @source_person.id, target_id: @target_person.id)
 
@@ -44,6 +106,36 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_nil Person.find_by(id: source_id)
   end
 
+  test "merge deletes stale duplicate suggestions" do
+    source_id = @source_person.id
+    target_id = @target_person.id
+
+    # Create a suggestion involving the source person
+    lower_id, higher_id = [ source_id, target_id ].sort
+    suggestion = DuplicateSuggestion.create!(
+      person_id: lower_id,
+      duplicate_person_id: higher_id,
+      match_type: :similar,
+      similarity_score: 1
+    )
+
+    assert_equal 1, DuplicateSuggestion.involving(source_id).count
+    assert Person.exists?(source_id), "Source person should exist before merge"
+
+    post merge_admin_people_url(source_id: source_id, target_id: target_id)
+
+    # Follow redirect to see flash message
+    follow_redirect!
+    assert_match(/Successfully merged/, flash[:notice] || "",
+                 "Merge should succeed. Alert: #{flash[:alert]}")
+
+    assert_not Person.exists?(source_id), "Source person should be deleted after merge"
+
+    # Suggestion should be deleted after merge
+    assert_not DuplicateSuggestion.exists?(suggestion.id),
+               "Suggestion #{suggestion.id} should be deleted after merge"
+  end
+
   test "merge redirects with error when source not found" do
     post merge_admin_people_url(source_id: 999999, target_id: @target_person.id)
 
@@ -57,6 +149,8 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to towns_url
     assert_match(/not found/, flash[:alert])
   end
+
+  # === Unmerge ===
 
   test "unmerge creates new person for attendee" do
     # First merge two attendees under one person

@@ -17,3 +17,7 @@ production:
   cleanup_audit_logs:
     class: CleanupLogsJob
     schedule: at 3am every day
+
+  compute_duplicates:
+    class: ComputeDuplicatesJob
+    schedule: at 4am every day

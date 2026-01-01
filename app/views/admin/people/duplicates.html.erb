@@ -24,6 +24,29 @@
               <% end %>
             </select>
           </div>
+
+          <%# Last computed info and recompute button %>
+          <div class="flex items-center gap-3 border-l border-base-200 pl-4">
+            <% if @last_computed_at %>
+              <span class="text-sm text-base-content/60 flex items-center gap-1">
+                <%= icon("clock", size: "w-4 h-4") %>
+                Last computed: <%= time_ago_in_words(@last_computed_at) %> ago
+              </span>
+            <% else %>
+              <span class="text-sm text-warning flex items-center gap-1">
+                <%= icon("exclamation-triangle", size: "w-4 h-4") %>
+                Never computed
+              </span>
+            <% end %>
+
+            <%= button_to recompute_duplicates_admin_people_path,
+                          method: :post,
+                          class: "btn btn-sm btn-ghost gap-1",
+                          data: { confirm: "Queue duplicate detection job? This may take a moment." } do %>
+              <%= icon("arrow-path", size: "w-4 h-4") %>
+              Recompute
+            <% end %>
+          </div>
         </div>
 
         <div class="badge badge-lg badge-ghost">

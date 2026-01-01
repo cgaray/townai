@@ -29,8 +29,12 @@ class Users::MagicLinksController < Devise::MagicLinksController
   end
 
   def log_failed_login
+    # Extract email from params if available for tracking failed attempts
+    email = params.dig(:user, :email)
+
     AuthenticationLogJob.perform_later(
       action: "login_failed",
+      email: email,
       ip_address: request.remote_ip,
       user_agent: request.user_agent
     )

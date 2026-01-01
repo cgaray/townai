@@ -33,7 +33,6 @@ module Admin
         attendees_count: @document.document_attendees.count
       }
 
-      governing_body = @document.governing_body
       @document.destroy!
 
       AuditLogJob.perform_later(
