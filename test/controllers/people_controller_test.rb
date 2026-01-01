@@ -75,4 +75,75 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/Extracted Identities/, response.body)
   end
+
+  test "show displays topics discussed section" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    assert_match(/Topics Discussed/, response.body)
+  end
+
+  test "show displays topics from attended meetings" do
+    # john_smith has john_smith_finance attendee linked to complete_agenda
+    # which has topics including "Budget Amendment for FY2025"
+    get town_person_url(@town, @person)
+    assert_response :success
+    assert_match(/Budget Amendment for FY2025/, response.body)
+  end
+
+  test "show displays action badges on topics" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Topics with actions should show action badges
+    # budget_amendment has action_taken: approved
+    assert_select ".badge", text: /Approved/i
+  end
+
+  test "show displays person role for each topic" do
+    # john_at_agenda has role: chair
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Should show role badge - the "as" prefix indicates it's in the activity topic context
+    assert_match(/as.*Chair/im, response.body)
+  end
+
+  test "show displays governing body for topics" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    assert_match(/Select Board/, response.body)
+  end
+
+  test "show displays topics count badge" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Should show total topics count
+    assert_select ".badge", text: /topics/i
+  end
+
+  test "show displays explanatory text about committee decisions" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Should clarify that actions reflect committee decisions, not individual votes
+    assert_match(/committee decisions/, response.body)
+  end
+
+  test "show topics link to document with anchor" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Topics should link to the document page with an anchor to the specific topic
+    assert_select "a[href*='#topic-']"
+  end
+
+  test "show paginates topics" do
+    get town_person_url(@town, @person, topics_page: 1)
+    assert_response :success
+  end
+
+  test "show handles person with no topics" do
+    # jon_smith has no document_attendees linking to any documents
+    person = people(:jon_smith)
+    get town_person_url(@town, person)
+    assert_response :success
+    # Should show empty state message
+    assert_match(/No topics yet/, response.body)
+  end
 end

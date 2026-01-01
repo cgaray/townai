@@ -133,4 +133,34 @@ class PersonTest < ActiveSupport::TestCase
     person = people(:john_smith)
     assert_not_includes person.co_people, person
   end
+
+  test "has many topics through documents" do
+    person = people(:john_smith)
+    # john_smith has john_smith_finance attendee which is linked to complete_agenda
+    # complete_agenda has topics: budget_amendment, zoning_variance, public_comment
+
+    topics = person.topics
+    assert topics.any?, "Person should have topics through their attended documents"
+    topic_titles = topics.map(&:title)
+    assert_includes topic_titles, "Budget Amendment for FY2025"
+  end
+
+  test "topics returns topics from all attended meetings" do
+    # Set up a second document attendance for john_smith
+    person = people(:john_smith)
+    attendee = attendees(:john_smith_finance)
+    doc2 = documents(:complete_minutes)
+
+    # Link john_smith to the minutes document
+    DocumentAttendee.find_or_create_by!(document: doc2, attendee: attendee) do |da|
+      da.role = "member"
+    end
+
+    topics = person.topics
+    topic_titles = topics.map(&:title)
+
+    # Should include topics from both documents
+    assert_includes topic_titles, "Budget Amendment for FY2025"  # from complete_agenda
+    assert_includes topic_titles, "Road Repair Contract Award"   # from complete_minutes
+  end
 end

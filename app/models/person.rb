@@ -8,6 +8,7 @@ class Person < ApplicationRecord
   has_many :attendees, dependent: :restrict_with_error
   has_many :document_attendees, through: :attendees
   has_many :documents, -> { distinct }, through: :document_attendees
+  has_many :topics, through: :documents
 
   validates :name, :normalized_name, presence: true
 

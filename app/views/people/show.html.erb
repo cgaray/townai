@@ -56,8 +56,16 @@
   </div>
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <%# Main content: Meeting Timeline %>
-    <div class="lg:col-span-2">
+    <%# Main content: Activity (Topics) and Meeting Timeline %>
+    <div class="lg:col-span-2 space-y-8">
+      <%# Activity Section: Topics from meetings %>
+      <%= render "people/activity_section",
+                 topics: @topics,
+                 topics_pagy: @topics_pagy,
+                 role_by_document_id: @role_by_document_id,
+                 activity_stats: @activity_stats %>
+
+      <%# Meeting Timeline %>
       <%= render "shared/meeting_timeline",
                  meetings_by_year: @meetings_by_year,
                  title: "Meeting History",

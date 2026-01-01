@@ -1,0 +1,34 @@
+<%# Single topic item for person activity section %>
+<%# locals: (topic:, role:) %>
+<%= link_to town_document_path(current_town, topic.document, anchor: "topic-#{topic.id}"),
+            class: "block px-5 py-4 hover:bg-base-50 transition-colors duration-150 #{action_border_class(topic.action_taken) if topic.has_action?}" do %>
+  <%# Topic Title and Action Badge %>
+  <%= render "shared/topic_content", topic: topic, truncate_summary: true %>
+
+  <%# Meeting context: governing body, date, role %>
+  <div class="flex flex-wrap items-center gap-3 mt-3 text-xs text-base-content/50">
+    <%# Governing Body %>
+    <span class="flex items-center gap-1">
+      <%= icon("building-library", size: "w-3.5 h-3.5") %>
+      <%= topic.governing_body&.name || "Unknown" %>
+    </span>
+
+    <%# Meeting Date %>
+    <span class="flex items-center gap-1">
+      <%= icon("calendar", size: "w-3.5 h-3.5") %>
+      <%= topic.meeting_date_formatted %>
+    </span>
+
+    <%# Person's Role in this Meeting %>
+    <% if role.present? %>
+      <span class="flex items-center gap-1">
+        as <%= role_badge(role) %>
+      </span>
+    <% end %>
+
+    <%# Raw Action Text (if different from normalized) %>
+    <% if topic.action_taken_raw.present? && topic.has_action? %>
+      <span class="flex items-center gap-1 italic">"<%= topic.action_taken_raw %>"</span>
+    <% end %>
+  </div>
+<% end %>
