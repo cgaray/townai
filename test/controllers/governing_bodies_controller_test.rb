@@ -5,6 +5,7 @@ require "test_helper"
 class GoverningBodiesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @town = towns(:arlington)
+    sign_in users(:user)
   end
 
   test "should get index" do

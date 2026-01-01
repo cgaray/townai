@@ -83,7 +83,10 @@ CREATE INDEX "index_people_on_name" ON "people" ("name") /*application='Townai'*
 CREATE INDEX "index_people_on_normalized_name" ON "people" ("normalized_name") /*application='Townai'*/;
 CREATE INDEX "index_people_on_town_id" ON "people" ("town_id") /*application='Townai'*/;
 CREATE UNIQUE INDEX "index_governing_bodies_on_normalized_name_and_town_id" ON "governing_bodies" ("normalized_name", "town_id") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "users" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "email" varchar DEFAULT '' NOT NULL, "admin" boolean DEFAULT FALSE NOT NULL, "remember_created_at" datetime(6), "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE UNIQUE INDEX "index_users_on_email" ON "users" ("email") /*application='Townai'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20251231173616'),
 ('20251231122803'),
 ('20251231114742'),
 ('20251231114720'),

@@ -1,0 +1,10 @@
+# Users fixtures for testing authentication
+# Devise passwordless users only need email and admin flag
+
+admin:
+  email: admin@example.com
+  admin: true
+
+user:
+  email: user@example.com
+  admin: false

@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Pre-commit hook for TownAI
+# Install with: ln -sf ../../bin/pre-commit .git/hooks/pre-commit
+
+set -e
+
+echo "Running pre-commit checks..."
+
+# Get list of staged Ruby files
+STAGED_RB_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.rb$' || true)
+
+# Run RuboCop on staged Ruby files only (for speed)
+if [ -n "$STAGED_RB_FILES" ]; then
+  echo "=> RuboCop (staged files only)"
+  echo "$STAGED_RB_FILES" | xargs bin/rubocop --force-exclusion
+fi
+
+# Run Brakeman (security scan)
+echo "=> Brakeman"
+bin/brakeman -q --no-pager
+
+# Run bundler-audit (gem vulnerabilities)
+echo "=> Bundler Audit"
+bin/bundler-audit check --update
+
+# Run importmap audit (JS vulnerabilities)
+echo "=> Importmap Audit"
+bin/importmap audit
+
+echo "All pre-commit checks passed!"

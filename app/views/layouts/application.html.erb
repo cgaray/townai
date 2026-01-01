@@ -61,6 +61,46 @@
                 <kbd class="kbd kbd-sm hidden sm:inline-flex" data-hotkey-modifier>Ctrl</kbd>
                 <kbd class="kbd kbd-sm hidden sm:inline-flex">K</kbd>
               </button>
+
+              <%# User dropdown %>
+              <% if user_signed_in? %>
+                <div class="dropdown dropdown-end">
+                  <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
+                    <%= avatar(current_user.email, size: :sm) %>
+                    <span class="hidden md:inline text-sm font-medium"><%= current_user.email.split("@").first %></span>
+                    <%= icon("chevron-down", size: "w-4 h-4") %>
+                  </div>
+                  <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-50 w-56 p-2 shadow-lg border border-base-200 mt-2">
+                    <li class="menu-title">
+                      <span class="text-xs text-base-content/50"><%= current_user.email %></span>
+                    </li>
+                    <% if current_user.admin? %>
+                      <li class="menu-title">
+                        <span class="text-xs text-base-content/50">Admin</span>
+                      </li>
+                      <li>
+                        <%= link_to admin_users_path, class: "flex items-center gap-2" do %>
+                          <%= icon("users", size: "w-4 h-4") %>
+                          Users
+                        <% end %>
+                      </li>
+                      <li>
+                        <%= link_to admin_api_costs_path, class: "flex items-center gap-2" do %>
+                          <%= icon("currency-dollar", size: "w-4 h-4") %>
+                          API Costs
+                        <% end %>
+                      </li>
+                      <li class="divider"></li>
+                    <% end %>
+                    <li>
+                      <%= button_to destroy_user_session_path, method: :delete, class: "flex items-center gap-2 text-error" do %>
+                        <%= icon("arrow-right-start-on-rectangle", size: "w-4 h-4") %>
+                        Sign Out
+                      <% end %>
+                    </li>
+                  </ul>
+                </div>
+              <% end %>
             </div>
           </nav>
 
@@ -163,6 +203,47 @@
               <%= icon("building-library", size: "w-4 h-4") %>
             </span>
             <span class="text-xl font-extrabold tracking-tight text-gradient-primary">TownAI</span>
+          <% end %>
+        </div>
+        <div class="flex-none gap-2 flex items-center">
+          <%# User dropdown %>
+          <% if user_signed_in? %>
+            <div class="dropdown dropdown-end">
+              <div tabindex="0" role="button" class="btn btn-ghost btn-sm gap-2">
+                <%= avatar(current_user.email, size: :sm) %>
+                <span class="hidden md:inline text-sm font-medium"><%= current_user.email.split("@").first %></span>
+                <%= icon("chevron-down", size: "w-4 h-4") %>
+              </div>
+              <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-50 w-56 p-2 shadow-lg border border-base-200 mt-2">
+                <li class="menu-title">
+                  <span class="text-xs text-base-content/50"><%= current_user.email %></span>
+                </li>
+                <% if current_user.admin? %>
+                  <li class="menu-title">
+                    <span class="text-xs text-base-content/50">Admin</span>
+                  </li>
+                  <li>
+                    <%= link_to admin_users_path, class: "flex items-center gap-2" do %>
+                      <%= icon("users", size: "w-4 h-4") %>
+                      Users
+                    <% end %>
+                  </li>
+                  <li>
+                    <%= link_to admin_api_costs_path, class: "flex items-center gap-2" do %>
+                      <%= icon("currency-dollar", size: "w-4 h-4") %>
+                      API Costs
+                    <% end %>
+                  </li>
+                  <li class="divider"></li>
+                <% end %>
+                <li>
+                  <%= button_to destroy_user_session_path, method: :delete, class: "flex items-center gap-2 text-error" do %>
+                    <%= icon("arrow-right-start-on-rectangle", size: "w-4 h-4") %>
+                    Sign Out
+                  <% end %>
+                </li>
+              </ul>
+            </div>
           <% end %>
         </div>
       </nav>

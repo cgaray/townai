@@ -1,5 +1,5 @@
 module Admin
-  class ApiCostsController < ApplicationController
+  class ApiCostsController < BaseController
     def index
       @total_cost = ApiCall.total_cost
       @total_cost_this_month = ApiCall.total_cost_this_month

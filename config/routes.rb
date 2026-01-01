@@ -1,4 +1,11 @@
 Rails.application.routes.draw do
+  # Development email preview at /letter_opener
+  if Rails.env.development?
+    require "letter_opener_web"
+    mount LetterOpenerWeb::Engine, at: "/letter_opener"
+  end
+
+  devise_for :users, controllers: { sessions: "users/sessions" }
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -32,6 +39,11 @@ Rails.application.routes.draw do
 
   # Admin routes (global)
   namespace :admin do
+    resources :users, except: [ :show ] do
+      member do
+        post :send_magic_link
+      end
+    end
     resources :api_costs, only: [ :index ]
     post "people/merge", to: "people#merge", as: :people_merge
     post "people/unmerge", to: "people#unmerge", as: :people_unmerge

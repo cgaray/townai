@@ -5,6 +5,7 @@ require "test_helper"
 class TownsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @town = towns(:arlington)
+    sign_in users(:user)
   end
 
   test "should get index" do
@@ -42,5 +43,11 @@ class TownsControllerTest < ActionDispatch::IntegrationTest
   test "show returns 404 for non-existent town" do
     get town_url(slug: "nonexistent")
     assert_response :not_found
+  end
+
+  test "redirects to login when not authenticated" do
+    sign_out :user
+    get towns_url
+    assert_redirected_to new_user_session_url
   end
 end

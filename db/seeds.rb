@@ -80,6 +80,7 @@ module Seeds
       create_documents(governing_bodies_by_town, attendees_by_body)
       update_counter_caches
       create_sample_api_calls
+      create_admin_user
 
       print_summary(towns)
     end
@@ -285,12 +286,23 @@ module Seeds
       end
     end
 
+    def create_admin_user
+      puts "Creating admin user..."
+      admin_email = ENV.fetch("ADMIN_EMAIL", "admin@example.com")
+      admin = User.find_or_create_by!(email: admin_email) do |user|
+        user.admin = true
+      end
+      admin.update!(admin: true) # Ensure admin flag is set even if user existed
+      puts "  Admin user: #{admin_email}"
+    end
+
     def print_summary(towns)
       puts ""
       puts "=" * 50
       puts "Seed complete!"
       puts "=" * 50
       puts "Created:"
+      puts "  - #{User.count} users (#{User.where(admin: true).count} admin)"
       puts "  - #{Town.count} towns"
       towns.each do |town|
         puts "    - #{town.name}: #{town.governing_bodies.count} bodies, #{town.people.count} people, #{town.documents.count} docs"

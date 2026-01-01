@@ -1,0 +1,13 @@
+<div class="space-y-8">
+  <%= render "shared/back_link", path: admin_users_path, text: "Back to Users" %>
+
+  <%= render "shared/page_header",
+             title: "Invite User",
+             subtitle: "Add a new user to the system" %>
+
+  <div class="card bg-base-100 border border-base-200 shadow-sm max-w-xl">
+    <div class="card-body">
+      <%= render "form", user: @user %>
+    </div>
+  </div>
+</div>
