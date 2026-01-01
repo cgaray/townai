@@ -183,6 +183,41 @@ import { createRoot } from "react-dom/client";
 - Use Solid Cable for Action Cable
 - Use SQLite FTS5 for full-text search (see `SearchEntry` model)
 
+### Topic Model
+
+Topics are agenda items/discussion points extracted from meeting documents. They're stored as first-class records (not just JSON) to enable filtering, timelines, and corrections.
+
+```ruby
+# Topics belong to documents
+document.topics.ordered  # Returns topics sorted by position
+
+# Action normalization - handles varied municipal terminology
+Topic.normalize_action("motion passed 4-1")  # => :approved
+Topic.normalize_action("laid on the table")  # => :tabled
+Topic.normalize_action("referred to committee")  # => :continued
+
+# Create topics from document metadata (used by ExtractMetadataJob)
+Topic.create_from_metadata(document)
+
+# Check if topic has a meaningful action (not "none")
+topic.has_action?  # => true for approved/denied/tabled/continued
+
+# Display position (1-indexed for UI)
+topic.display_position  # => 1, 2, 3...
+```
+
+**Key fields:**
+- `action_taken` (enum): Normalized value for filtering (approved, denied, tabled, continued, none)
+- `action_taken_raw` (string): Original text from document (e.g., "motion carried 4-1")
+- `position` (integer): Order within document (0-indexed)
+- `source_text` (text): Verbatim text from the document
+
+**Helpers** (`app/helpers/topics_helper.rb`):
+```erb
+<%= action_badge(topic.action_taken) %>  <%# Colored badge for action %>
+<%= action_border_class(topic.action_taken) %>  <%# CSS border class %>
+```
+
 ### Full-Text Search
 
 The application uses SQLite FTS5 for full-text search via `SearchEntry` model:
@@ -256,15 +291,21 @@ Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, 
 <%# Border class for document type %>
 <div class="card <%= document_type_border_class(doc_type) %>">
 
-<%# Action badge with icon %>
-<%= action_badge("approved") %>
-
 <%# Section header with icon and optional count %>
 <%= section_header("Attendees", icon_name: "users", count: 5) %>
 
 <%# DaisyUI avatar with initials (uses avatar-placeholder component) %>
 <%= avatar(person.name, size: :lg) %>
 <%# Sizes: :sm (32px), :md (40px), :lg (48px), :xl (64px) %>
+```
+
+#### Topics Helper (`app/helpers/topics_helper.rb`)
+```erb
+<%# Action badge with icon (approved=green, denied=red, tabled/continued=yellow) %>
+<%= action_badge(topic.action_taken) %>
+
+<%# Border class for action (use with topic cards) %>
+<div class="card <%= action_border_class(topic.action_taken) if topic.has_action? %>">
 ```
 
 #### Shared View Partials (`app/views/shared/`)
