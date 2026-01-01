@@ -70,18 +70,18 @@ class NameNormalizableTest < ActiveSupport::TestCase
     model = TestModel.new
     model.name = "John Smith"
     model.instance_variable_set(:@name_changed, true)
-    
+
     model.valid?
-    
+
     assert_equal "john smith", model.normalized_name
   end
 
   test "set_normalized_name is not called when name is blank" do
     model = TestModel.new
     model.name = ""
-    
+
     model.valid?
-    
+
     assert_nil model.normalized_name
   end
 
@@ -102,7 +102,7 @@ class NameNormalizableTest < ActiveSupport::TestCase
     assert_equal true, Person.strip_titles_on_normalize?
     result = Person.normalize_name("Dr. John Smith")
     assert_equal "john smith", result
-    
+
     # Attendee also strips titles
     assert_equal true, Attendee.strip_titles_on_normalize?
     result = Attendee.normalize_name("Dr. John Smith")
