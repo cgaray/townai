@@ -1,4 +1,6 @@
-# README
+# TownAI
+
+[![codecov](https://codecov.io/gh/cgaray/townai/branch/main/graph/badge.svg)](https://codecov.io/gh/cgaray/townai)
 
 This README would normally document whatever steps are necessary to get the
 application up and running.
