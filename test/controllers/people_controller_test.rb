@@ -75,4 +75,45 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/Extracted Identities/, response.body)
   end
+
+  test "show displays topics inline within meeting timeline" do
+    # john_smith has john_smith_finance attendee linked to complete_agenda
+    # which has topics including "Budget Amendment for FY2025"
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Topics should appear inline within the meeting timeline
+    assert_match(/Budget Amendment for FY2025/, response.body)
+  end
+
+  test "show displays action badges on topics in timeline" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Topics with actions should show action badges
+    # budget_amendment has action_taken: approved
+    assert_select ".badge", text: /Approved/i
+  end
+
+  test "show displays person role in meeting timeline" do
+    # john_at_agenda has role: chair
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Should show role badge in the timeline
+    assert_select ".badge", text: /Chair/i
+  end
+
+  test "show topics link to document with anchor" do
+    get town_person_url(@town, @person)
+    assert_response :success
+    # Topics should link to the document page with an anchor to the specific topic
+    assert_select "a[href*='#topic-']"
+  end
+
+  test "show handles person with no meetings" do
+    # jon_smith has an attendee (jon_smith_finance) but no document_attendees linking to documents
+    person = people(:jon_smith)
+    get town_person_url(@town, person)
+    assert_response :success
+    # Should show the meeting history section but with no meetings
+    assert_match(/Meeting History/, response.body)
+  end
 end

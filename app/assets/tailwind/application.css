@@ -306,3 +306,23 @@ mark {
   background-color: var(--color-primary);
   color: var(--color-primary-content);
 }
+
+/* Topic anchor scroll margin and highlight animation */
+[id^="topic-"] {
+  scroll-margin-top: 2rem;
+}
+
+/* Highlight for anchor targets - works via :target (full page load) or .anchor-highlight (Turbo) */
+[id^="topic-"]:target,
+.anchor-highlight {
+  animation: highlight-fade 3s ease-out;
+}
+
+@keyframes highlight-fade {
+  0%, 30% {
+    background-color: oklch(54% 0.22 264 / 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}

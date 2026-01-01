@@ -18,12 +18,17 @@ class PeopleController < ApplicationController
     @person = current_town.people.find(params[:id])
     @attendees = @person.attendees.includes(:governing_body, :document_attendees).order(:name)
     @document_attendees = @person.document_attendees
-                                  .includes(:attendee, document: :pdf_attachment)
+                                  .includes(:attendee, document: [ :pdf_attachment, :topics ])
                                   .order("documents.created_at DESC")
 
-    # Build extra data (role, status) keyed by document_id for timeline
+    # Build extra data (role, status, topics) keyed by document_id for timeline
     extra_data = @document_attendees.each_with_object({}) do |da, hash|
-      hash[da.document_id] = { role: da.role, status: da.status, source_text: da.source_text }
+      hash[da.document_id] = {
+        role: da.role,
+        status: da.status,
+        source_text: da.source_text,
+        topics: da.document.topics.ordered
+      }
     end
 
     # Build hierarchical timeline with extra data
