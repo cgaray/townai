@@ -5,6 +5,7 @@ require "test_helper"
 class TownScopedTest < ActionDispatch::IntegrationTest
   setup do
     @town = towns(:arlington)
+    sign_in users(:user)
   end
 
   test "sets current_town from town_slug parameter" do

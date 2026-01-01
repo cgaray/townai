@@ -15,7 +15,7 @@ class DocumentsControllerTest < ActionDispatch::IntegrationTest
 
   test "redirects to login when not authenticated" do
     sign_out :user
-    get documents_url
+    get town_documents_url(@town)
     assert_redirected_to new_user_session_url
   end
 
