@@ -1,7 +1,8 @@
 class CreateTopics < ActiveRecord::Migration[8.1]
   def change
     create_table :topics do |t|
-      t.references :document, null: false, foreign_key: true
+      # index: false because composite index on [document_id, position] covers document_id queries
+      t.references :document, null: false, foreign_key: true, index: false
       t.string :title, null: false
       t.text :summary
       t.integer :action_taken, default: 0

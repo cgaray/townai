@@ -24,6 +24,30 @@ class TopicTest < ActiveSupport::TestCase
     assert_includes topic.errors[:title], "can't be blank"
   end
 
+  test "validates title length" do
+    topic = Topic.new(document: documents(:complete_agenda), title: "a" * 501)
+    assert_not topic.valid?
+    assert_includes topic.errors[:title], "is too long (maximum is 500 characters)"
+  end
+
+  test "validates summary length" do
+    topic = Topic.new(document: documents(:complete_agenda), title: "Valid", summary: "a" * 5001)
+    assert_not topic.valid?
+    assert_includes topic.errors[:summary], "is too long (maximum is 5000 characters)"
+  end
+
+  test "validates action_taken_raw length" do
+    topic = Topic.new(document: documents(:complete_agenda), title: "Valid", action_taken_raw: "a" * 201)
+    assert_not topic.valid?
+    assert_includes topic.errors[:action_taken_raw], "is too long (maximum is 200 characters)"
+  end
+
+  test "validates source_text length" do
+    topic = Topic.new(document: documents(:complete_agenda), title: "Valid", source_text: "a" * 50_001)
+    assert_not topic.valid?
+    assert_includes topic.errors[:source_text], "is too long (maximum is 50000 characters)"
+  end
+
   test "action_taken enum values" do
     topic = topics(:budget_amendment)
     assert topic.action_taken_approved?
@@ -94,9 +118,8 @@ class TopicTest < ActiveSupport::TestCase
 
     document.destroy
 
-    topic_ids.each do |id|
-      assert_nil Topic.find_by(id: id), "Topic #{id} should be destroyed"
-    end
+    remaining_topics = Topic.where(id: topic_ids)
+    assert_empty remaining_topics, "All topics should be destroyed with document"
   end
 
   # has_action? tests
@@ -251,6 +274,21 @@ class TopicTest < ActiveSupport::TestCase
 
     assert_equal 1, count
     assert_equal "Valid Topic", document.topics.first.title
+  end
+
+  test "create_from_metadata limits topics to MAX_TOPICS_PER_DOCUMENT" do
+    document = documents(:complete_agenda)
+    document.topics.destroy_all
+
+    # Create metadata with more than MAX_TOPICS_PER_DOCUMENT topics
+    many_topics = (1..150).map { |i| { "title" => "Topic #{i}" } }
+    metadata = { "topics" => many_topics }
+    document.update!(extracted_metadata: metadata.to_json)
+
+    count = Topic.create_from_metadata(document)
+
+    assert_equal Topic::MAX_TOPICS_PER_DOCUMENT, count
+    assert_equal Topic::MAX_TOPICS_PER_DOCUMENT, document.topics.count
   end
 
   # display_position tests

@@ -30,7 +30,9 @@ complete_agenda:
   status: 3  # complete
   governing_body: select_board
   raw_text: "Finance Committee Meeting Agenda January 10, 2025"
-  extracted_metadata: '{"document_type":"agenda","governing_body":"Select Board","meeting_date":"2025-01-10","meeting_time":"19:00","abstract":"Monthly finance committee meeting to discuss budget items","attendees":[{"name":"John Smith","role":"chair","status":"present"},{"name":"Jane Doe","role":"member","status":"present"}],"topics":[{"title":"Budget Review","summary":"Review of Q4 2024 expenses","action_taken":"approved"},{"title":"Grant Applications","summary":"Discussion of pending grant applications","action_taken":"tabled"}]}'
+  # Note: topics in metadata should match topics.yml fixtures for this document
+  # Topics: budget_amendment, zoning_variance, public_comment
+  extracted_metadata: '{"document_type":"agenda","governing_body":"Select Board","meeting_date":"2025-01-10","meeting_time":"19:00","abstract":"Monthly finance committee meeting to discuss budget items","attendees":[{"name":"John Smith","role":"chair","status":"present"},{"name":"Jane Doe","role":"member","status":"present"}],"topics":[{"title":"Budget Amendment for FY2025","summary":"Proposed amendment to increase parks department funding by $50,000","action_taken":"motion passed 4-1"},{"title":"Zoning Variance Request - 123 Main St","summary":"Request for setback variance for residential addition","action_taken":"rejected 3-2"},{"title":"Public Comment Period","summary":"Opportunity for residents to address the board","action_taken":null}]}'
 
 complete_minutes:
   source_file_name: "conservation_commission_minutes.pdf"
@@ -38,7 +40,9 @@ complete_minutes:
   status: 3  # complete
   governing_body: redevelopment_board
   raw_text: "Conservation Commission Meeting Minutes December 20, 2024"
-  extracted_metadata: '{"document_type":"minutes","governing_body":"Redevelopment Board","meeting_date":"2024-12-20","meeting_time":"18:30","abstract":"Regular meeting of the Conservation Commission","attendees":[{"name":"Alice Johnson","role":"chair","status":"present"},{"name":"Bob Williams","role":"clerk","status":"present"},{"name":"Carol Davis","role":"member","status":"absent"}],"topics":[{"title":"Wetlands Permit Application","summary":"Review of permit application for 123 Main St","action_taken":"approved"},{"title":"Site Visit Report","summary":"Discussion of recent site visits","action_taken":"none"}]}'
+  # Note: topics in metadata should match topics.yml fixtures for this document
+  # Topics: road_repair, tabled_item
+  extracted_metadata: '{"document_type":"minutes","governing_body":"Redevelopment Board","meeting_date":"2024-12-20","meeting_time":"18:30","abstract":"Regular meeting of the Conservation Commission","attendees":[{"name":"Alice Johnson","role":"chair","status":"present"},{"name":"Bob Williams","role":"clerk","status":"present"},{"name":"Carol Davis","role":"member","status":"absent"}],"topics":[{"title":"Road Repair Contract Award","summary":"Award of contract for Main Street reconstruction","action_taken":"approved unanimously"},{"title":"Historic District Expansion","summary":"Proposal to expand local historic district boundaries","action_taken":"laid on the table"}]}'
 
 failed_document:
   source_file_name: "corrupted_file.pdf"

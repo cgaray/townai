@@ -13,7 +13,13 @@ class Topic < ApplicationRecord
     continued: 4
   }, prefix: true
 
-  validates :title, presence: true
+  validates :title, presence: true, length: { maximum: 500 }
+  validates :summary, length: { maximum: 5000 }, allow_nil: true
+  validates :action_taken_raw, length: { maximum: 200 }, allow_nil: true
+  validates :source_text, length: { maximum: 50_000 }, allow_nil: true
+
+  # Maximum topics per document to prevent DoS from malformed LLM responses
+  MAX_TOPICS_PER_DOCUMENT = 100
 
   scope :with_actions, -> { where.not(action_taken: :none) }
   scope :ordered, -> { order(:position) }
@@ -23,12 +29,16 @@ class Topic < ApplicationRecord
   class << self
     # Create Topic records from document's extracted metadata
     # Replaces any existing topics for the document
+    # Limits to MAX_TOPICS_PER_DOCUMENT to prevent DoS from malformed LLM responses
     def create_from_metadata(document)
       topics_data = document.metadata_field("topics") || []
       return 0 if topics_data.empty?
 
       # Clear existing topics to avoid duplicates on re-extraction
       document.topics.destroy_all
+
+      # Limit topics to prevent DoS from malformed LLM responses
+      topics_data = topics_data.first(MAX_TOPICS_PER_DOCUMENT)
 
       created_count = 0
       topics_data.each_with_index do |topic_data, position|
