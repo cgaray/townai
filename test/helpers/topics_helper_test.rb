@@ -68,4 +68,68 @@ class TopicsHelperTest < ActionView::TestCase
     assert_equal "border-l-approved", action_border_class(:approved)
     assert_equal "border-l-denied", action_border_class(:denied)
   end
+
+  # topic_filter_pills tests
+  test "topic_filter_pills renders all filter buttons" do
+    town = towns(:arlington)
+    filter_counts = { all: 10, with_actions: 5, approved: 2, denied: 1, tabled: 1, continued: 1 }
+
+    result = topic_filter_pills(
+      town: town,
+      current_action: nil,
+      governing_body_id: nil,
+      filter_counts: filter_counts
+    )
+
+    assert_includes result, "All"
+    assert_includes result, "With Actions"
+    assert_includes result, "Approved"
+    assert_includes result, "Denied"
+    assert_includes result, "Tabled"
+    assert_includes result, "Continued"
+  end
+
+  test "topic_filter_pills shows counts in badges" do
+    town = towns(:arlington)
+    filter_counts = { all: 42, with_actions: 5, approved: 2, denied: 1, tabled: 1, continued: 1 }
+
+    result = topic_filter_pills(
+      town: town,
+      current_action: nil,
+      governing_body_id: nil,
+      filter_counts: filter_counts
+    )
+
+    assert_includes result, ">42<"
+  end
+
+  test "topic_filter_pills highlights active filter" do
+    town = towns(:arlington)
+    filter_counts = { all: 10, with_actions: 5, approved: 2, denied: 1, tabled: 1, continued: 1 }
+
+    result = topic_filter_pills(
+      town: town,
+      current_action: "approved",
+      governing_body_id: nil,
+      filter_counts: filter_counts
+    )
+
+    # The approved button should have btn-success (active), not btn-ghost
+    assert_includes result, "btn-success"
+  end
+
+  test "topic_filter_pills preserves governing_body_id in links" do
+    town = towns(:arlington)
+    governing_body = governing_bodies(:select_board)
+    filter_counts = { all: 10, with_actions: 5, approved: 2, denied: 1, tabled: 1, continued: 1 }
+
+    result = topic_filter_pills(
+      town: town,
+      current_action: nil,
+      governing_body_id: governing_body.id,
+      filter_counts: filter_counts
+    )
+
+    assert_includes result, "governing_body_id=#{governing_body.id}"
+  end
 end

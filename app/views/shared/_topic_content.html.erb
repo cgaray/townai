@@ -1,0 +1,13 @@
+<%# Shared topic content: title, optional inline action badge, and summary %>
+<%# locals: (topic:, show_inline_badge: true, truncate_summary: false) %>
+<div class="flex flex-wrap items-center gap-2">
+  <h3 class="text-base font-bold text-base-content"><%= topic.title %></h3>
+  <% if show_inline_badge && topic.has_action? %>
+    <%= action_badge(topic.action_taken) %>
+  <% end %>
+</div>
+<% if topic.summary.present? %>
+  <p class="text-sm text-base-content/60 mt-2 leading-relaxed <%= 'line-clamp-2' if truncate_summary %>">
+    <%= topic.summary %>
+  </p>
+<% end %>

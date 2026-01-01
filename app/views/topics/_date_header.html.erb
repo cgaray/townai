@@ -1,0 +1,9 @@
+<%# Date header for topic groupings %>
+<%# Parameters: date_label (formatted date string), topics_count (number of topics) %>
+<div class="bg-base-200/50 px-5 py-3 border-b border-base-200">
+  <div class="flex items-center gap-3">
+    <%= icon("calendar", size: "w-5 h-5", class: "text-primary") %>
+    <span class="font-bold"><%= date_label %></span>
+    <span class="badge badge-ghost badge-sm"><%= pluralize(topics_count, "topic") %></span>
+  </div>
+</div>

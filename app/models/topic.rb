@@ -25,6 +25,29 @@ class Topic < ApplicationRecord
   scope :ordered, -> { order(:position) }
   scope :recent, -> { joins(:document).merge(Document.order(created_at: :desc)) }
   scope :for_town, ->(town) { joins(:town).where(towns: { id: town.id }) }
+  scope :complete, -> { joins(:document).merge(Document.complete) }
+
+  # Calculate filter counts with a single GROUP BY query instead of 6 separate COUNT queries
+  # Returns hash with :all, :with_actions, :approved, :denied, :tabled, :continued keys
+  def self.filter_counts_for_town(town)
+    base = for_town(town).complete
+
+    # Single query to get counts by action_taken
+    counts_by_action = base.group(:action_taken).count
+
+    # Build the result hash
+    all_count = counts_by_action.values.sum
+    with_actions_count = all_count - (counts_by_action["none"] || 0)
+
+    {
+      all: all_count,
+      with_actions: with_actions_count,
+      approved: counts_by_action["approved"] || 0,
+      denied: counts_by_action["denied"] || 0,
+      tabled: counts_by_action["tabled"] || 0,
+      continued: counts_by_action["continued"] || 0
+    }
+  end
 
   class << self
     # Create Topic records from document's extracted metadata
@@ -88,6 +111,16 @@ class Topic < ApplicationRecord
   # Get the meeting date from the parent document
   def meeting_date
     document.metadata_field("meeting_date")
+  end
+
+  # Returns formatted meeting date string for display
+  # Returns "Date Unknown" if date is nil or can't be parsed
+  def meeting_date_formatted
+    return "Date Unknown" if meeting_date.blank?
+
+    Date.parse(meeting_date).strftime("%B %d, %Y")
+  rescue ArgumentError
+    meeting_date # Return raw string if parsing fails
   end
 
   # Returns true if this topic has a meaningful action (not "none")
