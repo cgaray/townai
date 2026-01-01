@@ -93,6 +93,26 @@ CREATE INDEX "index_topics_on_document_id" ON "topics" ("document_id") /*applica
 CREATE INDEX "index_topics_on_document_id_and_position" ON "topics" ("document_id", "position") /*application='Townai'*/;
 CREATE INDEX "index_topics_on_action_taken" ON "topics" ("action_taken") /*application='Townai'*/;
 CREATE INDEX "index_topics_on_category" ON "topics" ("category") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "admin_audit_logs" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "user_id" integer NOT NULL, "action" varchar NOT NULL, "resource_type" varchar NOT NULL, "resource_id" bigint, "params" text, "previous_state" text, "new_state" text, "ip_address" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_194c515e61"
+FOREIGN KEY ("user_id")
+  REFERENCES "users" ("id")
+);
+CREATE INDEX "index_admin_audit_logs_on_user_id" ON "admin_audit_logs" ("user_id") /*application='Townai'*/;
+CREATE INDEX "index_admin_audit_logs_on_user_id_and_created_at" ON "admin_audit_logs" ("user_id", "created_at") /*application='Townai'*/;
+CREATE INDEX "index_admin_audit_logs_on_resource_type_and_resource_id" ON "admin_audit_logs" ("resource_type", "resource_id") /*application='Townai'*/;
+CREATE INDEX "index_admin_audit_logs_on_action" ON "admin_audit_logs" ("action") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "document_event_logs" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "document_id" integer NOT NULL, "event_type" varchar NOT NULL, "metadata" text, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_e9258834fe"
+FOREIGN KEY ("document_id")
+  REFERENCES "documents" ("id")
+);
+CREATE INDEX "index_document_event_logs_on_document_id" ON "document_event_logs" ("document_id") /*application='Townai'*/;
+CREATE INDEX "index_document_event_logs_on_document_id_and_created_at" ON "document_event_logs" ("document_id", "created_at") /*application='Townai'*/;
+CREATE INDEX "index_document_event_logs_on_event_type" ON "document_event_logs" ("event_type") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "authentication_logs" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "user_id" integer, "action" varchar NOT NULL, "email_hash" varchar, "ip_address" varchar, "user_agent" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
+CREATE INDEX "index_authentication_logs_on_user_id" ON "authentication_logs" ("user_id") /*application='Townai'*/;
+CREATE INDEX "index_authentication_logs_on_user_id_and_created_at" ON "authentication_logs" ("user_id", "created_at") /*application='Townai'*/;
+CREATE INDEX "index_authentication_logs_on_action" ON "authentication_logs" ("action") /*application='Townai'*/;
+CREATE INDEX "index_authentication_logs_on_email_hash" ON "authentication_logs" ("email_hash") /*application='Townai'*/;
 INSERT INTO "schema_migrations" (version) VALUES
 ('20260101134241'),
 ('20260101124059'),
@@ -107,5 +127,8 @@ INSERT INTO "schema_migrations" (version) VALUES
 ('20251229125336'),
 ('20251228192040'),
 ('20251226194717'),
-('20251226194547');
+('20251226194547'),
+('20250101000002'),
+('20250101000001'),
+('20250101000000');
 

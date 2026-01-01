@@ -16,7 +16,7 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "merge redirects to target person on success" do
-    post admin_people_merge_url(source_id: @source_person.id, target_id: @target_person.id)
+    post merge_admin_people_url(source_id: @source_person.id, target_id: @target_person.id)
 
     assert_redirected_to town_person_url(@town, @target_person)
     follow_redirect!
@@ -27,7 +27,7 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     source_attendee = attendees(:jon_smith_finance)
     original_target_attendees_count = @target_person.attendees.count
 
-    post admin_people_merge_url(source_id: @source_person.id, target_id: @target_person.id)
+    post merge_admin_people_url(source_id: @source_person.id, target_id: @target_person.id)
 
     @target_person.reload
     source_attendee.reload
@@ -39,20 +39,20 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
   test "merge deletes source person" do
     source_id = @source_person.id
 
-    post admin_people_merge_url(source_id: @source_person.id, target_id: @target_person.id)
+    post merge_admin_people_url(source_id: @source_person.id, target_id: @target_person.id)
 
     assert_nil Person.find_by(id: source_id)
   end
 
   test "merge redirects with error when source not found" do
-    post admin_people_merge_url(source_id: 999999, target_id: @target_person.id)
+    post merge_admin_people_url(source_id: 999999, target_id: @target_person.id)
 
     assert_redirected_to towns_url
     assert_match(/not found/, flash[:alert])
   end
 
   test "merge redirects with error when target not found" do
-    post admin_people_merge_url(source_id: @source_person.id, target_id: 999999)
+    post merge_admin_people_url(source_id: @source_person.id, target_id: 999999)
 
     assert_redirected_to towns_url
     assert_match(/not found/, flash[:alert])
@@ -66,7 +66,7 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
 
     original_person_count = Person.count
 
-    post admin_people_unmerge_url(attendee_id: second_attendee.id)
+    post unmerge_admin_people_url(attendee_id: second_attendee.id)
 
     assert_equal original_person_count + 1, Person.count
     second_attendee.reload
@@ -79,7 +79,7 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
     second_attendee.update!(person: @target_person)
     @target_person.update_appearances_count!
 
-    post admin_people_unmerge_url(attendee_id: second_attendee.id)
+    post unmerge_admin_people_url(attendee_id: second_attendee.id)
 
     second_attendee.reload
     assert_redirected_to town_person_url(@town, second_attendee.person)
@@ -90,14 +90,14 @@ class Admin::PeopleControllerTest < ActionDispatch::IntegrationTest
   test "unmerge fails when person has only one attendee" do
     single_attendee = attendees(:john_smith_finance)
 
-    post admin_people_unmerge_url(attendee_id: single_attendee.id)
+    post unmerge_admin_people_url(attendee_id: single_attendee.id)
 
     assert_redirected_to town_person_url(@town, @target_person)
     assert_match(/Unmerge failed/, flash[:alert])
   end
 
   test "unmerge redirects with error when attendee not found" do
-    post admin_people_unmerge_url(attendee_id: 999999)
+    post unmerge_admin_people_url(attendee_id: 999999)
 
     assert_redirected_to towns_url
     assert_match(/not found/, flash[:alert])

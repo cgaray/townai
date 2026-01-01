@@ -1,0 +1,94 @@
+<%= render "shared/page_header",
+           title: "People Management",
+           subtitle: "View and manage person records" %>
+
+<div class="space-y-6">
+  <%# Actions and filters %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <%# Town filter %>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-base-content/70">Town:</span>
+            <select class="select select-bordered select-sm" onchange="window.location.href = this.value">
+              <option value="<%= admin_people_path %>"
+                      <%= 'selected' if params[:town_id].blank? %>>
+                All Towns
+              </option>
+              <% @towns.each do |town| %>
+                <option value="<%= admin_people_path(town_id: town.id) %>"
+                        <%= 'selected' if params[:town_id].to_s == town.id.to_s %>>
+                  <%= town.name %>
+                </option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+
+        <%= link_to duplicates_admin_people_path, class: "btn btn-sm btn-primary" do %>
+          <%= icon("users", size: "w-4 h-4") %>
+          Find Duplicates
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# People table %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-0">
+      <% if @people.any? %>
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr class="bg-base-200/50">
+                <th class="font-semibold">Name</th>
+                <th class="font-semibold">Town</th>
+                <th class="font-semibold">Primary Board</th>
+                <th class="font-semibold">Appearances</th>
+                <th class="font-semibold">Attendees</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @people.each do |person| %>
+                <tr class="hover:bg-base-50">
+                  <td>
+                    <div class="flex items-center gap-3">
+                      <%= avatar(person.name, size: :sm) %>
+                      <div>
+                        <% if person.town %>
+                          <%= link_to person.name, town_person_path(person.town, person),
+                                      class: "link link-hover font-medium" %>
+                        <% else %>
+                          <span class="font-medium"><%= person.name %></span>
+                        <% end %>
+                        <div class="text-xs text-base-content/50">
+                          <%= person.normalized_name %>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-sm"><%= person.town&.name || "-" %></td>
+                  <td class="text-sm"><%= person.primary_governing_body&.name || "-" %></td>
+                  <td class="text-sm"><%= person.document_appearances_count %></td>
+                  <td class="text-sm"><%= person.attendees.size %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-4 border-t border-base-200">
+          <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { admin_people_path(params.permit(:town_id).merge(page: page)) } %>
+        </div>
+      <% else %>
+        <div class="p-8">
+          <%= render "shared/empty_state",
+                     icon_name: "users",
+                     title: "No People Found",
+                     description: "No person records match your current filters." %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -17,6 +17,16 @@ module Admin
       assign_user_attributes(@user)
 
       if @user.save
+        # Log admin action
+        AuditLogJob.perform_later(
+          user: current_user,
+          action: "user_create",
+          resource_type: "User",
+          resource_id: @user.id,
+          new_state: { email: @user.email, admin: @user.admin }.to_json,
+          ip_address: request.remote_ip
+        )
+
         # Send invitation email with magic link
         begin
           @user.send_magic_link
@@ -42,8 +52,22 @@ module Admin
         end
       end
 
+      previous_state = { email: @user.email, admin: @user.admin }
       assign_user_attributes(@user)
       if @user.save
+        new_state = { email: @user.email, admin: @user.admin }
+
+        # Log admin action
+        AuditLogJob.perform_later(
+          user: current_user,
+          action: "user_update",
+          resource_type: "User",
+          resource_id: @user.id,
+          previous_state: previous_state.to_json,
+          new_state: new_state.to_json,
+          ip_address: request.remote_ip
+        )
+
         redirect_to admin_users_path, notice: "User updated successfully."
       else
         render :edit, status: :unprocessable_entity
@@ -54,19 +78,39 @@ module Admin
       if @user == current_user
         redirect_to admin_users_path, alert: "You cannot delete your own account."
       else
+        previous_state = { email: @user.email, admin: @user.admin }
+
         @user.destroy
+
+        # Log admin action
+        AuditLogJob.perform_later(
+          user: current_user,
+          action: "user_delete",
+          resource_type: "User",
+          resource_id: @user.id,
+          previous_state: previous_state.to_json,
+          ip_address: request.remote_ip
+        )
+
         redirect_to admin_users_path, notice: "User deleted successfully."
       end
     end
 
     def send_magic_link
-      begin
-        @user.send_magic_link
-        redirect_to admin_users_path, notice: "Login link sent to #{@user.email}."
-      rescue StandardError => e
-        Rails.logger.error("Failed to send magic link to #{@user.email}: #{e.message}")
-        redirect_to admin_users_path, alert: "Failed to send login link. Please try again."
-      end
+      @user.send_magic_link
+
+      AuditLogJob.perform_later(
+        user: current_user,
+        action: "user_magic_link",
+        resource_type: "User",
+        resource_id: @user.id,
+        ip_address: request.remote_ip
+      )
+
+      redirect_to admin_users_path, notice: "Login link sent to #{@user.email}."
+    rescue StandardError => e
+      Rails.logger.error("Failed to send magic link to #{@user.email}: #{e.message}")
+      redirect_to admin_users_path, alert: "Failed to send login link. Please try again."
     end
 
     private

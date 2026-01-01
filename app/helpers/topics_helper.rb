@@ -29,7 +29,7 @@ module TopicsHelper
 
     config = ACTION_CONFIG[action.to_s.downcase] || DEFAULT_ACTION_CONFIG
 
-    content_tag :span, class: "badge badge-sm #{config[:badge]}" do
+    content_tag :span, class: "badge badge-sm #{config[:badge]} inline-flex items-center gap-1.5" do
       concat icon(config[:icon], size: "size-[1em]") if config[:icon]
       concat action.to_s.capitalize
     end

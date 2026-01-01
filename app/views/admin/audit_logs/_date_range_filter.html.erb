@@ -1,0 +1,37 @@
+<%# Date range filter for audit logs %>
+<%# locals: (path_helper:, current_params:) %>
+<%
+  start_date = current_params[:start_date]
+  end_date = current_params[:end_date]
+  preserved_params = current_params.except(:start_date, :end_date, :page, :controller, :action).to_h
+%>
+
+<div class="flex items-center gap-2">
+  <span class="text-sm font-medium text-base-content/70">Date:</span>
+  <form method="get" action="<%= send(path_helper) %>" class="flex items-center gap-2">
+    <%# Preserve other filter params %>
+    <% preserved_params.each do |key, value| %>
+      <input type="hidden" name="<%= key %>" value="<%= value %>">
+    <% end %>
+
+    <input type="date"
+           name="start_date"
+           value="<%= start_date %>"
+           class="input input-bordered input-sm w-36"
+           placeholder="Start date">
+    <span class="text-base-content/50">to</span>
+    <input type="date"
+           name="end_date"
+           value="<%= end_date %>"
+           class="input input-bordered input-sm w-36"
+           placeholder="End date">
+    <button type="submit" class="btn btn-sm btn-primary">
+      <%= icon("magnifying-glass", size: "w-4 h-4") %>
+    </button>
+    <% if start_date.present? || end_date.present? %>
+      <%= link_to send(path_helper, preserved_params), class: "btn btn-sm btn-ghost" do %>
+        <%= icon("x-mark", size: "w-4 h-4") %>
+      <% end %>
+    <% end %>
+  </form>
+</div>

@@ -1,0 +1,117 @@
+<%# app/views/admin/audit_logs/authentication_logs.html.erb %>
+<%
+  sort_params = params.permit(:status, :start_date, :end_date, :sort, :direction).to_h
+  current_sort = params[:sort]
+  current_direction = params[:direction] || "desc"
+%>
+<div class="space-y-6">
+  <%= render "shared/page_header",
+             title: "Audit Logs",
+             subtitle: "System activity, authentication, and document events" %>
+
+  <%= render "admin/audit_logs/tabs", current_tab: :authentication %>
+
+  <%# Section Header with count badge %>
+  <div class="flex items-center justify-between">
+    <h2 class="text-xl font-bold">Authentication Events</h2>
+    <div class="badge badge-lg badge-ghost font-semibold">
+      <%= icon("shield-check", size: "w-4 h-4") %>
+      <span class="ml-1"><%= pluralize(@pagy.count, "event") %></span>
+    </div>
+  </div>
+
+  <%# Filters %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap items-center gap-4">
+        <%# Status filter pills %>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-medium text-base-content/70">Status:</span>
+          <%= auth_log_filter_pills(current_filter: params[:status], filter_counts: @filter_counts) %>
+        </div>
+      </div>
+
+      <%# Date range filter %>
+      <div class="mt-3 pt-3 border-t border-base-200">
+        <%= render "admin/audit_logs/date_range_filter",
+                   path_helper: :admin_authentication_logs_path,
+                   current_params: params.permit(:status, :start_date, :end_date, :sort, :direction) %>
+      </div>
+    </div>
+  </div>
+
+  <%# Logs Table %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-0">
+      <% if @logs.any? %>
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr class="bg-base-200/50">
+                <th class="font-semibold">
+                  <%= sortable_column(column: :created_at, label: "Timestamp", current_sort: current_sort, current_direction: current_direction, path_helper: :admin_authentication_logs_path, preserved_params: sort_params) %>
+                </th>
+                <th class="font-semibold">
+                  <%= sortable_column(column: :action, label: "Status", current_sort: current_sort, current_direction: current_direction, path_helper: :admin_authentication_logs_path, preserved_params: sort_params) %>
+                </th>
+                <th class="font-semibold">
+                  <%= sortable_column(column: :user, label: "User / Email", current_sort: current_sort, current_direction: current_direction, path_helper: :admin_authentication_logs_path, preserved_params: sort_params) %>
+                </th>
+                <th class="font-semibold">
+                  <%= sortable_column(column: :ip_address, label: "IP Address", current_sort: current_sort, current_direction: current_direction, path_helper: :admin_authentication_logs_path, preserved_params: sort_params) %>
+                </th>
+                <th class="font-semibold">User Agent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @logs.each do |log| %>
+                <tr class="hover:bg-base-50 <%= auth_status_border_class(log) %>">
+                  <td class="whitespace-nowrap">
+                    <div class="text-sm font-medium"><%= log.created_at.strftime("%b %d, %Y") %></div>
+                    <div class="text-xs text-base-content/50"><%= log.created_at.strftime("%I:%M:%S %p") %></div>
+                  </td>
+                  <td>
+                    <%= auth_status_badge(log) %>
+                  </td>
+                  <td>
+                    <% if log.user %>
+                      <div class="flex items-center gap-2">
+                        <%= avatar(log.user.email, size: :sm) %>
+                        <span class="text-sm"><%= log.user.email %></span>
+                      </div>
+                    <% elsif log.email_hash %>
+                      <span class="text-sm text-base-content/50 font-mono"><%= log.email_hash[0..16] %>...</span>
+                    <% else %>
+                      <span class="text-base-content/50">—</span>
+                    <% end %>
+                  </td>
+                  <td class="font-mono text-xs text-base-content/50"><%= log.ip_address || "—" %></td>
+                  <td class="max-w-xs">
+                    <% if log.user_agent.present? %>
+                      <span class="text-xs text-base-content/50 truncate block" title="<%= log.user_agent %>">
+                        <%= truncate(log.user_agent, length: 50) %>
+                      </span>
+                    <% else %>
+                      <span class="text-base-content/50">—</span>
+                    <% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="p-4 border-t border-base-200">
+          <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { admin_authentication_logs_path(sort_params.merge(page: page)) } %>
+        </div>
+      <% else %>
+        <div class="p-8">
+          <%= render "shared/empty_state",
+                     icon_name: "shield-check",
+                     title: "No Authentication Events Found",
+                     description: "Authentication events will appear here as users log in. Try adjusting your filters." %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -83,6 +83,7 @@ module Seeds
       update_counter_caches
       create_sample_api_calls
       create_admin_user
+      create_audit_log_data
 
       print_summary(towns)
     end
@@ -312,6 +313,184 @@ module Seeds
       end
       admin.update!(admin: true) # Ensure admin flag is set even if user existed
       puts "  Admin user: #{admin_email}"
+      admin
+    end
+
+    def create_audit_log_data
+      puts "Creating audit log data..."
+      admin = User.where(admin: true).first || create_admin_user
+      documents = Document.limit(10).to_a
+      people = Person.limit(5).to_a
+      topics = Topic.limit(10).to_a
+
+      return if documents.empty? || people.empty?
+
+      # Create admin action logs with realistic action/resource combinations
+      admin_actions = [
+        # User actions
+        { action: "user_create", resource_type: "User", new_state: { email: "newuser@example.com", admin: false } },
+        { action: "user_update", resource_type: "User", previous_state: { admin: false }, new_state: { admin: true } },
+        { action: "user_role_change", resource_type: "User", previous_state: { admin: false }, new_state: { admin: true } },
+        { action: "user_delete", resource_type: "User", previous_state: { email: "deleted@example.com", admin: false } },
+
+        # Person actions
+        { action: "person_merge", resource_type: "Person", new_state: { source_count: 2, merged_ids: [ 1, 2 ] } },
+        { action: "person_unmerge", resource_type: "Person", new_state: { split_into: [ 3, 4 ] } },
+        { action: "person_link", resource_type: "Person", new_state: { linked_attendee_id: 5 } },
+        { action: "person_unlink", resource_type: "Person", new_state: { unlinked_attendee_id: 5 } },
+
+        # Document actions
+        { action: "document_retry", resource_type: "Document", new_state: { status: "pending", reason: "Manual retry" } },
+        { action: "document_delete", resource_type: "Document", previous_state: { status: "complete", file_name: "deleted.pdf" } },
+        { action: "document_reextract", resource_type: "Document", new_state: { status: "extracting_metadata" } },
+
+        # Topic actions
+        { action: "topic_update", resource_type: "Topic", previous_state: { action_taken: "none" }, new_state: { action_taken: "approved" } },
+        { action: "topic_delete", resource_type: "Topic", previous_state: { title: "Deleted topic" } }
+      ]
+
+      25.times do
+        action_template = admin_actions.sample
+        resource_id = case action_template[:resource_type]
+        when "Document" then documents.sample&.id
+        when "Person" then people.sample&.id
+        when "User" then admin.id
+        when "Topic" then topics.sample&.id
+        end
+
+        AdminAuditLog.create!(
+          user: admin,
+          action: action_template[:action],
+          resource_type: action_template[:resource_type],
+          resource_id: resource_id,
+          ip_address: "192.168.1.#{rand(1..255)}",
+          params: nil,
+          previous_state: action_template[:previous_state]&.to_json,
+          new_state: action_template[:new_state]&.to_json,
+          created_at: rand(1..30).days.ago + rand(0..23).hours + rand(0..59).minutes
+        )
+      end
+      puts "  Created #{AdminAuditLog.count} admin audit logs"
+
+      # Create authentication logs with proper user associations
+      user_agents = [
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+        "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+      ]
+
+      # Successful logins (with user)
+      15.times do
+        AuthenticationLog.create!(
+          user: admin,
+          action: "login_success",
+          email_hash: nil,
+          ip_address: "192.168.1.#{rand(1..255)}",
+          user_agent: user_agents.sample,
+          created_at: rand(1..30).days.ago + rand(0..23).hours + rand(0..59).minutes
+        )
+      end
+
+      # Failed logins (no user, but email hash)
+      10.times do |i|
+        email = "unknown#{i}@example.com"
+        AuthenticationLog.create!(
+          user: nil,
+          action: "login_failed",
+          email_hash: AuthenticationLog.hash_email(email),
+          ip_address: "192.168.1.#{rand(1..255)}",
+          user_agent: user_agents.sample,
+          created_at: rand(1..30).days.ago + rand(0..23).hours + rand(0..59).minutes
+        )
+      end
+
+      # Logouts (with user)
+      8.times do
+        AuthenticationLog.create!(
+          user: admin,
+          action: "logout",
+          email_hash: nil,
+          ip_address: "192.168.1.#{rand(1..255)}",
+          user_agent: user_agents.sample,
+          created_at: rand(1..30).days.ago + rand(0..23).hours + rand(0..59).minutes
+        )
+      end
+
+      # Magic link events
+      5.times do
+        AuthenticationLog.create!(
+          user: admin,
+          action: "magic_link_used",
+          email_hash: nil,
+          ip_address: "192.168.1.#{rand(1..255)}",
+          user_agent: user_agents.sample,
+          created_at: rand(1..30).days.ago + rand(0..23).hours + rand(0..59).minutes
+        )
+      end
+      puts "  Created #{AuthenticationLog.count} authentication logs"
+
+      # Create document event logs
+      documents.each do |doc|
+        base_time = doc.created_at
+
+        # Upload event
+        DocumentEventLog.create!(
+          document: doc,
+          event_type: "uploaded",
+          metadata: { file_size: rand(100_000..5_000_000), content_type: "application/pdf" }.to_json,
+          created_at: base_time
+        )
+
+        # Extraction started
+        DocumentEventLog.create!(
+          document: doc,
+          event_type: "extraction_started",
+          metadata: { job_id: SecureRandom.uuid }.to_json,
+          created_at: base_time + rand(1..30).seconds
+        )
+
+        # Some documents fail, then retry
+        if rand < 0.25
+          DocumentEventLog.create!(
+            document: doc,
+            event_type: "extraction_failed",
+            metadata: { error: [ "Failed to parse PDF structure", "Timeout waiting for API response", "Invalid PDF format" ].sample, retry_count: 0 }.to_json,
+            created_at: base_time + rand(1..2).minutes
+          )
+
+          DocumentEventLog.create!(
+            document: doc,
+            event_type: "retry",
+            metadata: { reason: "Auto-retry after failure", attempt: 1 }.to_json,
+            created_at: base_time + rand(3..5).minutes
+          )
+
+          DocumentEventLog.create!(
+            document: doc,
+            event_type: "extraction_completed",
+            metadata: { duration_ms: rand(5000..15000), pages: rand(1..20) }.to_json,
+            created_at: base_time + rand(6..10).minutes
+          )
+        else
+          # Successful extraction
+          DocumentEventLog.create!(
+            document: doc,
+            event_type: "extraction_completed",
+            metadata: { duration_ms: rand(2000..8000), pages: rand(1..20) }.to_json,
+            created_at: base_time + rand(1..3).minutes
+          )
+        end
+
+        # Metadata extraction
+        DocumentEventLog.create!(
+          document: doc,
+          event_type: "metadata_extracted",
+          metadata: { topics_count: rand(3..10), attendees_count: rand(5..12) }.to_json,
+          created_at: base_time + rand(4..8).minutes
+        )
+      end
+      puts "  Created #{DocumentEventLog.count} document event logs"
     end
 
     def print_summary(towns)
@@ -332,6 +511,9 @@ module Seeds
       puts "  - #{Topic.count} topics"
       puts "  - #{DocumentAttendee.count} document attendees"
       puts "  - #{ApiCall.count} API calls"
+      puts "  - #{AdminAuditLog.count} admin audit logs"
+      puts "  - #{AuthenticationLog.count} authentication logs"
+      puts "  - #{DocumentEventLog.count} document event logs"
       puts ""
       puts "Run 'bin/dev' to start the server and view at http://localhost:3000"
     end

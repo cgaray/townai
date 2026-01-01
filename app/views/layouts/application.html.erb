@@ -75,22 +75,12 @@
                       <span class="text-xs text-base-content/50"><%= current_user.email %></span>
                     </li>
                     <% if current_user.admin? %>
-                      <li class="menu-title">
-                        <span class="text-xs text-base-content/50">Admin</span>
-                      </li>
                       <li>
-                        <%= link_to admin_users_path, class: "flex items-center gap-2" do %>
-                          <%= icon("users", size: "w-4 h-4") %>
-                          Users
+                        <%= link_to admin_root_path, class: "flex items-center gap-2" do %>
+                          <%= icon("shield-check", size: "w-4 h-4") %>
+                          Admin
                         <% end %>
                       </li>
-                      <li>
-                        <%= link_to admin_api_costs_path, class: "flex items-center gap-2" do %>
-                          <%= icon("currency-dollar", size: "w-4 h-4") %>
-                          API Costs
-                        <% end %>
-                      </li>
-                      <li class="divider"></li>
                     <% end %>
                     <li>
                       <%= button_to destroy_user_session_path, method: :delete, class: "flex items-center gap-2 text-error" do %>
@@ -221,27 +211,17 @@
                 <span class="hidden md:inline text-sm font-medium"><%= current_user.email.split("@").first %></span>
                 <%= icon("chevron-down", size: "w-4 h-4") %>
               </div>
-              <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-50 w-56 p-2 shadow-lg border border-base-200 mt-2">
+                <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-50 w-56 p-2 shadow-lg border border-base-200 mt-2">
                 <li class="menu-title">
                   <span class="text-xs text-base-content/50"><%= current_user.email %></span>
                 </li>
                 <% if current_user.admin? %>
-                  <li class="menu-title">
-                    <span class="text-xs text-base-content/50">Admin</span>
-                  </li>
                   <li>
-                    <%= link_to admin_users_path, class: "flex items-center gap-2" do %>
-                      <%= icon("users", size: "w-4 h-4") %>
-                      Users
+                    <%= link_to admin_root_path, class: "flex items-center gap-2" do %>
+                      <%= icon("shield-check", size: "w-4 h-4") %>
+                      Admin
                     <% end %>
                   </li>
-                  <li>
-                    <%= link_to admin_api_costs_path, class: "flex items-center gap-2" do %>
-                      <%= icon("currency-dollar", size: "w-4 h-4") %>
-                      API Costs
-                    <% end %>
-                  </li>
-                  <li class="divider"></li>
                 <% end %>
                 <li>
                   <%= button_to destroy_user_session_path, method: :delete, class: "flex items-center gap-2 text-error" do %>

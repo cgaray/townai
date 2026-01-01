@@ -92,7 +92,7 @@
                         </p>
                       </div>
                     </div>
-                    <%= button_to admin_people_unmerge_path(attendee_id: attendee.id),
+                    <%= button_to unmerge_admin_people_path(attendee_id: attendee.id),
                         method: :post,
                         class: "btn btn-xs btn-ghost",
                         data: { turbo_confirm: "Unmerge '#{attendee.name}' into a separate person?" } do %>
@@ -139,7 +139,7 @@
                               <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body&.name %></p>
                             </div>
                           </div>
-                          <%= button_to admin_people_merge_path(source_id: dup.id, target_id: @person.id),
+                          <%= button_to merge_admin_people_path(source_id: dup.id, target_id: @person.id),
                               method: :post,
                               class: "btn btn-xs btn-warning btn-outline",
                               data: { turbo_confirm: "Merge #{dup.name} into #{@person.name}? This can be undone by unmerging." } do %>
@@ -164,7 +164,7 @@
                               <p class="text-xs text-base-content/50 truncate"><%= dup.primary_governing_body&.name %></p>
                             </div>
                           </div>
-                          <%= button_to admin_people_merge_path(source_id: dup.id, target_id: @person.id),
+                          <%= button_to merge_admin_people_path(source_id: dup.id, target_id: @person.id),
                               method: :post,
                               class: "btn btn-xs btn-warning btn-outline",
                               data: { turbo_confirm: "Merge #{dup.name} into #{@person.name}? This can be undone by unmerging." } do %>

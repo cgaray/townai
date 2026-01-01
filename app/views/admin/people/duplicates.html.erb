@@ -1,0 +1,129 @@
+<%= render "shared/page_header",
+           title: "Duplicate People Finder",
+           subtitle: "Review and merge potential duplicate person records" %>
+
+<div class="space-y-6">
+  <%# Filters and stats %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <%# Town filter %>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-base-content/70">Town:</span>
+            <select class="select select-bordered select-sm" onchange="window.location.href = this.value">
+              <option value="<%= duplicates_admin_people_path %>"
+                      <%= 'selected' if params[:town_id].blank? %>>
+                All Towns
+              </option>
+              <% @towns.each do |town| %>
+                <option value="<%= duplicates_admin_people_path(town_id: town.id) %>"
+                        <%= 'selected' if params[:town_id].to_s == town.id.to_s %>>
+                  <%= town.name %>
+                </option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+
+        <div class="badge badge-lg badge-ghost">
+          <%= icon("users", size: "w-4 h-4") %>
+          <%= pluralize(@duplicate_groups.size, "duplicate group") %> found
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if @duplicate_groups.any? %>
+    <div class="space-y-4">
+      <% @duplicate_groups.each_with_index do |group, index| %>
+        <div class="card bg-base-100 border border-base-200 shadow-sm">
+          <div class="card-body p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-lg flex items-center gap-2">
+                <%= icon("identification", size: "w-5 h-5 text-primary") %>
+                "<%= group[:normalized_name] %>"
+                <span class="badge badge-sm badge-ghost"><%= group[:people].size %> records</span>
+              </h3>
+              <div class="flex gap-2">
+                <% if group[:same_name_count] > 0 %>
+                  <span class="badge badge-sm badge-warning"><%= group[:same_name_count] %> exact match</span>
+                <% end %>
+                <% if group[:similar_name_count] > 0 %>
+                  <span class="badge badge-sm badge-info"><%= group[:similar_name_count] %> similar</span>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="table table-sm">
+                <thead>
+                  <tr class="bg-base-200/50">
+                    <th>Name</th>
+                    <th>Town</th>
+                    <th>Primary Board</th>
+                    <th>Appearances</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% group[:people].each do |person| %>
+                    <tr class="hover:bg-base-50">
+                      <td>
+                        <div class="flex items-center gap-2">
+                          <%= avatar(person.name, size: :sm) %>
+                          <div>
+                            <% if person.town %>
+                              <%= link_to person.name, town_person_path(person.town, person),
+                                          class: "link link-hover font-medium" %>
+                            <% else %>
+                              <span class="font-medium"><%= person.name %></span>
+                            <% end %>
+                            <div class="text-xs text-base-content/50">ID: <%= person.id %></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="text-sm"><%= person.town&.name || "-" %></td>
+                      <td class="text-sm"><%= person.primary_governing_body&.name || "-" %></td>
+                      <td class="text-sm"><%= person.document_appearances_count %></td>
+                      <td>
+                        <div class="dropdown dropdown-end">
+                          <label tabindex="0" class="btn btn-ghost btn-xs">
+                            Merge into...
+                            <%= icon("chevron-down", size: "w-3 h-3") %>
+                          </label>
+                          <ul tabindex="0" class="dropdown-content z-10 menu p-2 shadow bg-base-100 rounded-box w-52 border border-base-200">
+                            <% group[:people].reject { |p| p.id == person.id }.each do |target| %>
+                              <li>
+                                <%= button_to merge_admin_people_path(source_id: person.id, target_id: target.id),
+                                              method: :post,
+                                              class: "text-left",
+                                              data: { confirm: "Merge '#{person.name}' into '#{target.name}'? This will move all attendee records." } do %>
+                                  <%= target.name %>
+                                  <span class="text-xs text-base-content/50">(<%= target.document_appearances_count %> appearances)</span>
+                                <% end %>
+                              </li>
+                            <% end %>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body p-8">
+        <%= render "shared/empty_state",
+                   icon_name: "check-circle",
+                   title: "No Duplicates Found",
+                   description: "No potential duplicate people were detected. All records appear to be unique." %>
+      </div>
+    </div>
+  <% end %>
+</div>

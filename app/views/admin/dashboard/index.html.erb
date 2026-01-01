@@ -1,0 +1,167 @@
+<%= render "shared/page_header", title: "Admin", subtitle: "System overview and quick actions" %>
+
+<div class="max-w-5xl space-y-6">
+  <%# Quick Stats %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">Documents</div>
+      <div class="stat-value text-primary"><%= @stats[:documents] %></div>
+      <div class="stat-desc">
+        <% if @stats[:documents_failed] > 0 %>
+          <span class="text-error"><%= @stats[:documents_failed] %> failed</span>
+        <% elsif @stats[:documents_pending] > 0 %>
+          <span class="text-warning"><%= @stats[:documents_pending] %> processing</span>
+        <% else %>
+          All complete
+        <% end %>
+      </div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">People</div>
+      <div class="stat-value"><%= @stats[:people] %></div>
+      <div class="stat-desc">Unique individuals</div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">Topics</div>
+      <div class="stat-value"><%= @stats[:topics] %></div>
+      <div class="stat-desc">Agenda items</div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-box border border-base-200 shadow-sm">
+      <div class="stat-title">Job Queue</div>
+      <div class="stat-value <%= 'text-error' if @stats[:jobs_failed] > 0 %>">
+        <%= @stats[:jobs_failed] > 0 ? @stats[:jobs_failed] : @stats[:jobs_pending] %>
+      </div>
+      <div class="stat-desc">
+        <% if @stats[:jobs_failed] > 0 %>
+          <span class="text-error">Failed jobs</span>
+        <% else %>
+          Pending jobs
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Quick Actions Grid %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <%= link_to admin_documents_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow" do %>
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-primary/10">
+            <%= icon("document", size: "w-6 h-6 text-primary") %>
+          </div>
+          <div>
+            <h3 class="font-semibold">Documents</h3>
+            <p class="text-sm text-base-content/60">Re-extract, delete, bulk retry</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= link_to admin_people_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow" do %>
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-secondary/10">
+            <%= icon("identification", size: "w-6 h-6 text-secondary") %>
+          </div>
+          <div>
+            <h3 class="font-semibold">People</h3>
+            <p class="text-sm text-base-content/60">Find duplicates, merge records</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= link_to admin_users_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow" do %>
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-accent/10">
+            <%= icon("users", size: "w-6 h-6 text-accent") %>
+          </div>
+          <div>
+            <h3 class="font-semibold">Users</h3>
+            <p class="text-sm text-base-content/60">Manage admin accounts</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= link_to admin_api_costs_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow" do %>
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-warning/10">
+            <%= icon("currency-dollar", size: "w-6 h-6 text-warning") %>
+          </div>
+          <div>
+            <h3 class="font-semibold">API Costs</h3>
+            <p class="text-sm text-base-content/60">LLM usage and spending</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= link_to admin_audit_logs_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow" do %>
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-info/10">
+            <%= icon("clipboard-document-list", size: "w-6 h-6 text-info") %>
+          </div>
+          <div>
+            <h3 class="font-semibold">Audit Logs</h3>
+            <p class="text-sm text-base-content/60">Admin actions, auth, events</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= link_to admin_system_index_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow" do %>
+      <div class="card-body p-5">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg bg-base-300">
+            <%= icon("cog-6-tooth", size: "w-6 h-6") %>
+          </div>
+          <div>
+            <h3 class="font-semibold">System</h3>
+            <p class="text-sm text-base-content/60">Search index, cache, jobs</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Recent Activity %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="card-title text-base">
+          <%= icon("clock", size: "w-5 h-5 text-primary") %>
+          Recent Activity
+        </h2>
+        <%= link_to "View all", admin_audit_logs_path, class: "btn btn-ghost btn-sm" %>
+      </div>
+
+      <% if @recent_activity.any? %>
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <tbody>
+              <% @recent_activity.each do |log| %>
+                <tr>
+                  <td class="text-base-content/60 text-sm w-32"><%= time_ago_in_words(log.created_at) %> ago</td>
+                  <td class="w-40"><%= log.user&.email&.split("@")&.first || "System" %></td>
+                  <td><%= admin_action_badge(log.action) %></td>
+                  <td class="text-sm text-base-content/60">
+                    <%= log.resource_type %><% if log.resource_id %> #<%= log.resource_id %><% end %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p class="text-base-content/50 text-sm py-4">No activity recorded yet.</p>
+      <% end %>
+    </div>
+  </div>
+</div>
