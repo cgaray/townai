@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+john_at_agenda:
+  document: complete_agenda
+  attendee: john_smith_finance
+  status: present
+  role: chair
+
+jane_at_agenda:
+  document: complete_agenda
+  attendee: jane_doe_finance
+  status: present
+  role: member
+
+alice_at_minutes:
+  document: complete_minutes
+  attendee: alice_johnson_conservation
+  status: present
+  role: chair

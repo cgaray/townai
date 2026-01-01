@@ -1,0 +1,28 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+successful_extraction:
+  provider: openai
+  model: gpt-4
+  operation: text_extraction
+  status: success
+  cost_credits: 0.05
+  document: complete_agenda
+  created_at: <%= 1.day.ago %>
+
+failed_extraction:
+  provider: openai
+  model: gpt-4
+  operation: text_extraction
+  status: error
+  cost_credits: 0.0
+  document: failed_document
+  created_at: <%= 2.days.ago %>
+
+successful_metadata:
+  provider: openai
+  model: gpt-4o
+  operation: metadata_extraction
+  status: success
+  cost_credits: 0.10
+  document: complete_minutes
+  created_at: <%= 3.days.ago %>
