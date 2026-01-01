@@ -288,7 +288,7 @@ module Seeds
 
     def create_admin_user
       puts "Creating admin user..."
-      admin_email = "christopher.d.garay@gmail.com"
+      admin_email = ENV.fetch("ADMIN_EMAIL", "admin@example.com")
       admin = User.find_or_create_by!(email: admin_email) do |user|
         user.admin = true
       end

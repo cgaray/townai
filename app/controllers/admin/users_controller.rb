@@ -18,8 +18,13 @@ module Admin
 
       if @user.save
         # Send invitation email with magic link
-        @user.send_magic_link
-        redirect_to admin_users_path, notice: "User invited successfully. A login link has been sent to #{@user.email}."
+        begin
+          @user.send_magic_link
+          redirect_to admin_users_path, notice: "User invited successfully. A login link has been sent to #{@user.email}."
+        rescue StandardError => e
+          Rails.logger.error("Failed to send magic link to #{@user.email}: #{e.message}")
+          redirect_to admin_users_path, notice: "User created successfully.", alert: "Failed to send login link. Please try sending it manually."
+        end
       else
         render :new, status: :unprocessable_entity
       end
@@ -29,9 +34,12 @@ module Admin
     end
 
     def update
-      if @user == current_user && params[:user][:admin] == "0"
-        redirect_to admin_users_path, alert: "You cannot remove your own admin privileges."
-        return
+      if @user == current_user && params[:user].key?(:admin)
+        admin_value = ActiveModel::Type::Boolean.new.cast(params[:user][:admin])
+        if admin_value == false
+          redirect_to admin_users_path, alert: "You cannot remove your own admin privileges."
+          return
+        end
       end
 
       assign_user_attributes(@user)
@@ -52,8 +60,13 @@ module Admin
     end
 
     def send_magic_link
-      @user.send_magic_link
-      redirect_to admin_users_path, notice: "Login link sent to #{@user.email}."
+      begin
+        @user.send_magic_link
+        redirect_to admin_users_path, notice: "Login link sent to #{@user.email}."
+      rescue StandardError => e
+        Rails.logger.error("Failed to send magic link to #{@user.email}: #{e.message}")
+        redirect_to admin_users_path, alert: "Failed to send login link. Please try again."
+      end
     end
 
     private
