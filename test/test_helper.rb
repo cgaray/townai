@@ -1,3 +1,28 @@
+# Start SimpleCov for code coverage tracking
+require "simplecov"
+require "simplecov-cobertura"
+
+SimpleCov.start "rails" do
+  # Generate both HTML and Cobertura (XML) formats
+  # HTML is for local development, Cobertura is for Codecov
+  if ENV["CI"]
+    formatter SimpleCov::Formatter::CoberturaFormatter
+  else
+    formatter SimpleCov::Formatter::MultiFormatter.new([
+      SimpleCov::Formatter::HTMLFormatter,
+      SimpleCov::Formatter::CoberturaFormatter
+    ])
+  end
+
+  # Exclude test files and configuration from coverage
+  add_filter "/test/"
+  add_filter "/config/"
+  add_filter "/vendor/"
+
+  # Set minimum coverage threshold (optional)
+  # minimum_coverage 90
+end
+
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
