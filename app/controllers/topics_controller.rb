@@ -43,6 +43,6 @@ class TopicsController < ApplicationController
   def filter_by_governing_body(scope)
     return scope if params[:governing_body_id].blank?
 
-    scope.joins(:governing_body).where(governing_bodies: { id: params[:governing_body_id] })
+    scope.where(documents: { governing_body_id: params[:governing_body_id] })
   end
 end

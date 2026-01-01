@@ -33,19 +33,23 @@ class Topic < ApplicationRecord
     base = for_town(town).complete
 
     # Single query to get counts by action_taken
-    counts_by_action = base.group(:action_taken).count
+    # group(:enum).count returns integer keys (0, 1, 2, etc.) for enums
+    raw_counts = base.group(:action_taken).count
 
-    # Build the result hash
+    # Convert integer keys to string keys for consistent access
+    counts_by_action = Hash.new(0)
+    raw_counts.each { |k, v| counts_by_action[k.to_s] = v }
+
     all_count = counts_by_action.values.sum
-    with_actions_count = all_count - (counts_by_action["none"] || 0)
+    with_actions_count = all_count - counts_by_action["none"]
 
     {
       all: all_count,
       with_actions: with_actions_count,
-      approved: counts_by_action["approved"] || 0,
-      denied: counts_by_action["denied"] || 0,
-      tabled: counts_by_action["tabled"] || 0,
-      continued: counts_by_action["continued"] || 0
+      approved: counts_by_action["approved"],
+      denied: counts_by_action["denied"],
+      tabled: counts_by_action["tabled"],
+      continued: counts_by_action["continued"]
     }
   end
 
@@ -115,12 +119,19 @@ class Topic < ApplicationRecord
 
   # Returns formatted meeting date string for display
   # Returns "Date Unknown" if date is nil or can't be parsed
+  # Memoized to avoid repeated JSON parsing in views
   def meeting_date_formatted
-    return "Date Unknown" if meeting_date.blank?
+    return @meeting_date_formatted if defined?(@meeting_date_formatted)
 
-    Date.parse(meeting_date).strftime("%B %d, %Y")
-  rescue ArgumentError
-    meeting_date # Return raw string if parsing fails
+    @meeting_date_formatted = if meeting_date.blank?
+      "Date Unknown"
+    else
+      begin
+        Date.parse(meeting_date).strftime("%B %d, %Y")
+      rescue ArgumentError
+        meeting_date
+      end
+    end
   end
 
   # Returns true if this topic has a meaningful action (not "none")
