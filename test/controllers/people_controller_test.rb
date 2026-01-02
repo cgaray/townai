@@ -35,8 +35,15 @@ class PeopleControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show displays potential duplicates section when duplicates exist" do
-    # john_smith has duplicates: john_smith_planning_person (same name)
-    # and jon_smith (similar name)
+    # Create duplicate suggestions for john_smith
+    john_planning = people(:john_smith_planning_person)
+    lower_id, higher_id = [ @person.id, john_planning.id ].sort
+    DuplicateSuggestion.create!(
+      person_id: lower_id,
+      duplicate_person_id: higher_id,
+      match_type: :exact
+    )
+
     get town_person_url(@town, @person)
     assert_response :success
     assert_match(/Potential Duplicates/, response.body)

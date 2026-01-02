@@ -52,7 +52,13 @@ module Admin
     test "should rebuild search index" do
       post rebuild_search_admin_system_index_url
       assert_redirected_to admin_system_index_url
-      assert_match(/rebuilt successfully/, flash[:notice])
+      assert_match(/rebuild started/, flash[:notice])
+    end
+
+    test "rebuild search enqueues rebuild job" do
+      assert_enqueued_with(job: RebuildSearchIndexJob) do
+        post rebuild_search_admin_system_index_url
+      end
     end
 
     test "rebuild search enqueues audit log job" do

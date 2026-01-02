@@ -80,18 +80,36 @@ class PersonTest < ActiveSupport::TestCase
 
   test "potential_duplicates finds same name" do
     john = people(:john_smith)
-    duplicates = john.potential_duplicates
+    john_planning = people(:john_smith_planning_person)
 
+    # Create exact match suggestion (person_id must be < duplicate_person_id)
+    lower_id, higher_id = [ john.id, john_planning.id ].sort
+    DuplicateSuggestion.create!(
+      person_id: lower_id,
+      duplicate_person_id: higher_id,
+      match_type: :exact
+    )
+
+    duplicates = john.potential_duplicates
     same_name = duplicates[:same_name]
-    assert_includes same_name, people(:john_smith_planning_person)
+    assert_includes same_name, john_planning
   end
 
   test "potential_duplicates finds similar names" do
     john = people(:john_smith)
-    duplicates = john.potential_duplicates
+    jon = people(:jon_smith)
 
+    # Create similar match suggestion (person_id must be < duplicate_person_id)
+    lower_id, higher_id = [ john.id, jon.id ].sort
+    DuplicateSuggestion.create!(
+      person_id: lower_id,
+      duplicate_person_id: higher_id,
+      match_type: :similar
+    )
+
+    duplicates = john.potential_duplicates
     similar = duplicates[:similar_name]
-    assert_includes similar, people(:jon_smith)
+    assert_includes similar, jon
   end
 
   test "by_appearances orders by document_appearances_count descending" do

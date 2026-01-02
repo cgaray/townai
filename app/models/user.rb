@@ -22,4 +22,10 @@ class User < ApplicationRecord
   def admin?
     admin
   end
+
+  # Send Devise emails asynchronously via Active Job
+  # This avoids blocking the request thread during SMTP handshake
+  def send_devise_notification(notification, *args)
+    devise_mailer.send(notification, self, *args).deliver_later
+  end
 end

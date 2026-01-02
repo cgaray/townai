@@ -9,7 +9,7 @@ module Admin
     end
 
     def rebuild_search
-      SearchIndexer.rebuild_all!
+      RebuildSearchIndexJob.perform_later
 
       AuditLogJob.perform_later(
         user: current_user,
@@ -19,7 +19,7 @@ module Admin
         ip_address: request.remote_ip
       )
 
-      redirect_to admin_system_index_path, notice: "Search index rebuilt successfully."
+      redirect_to admin_system_index_path, notice: "Search index rebuild started. This may take a few minutes."
     end
 
     def clear_cache

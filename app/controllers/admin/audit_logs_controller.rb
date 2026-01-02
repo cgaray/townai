@@ -200,30 +200,60 @@ module Admin
       end
     end
 
-    # Filter counts for UI pills
+    # Filter counts for UI pills - consolidated into single queries
     def admin_log_filter_counts
+      counts = AdminAuditLog.group(
+        Arel.sql("CASE
+          WHEN action LIKE 'user_%' THEN 'users'
+          WHEN action LIKE 'person_%' THEN 'people'
+          WHEN action LIKE 'document_%' THEN 'documents'
+          ELSE 'other'
+        END")
+      ).count
+
       {
-        all: AdminAuditLog.count,
-        users: AdminAuditLog.where("action LIKE 'user_%'").count,
-        people: AdminAuditLog.where("action LIKE 'person_%'").count,
-        documents: AdminAuditLog.where("action LIKE 'document_%'").count
+        all: counts.values.sum,
+        users: counts["users"] || 0,
+        people: counts["people"] || 0,
+        documents: counts["documents"] || 0
       }
     end
 
     def auth_log_filter_counts
+      counts = AuthenticationLog.group(
+        Arel.sql("CASE
+          WHEN action = 'login_success' OR action = 'magic_link_used' THEN 'success'
+          WHEN action = 'login_failed' THEN 'failed'
+          ELSE 'other'
+        END")
+      ).count
+
       {
-        all: AuthenticationLog.count,
-        success: AuthenticationLog.successful.count,
-        failed: AuthenticationLog.failed.count
+        all: counts.values.sum,
+        success: counts["success"] || 0,
+        failed: counts["failed"] || 0
       }
     end
 
     def doc_event_filter_counts
+      # Match original scope definitions:
+      # - successful: event_type == "extraction_completed"
+      # - failed: event_type == "extraction_failed"
+      # - extraction: any extraction_* event (includes completed, failed, started)
+      #
+      # Uses conditional aggregation in a single query for all counts
+      result = DocumentEventLog.select(
+        "COUNT(*) as total",
+        "COUNT(CASE WHEN event_type = 'extraction_completed' THEN 1 END) as success",
+        "COUNT(CASE WHEN event_type = 'extraction_failed' THEN 1 END) as failed",
+        "COUNT(CASE WHEN event_type LIKE 'extraction_%' THEN 1 END) as extraction"
+      ).take
+
       {
-        all: DocumentEventLog.count,
-        success: DocumentEventLog.successful.count,
-        failed: DocumentEventLog.failed.count,
-        extraction: DocumentEventLog.where("event_type LIKE 'extraction_%'").count
+        all: result.total,
+        success: result.success,
+        failed: result.failed,
+        extraction: result.extraction
       }
     end
   end

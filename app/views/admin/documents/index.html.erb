@@ -91,7 +91,7 @@
                           <span class="font-medium"><%= truncate(doc.source_file_name, length: 40) %></span>
                         <% end %>
                         <div class="text-xs text-base-content/50">
-                          <%= doc.topics.count %> topics, <%= doc.document_attendees.count %> attendees
+                          <%= doc.try(:topics_count_cache) || doc.topics.count %> topics, <%= doc.try(:attendees_count_cache) || doc.document_attendees.count %> attendees
                         </div>
                       </div>
                     </div>

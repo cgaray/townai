@@ -88,25 +88,26 @@ class Person < ApplicationRecord
   end
 
   # Find potential duplicate people for merge suggestions
+  # Uses precomputed DuplicateSuggestion table (generated nightly by ComputeDuplicatesJob)
   # Returns a hash with :same_name and :similar_name arrays
   # Includes associations to avoid N+1 when displaying primary_governing_body
   def potential_duplicates
-    same_name = Person
-      .includes(attendees: :governing_body)
-      .where(normalized_name: normalized_name)
-      .where.not(id: id)
+    suggestions = DuplicateSuggestion.involving(self).includes(
+      person: { attendees: :governing_body },
+      duplicate_person: { attendees: :governing_body }
+    )
 
-    # Optimize: filter by name length first (Levenshtein distance of 2 means max 2 char difference)
-    min_length = [ normalized_name.length - 2, 1 ].max
-    max_length = normalized_name.length + 2
+    same_name = []
+    similar_name = []
 
-    similar_name = Person
-      .includes(attendees: :governing_body)
-      .where.not(id: id)
-      .where.not(normalized_name: normalized_name)
-      .where("LENGTH(normalized_name) BETWEEN ? AND ?", min_length, max_length)
-      .limit(100)
-      .select { |p| Attendee.levenshtein_distance(normalized_name, p.normalized_name) <= 2 }
+    suggestions.each do |suggestion|
+      other = suggestion.other_person(self)
+      if suggestion.exact?
+        same_name << other
+      else
+        similar_name << other
+      end
+    end
 
     {
       same_name: same_name,

@@ -72,12 +72,10 @@
       <% end %>
     </div>
 
-    <%# Results list %>
+    <%# Results list - use collection rendering for better performance %>
     <% if @results.any? %>
       <div class="space-y-3">
-        <% @results.each do |result| %>
-          <%= render "search/result_item", result: result %>
-        <% end %>
+        <%= render partial: "search/result_item", collection: @results, as: :result %>
       </div>
     <% else %>
       <%= render "shared/empty_state",

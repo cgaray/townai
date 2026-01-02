@@ -5,14 +5,20 @@ class GoverningBodiesController < ApplicationController
   include MeetingTimeline
 
   def index
+    # Use JOIN with GROUP BY instead of correlated subquery for people_count
     @governing_bodies = current_town.governing_bodies
+      .left_joins(:attendees)
+      .select("governing_bodies.*, COUNT(DISTINCT attendees.person_id) AS people_count")
+      .group("governing_bodies.id")
       .by_document_count
-      .select("governing_bodies.*, (SELECT COUNT(DISTINCT person_id) FROM attendees WHERE attendees.governing_body_id = governing_bodies.id) AS people_count")
   end
 
   def show
+    # Use JOIN with GROUP BY instead of correlated subquery for people_count
     @governing_body = current_town.governing_bodies
-      .select("governing_bodies.*, (SELECT COUNT(DISTINCT person_id) FROM attendees WHERE attendees.governing_body_id = governing_bodies.id) AS people_count")
+      .left_joins(:attendees)
+      .select("governing_bodies.*, COUNT(DISTINCT attendees.person_id) AS people_count")
+      .group("governing_bodies.id")
       .find(params[:id])
 
     # Build hierarchical timeline: year → month → day → meetings

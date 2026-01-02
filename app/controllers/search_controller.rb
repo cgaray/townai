@@ -72,16 +72,21 @@ class SearchController < ApplicationController
   helper_method :search_path_for
 
   # Pre-compute town statistics for sidebar (only when town is present)
+  # Cached for 5 minutes to reduce query load
+  # Structure matches TownScoped concern to avoid cache key collisions
   def town_stats
     return {} unless @current_town
 
-    @town_stats ||= {
-      documents_count: @current_town.documents.count,
-      governing_bodies_count: @current_town.governing_bodies.count,
-      people_count: @current_town.people.count,
-      complete_count: @current_town.documents.complete.count,
-      processing_count: @current_town.documents.where(status: [ :extracting_text, :extracting_metadata ]).count
-    }
+    @town_stats ||= Rails.cache.fetch("town_stats/#{@current_town.id}", expires_in: 5.minutes) do
+      {
+        documents_count: @current_town.documents.count,
+        governing_bodies_count: @current_town.governing_bodies.count,
+        people_count: @current_town.people.count,
+        topics_count: Topic.for_town(@current_town).with_actions.count,
+        complete_count: @current_town.documents.complete.count,
+        processing_count: @current_town.documents.where(status: [ :extracting_text, :extracting_metadata ]).count
+      }
+    end
   end
   helper_method :town_stats
 end

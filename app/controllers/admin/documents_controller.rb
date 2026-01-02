@@ -5,9 +5,18 @@ module Admin
     before_action :set_document, only: %i[destroy reextract]
 
     def index
-      @documents = Document.includes(:governing_body)
-                           .with_attached_pdf
-                           .order(created_at: :desc)
+      # Eager load counts to avoid N+1 queries (2 per document)
+      @documents = Document
+                     .includes(:governing_body)
+                     .left_joins(:topics, :document_attendees)
+                     .select(
+                       "documents.*",
+                       "COUNT(DISTINCT topics.id) AS topics_count_cache",
+                       "COUNT(DISTINCT document_attendees.id) AS attendees_count_cache"
+                     )
+                     .group("documents.id")
+                     .with_attached_pdf
+                     .order(created_at: :desc)
 
       # Filter by status
       @documents = @documents.where(status: params[:status]) if params[:status].present?
