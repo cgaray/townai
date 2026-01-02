@@ -1,7 +1,11 @@
-<%# Timeline item for governing body: document badge %>
-<% doc = item[:document] %>
-<% doc_type = doc.metadata_field("document_type")&.downcase %>
+<%# Timeline item for governing body: combined meeting with document badges %>
+<% documents = item[:documents] || [] %>
 
-<%= link_to town_document_path(current_town, doc), class: "hover:shadow-md transition-shadow" do %>
-  <%= document_type_badge(doc_type) %>
-<% end %>
+<div class="flex flex-wrap items-center gap-2">
+  <% documents.each do |doc| %>
+    <% doc_type = doc.metadata_field("document_type")&.downcase %>
+    <%= link_to town_document_path(current_town, doc), class: "hover:shadow-md transition-shadow" do %>
+      <%= document_type_badge(doc_type) %>
+    <% end %>
+  <% end %>
+</div>

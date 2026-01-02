@@ -399,3 +399,4 @@ Available icons: `document`, `agenda`, `minutes`, `calendar`, `clock`, `users`, 
 - The application is configured for Kamal deployment
 - Always use the provided bin scripts instead of direct gem commands
 - Follow Rails conventions and patterns throughout the codebase
+- **Wait for explicit user instruction before committing or pushing changes**

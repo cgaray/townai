@@ -86,12 +86,12 @@ class ApiCallTest < ActiveSupport::TestCase
   end
 
   test "this_month scope returns only current month calls" do
-    ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: 2.months.ago)
+    old_call = ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: 2.months.ago)
     current = ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: Time.current)
 
     this_month = ApiCall.this_month
     assert_includes this_month, current
-    assert_equal 1, this_month.count
+    assert_not_includes this_month, old_call
   end
 
   test "total_cost sums cost_credits" do
