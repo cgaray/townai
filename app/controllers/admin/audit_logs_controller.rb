@@ -236,24 +236,24 @@ module Admin
     end
 
     def doc_event_filter_counts
-      # Match original scope definitions exactly:
+      # Match original scope definitions:
       # - successful: event_type == "extraction_completed"
       # - failed: event_type == "extraction_failed"
-      # - extraction: any extraction_* event
-      counts = DocumentEventLog.group(
-        Arel.sql("CASE
-          WHEN event_type = 'extraction_completed' THEN 'success'
-          WHEN event_type = 'extraction_failed' THEN 'failed'
-          WHEN event_type LIKE 'extraction_%' THEN 'extraction'
-          ELSE 'other'
-        END")
-      ).count
+      # - extraction: any extraction_* event (includes completed, failed, started)
+      #
+      # Uses conditional aggregation in a single query for all counts
+      result = DocumentEventLog.select(
+        "COUNT(*) as total",
+        "COUNT(CASE WHEN event_type = 'extraction_completed' THEN 1 END) as success",
+        "COUNT(CASE WHEN event_type = 'extraction_failed' THEN 1 END) as failed",
+        "COUNT(CASE WHEN event_type LIKE 'extraction_%' THEN 1 END) as extraction"
+      ).take
 
       {
-        all: counts.values.sum,
-        success: counts["success"] || 0,
-        failed: counts["failed"] || 0,
-        extraction: (counts["extraction"] || 0) + (counts["success"] || 0) + (counts["failed"] || 0)
+        all: result.total,
+        success: result.success,
+        failed: result.failed,
+        extraction: result.extraction
       }
     end
   end
