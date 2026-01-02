@@ -8,7 +8,7 @@ class MeetingTimelineTest < ActiveSupport::TestCase
     include MeetingTimeline
 
     # Expose private methods for testing
-    public :build_meetings_hierarchy, :parse_meeting_date
+    public :build_meetings_hierarchy, :parse_meeting_date, :merge_meeting_topics
   end
 
   setup do
@@ -155,6 +155,101 @@ class MeetingTimelineTest < ActiveSupport::TestCase
   test "parse_meeting_date parses valid date string" do
     date = @controller.parse_meeting_date("2024-12-15")
     assert_equal Date.new(2024, 12, 15), date
+  end
+
+  # merge_meeting_topics tests
+
+  test "merge_meeting_topics returns empty array for empty documents" do
+    result = @controller.merge_meeting_topics([], {})
+    assert_equal [], result
+  end
+
+  test "merge_meeting_topics returns topics from single document" do
+    doc = create_doc_with_date("2024-12-15", doc_type: "agenda")
+    topic = Topic.create!(document: doc, title: "Budget Review", position: 0)
+
+    result = @controller.merge_meeting_topics([ doc ], {})
+
+    assert_equal 1, result.size
+    assert_equal topic, result.first[:topic]
+    assert_equal doc, result.first[:document]
+    assert_equal "agenda", result.first[:doc_type]
+  end
+
+  test "merge_meeting_topics deduplicates topics by normalized title" do
+    agenda = create_doc_with_date("2024-12-15", doc_type: "agenda")
+    minutes = create_doc_with_date("2024-12-15", doc_type: "minutes")
+    Topic.create!(document: agenda, title: "Budget Review", position: 0)
+    minutes_topic = Topic.create!(document: minutes, title: "Budget Review", position: 0, action_taken: :approved)
+
+    result = @controller.merge_meeting_topics([ agenda, minutes ], {})
+
+    assert_equal 1, result.size
+    assert_equal minutes_topic, result.first[:topic]
+  end
+
+  test "merge_meeting_topics prefers minutes over agenda for same topic" do
+    agenda = create_doc_with_date("2024-12-15", doc_type: "agenda")
+    minutes = create_doc_with_date("2024-12-15", doc_type: "minutes")
+    agenda_topic = Topic.create!(document: agenda, title: "Budget Review", position: 0, action_taken: :none)
+    minutes_topic = Topic.create!(document: minutes, title: "Budget Review", position: 0, action_taken: :approved)
+
+    # Test with agenda first
+    result = @controller.merge_meeting_topics([ agenda, minutes ], {})
+    assert_equal minutes_topic, result.first[:topic]
+    assert_equal "minutes", result.first[:doc_type]
+
+    # Test with minutes first - should still prefer minutes
+    result = @controller.merge_meeting_topics([ minutes, agenda ], {})
+    assert_equal minutes_topic, result.first[:topic]
+    assert_equal "minutes", result.first[:doc_type]
+  end
+
+  test "merge_meeting_topics preserves first minutes version when multiple minutes exist" do
+    minutes1 = create_doc_with_date("2024-12-15", doc_type: "minutes")
+    minutes2 = create_doc_with_date("2024-12-15", doc_type: "minutes")
+    first_topic = Topic.create!(document: minutes1, title: "Budget Review", position: 0, action_taken: :approved)
+    Topic.create!(document: minutes2, title: "Budget Review", position: 0, action_taken: :denied)
+
+    result = @controller.merge_meeting_topics([ minutes1, minutes2 ], {})
+
+    assert_equal 1, result.size
+    assert_equal first_topic, result.first[:topic]
+  end
+
+  test "merge_meeting_topics handles case-insensitive title matching" do
+    agenda = create_doc_with_date("2024-12-15", doc_type: "agenda")
+    minutes = create_doc_with_date("2024-12-15", doc_type: "minutes")
+    Topic.create!(document: agenda, title: "BUDGET REVIEW", position: 0)
+    minutes_topic = Topic.create!(document: minutes, title: "budget review", position: 0, action_taken: :approved)
+
+    result = @controller.merge_meeting_topics([ agenda, minutes ], {})
+
+    assert_equal 1, result.size
+    assert_equal minutes_topic, result.first[:topic]
+  end
+
+  test "merge_meeting_topics sorts by position" do
+    doc = create_doc_with_date("2024-12-15", doc_type: "minutes")
+    topic3 = Topic.create!(document: doc, title: "Third Item", position: 2)
+    topic1 = Topic.create!(document: doc, title: "First Item", position: 0)
+    topic2 = Topic.create!(document: doc, title: "Second Item", position: 1)
+
+    result = @controller.merge_meeting_topics([ doc ], {})
+
+    assert_equal [ topic1, topic2, topic3 ], result.map { |t| t[:topic] }
+  end
+
+  test "merge_meeting_topics uses preloaded topics from extras when available" do
+    doc = create_doc_with_date("2024-12-15", doc_type: "agenda")
+    # Don't create topics in DB - pass them via extras
+    mock_topic = Topic.new(title: "Preloaded Topic", position: 0)
+    extras = { doc.id => { topics: [ mock_topic ] } }
+
+    result = @controller.merge_meeting_topics([ doc ], extras)
+
+    assert_equal 1, result.size
+    assert_equal mock_topic, result.first[:topic]
   end
 
   private

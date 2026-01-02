@@ -93,8 +93,8 @@ module MeetingTimeline
 
         # Keep this topic if:
         # 1. No existing topic with this title, or
-        # 2. This is from minutes (prefer final actions over agenda)
-        if existing.nil? || is_minutes
+        # 2. This is from minutes and existing is not (prefer final actions over agenda)
+        if existing.nil? || (is_minutes && existing[:doc_type] != "minutes")
           topics_by_title[normalized_title] = {
             topic: topic,
             document: doc,
