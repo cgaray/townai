@@ -67,7 +67,7 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   # Pin minitest to 5.x for Rails 8.1 compatibility
-  gem "minitest", "~> 5.25"
+  gem "minitest", "~> 6.0"
   # Code coverage reporting
   gem "simplecov", require: false
   gem "simplecov-cobertura", require: false
