@@ -15,9 +15,11 @@ class GoverningBodiesController < ApplicationController
       .select("governing_bodies.*, (SELECT COUNT(DISTINCT person_id) FROM attendees WHERE attendees.governing_body_id = governing_bodies.id) AS people_count")
       .find(params[:id])
 
-    # Build hierarchical timeline: year → month → day → documents
-    # Eager load pdf attachment to avoid N+1 queries
-    @meetings_by_year = build_meetings_hierarchy(@governing_body.documents.complete.with_attached_pdf)
+    # Build hierarchical timeline: year → month → day → meetings
+    # Eager load pdf attachment and topics to avoid N+1 queries
+    @meetings_by_year = build_meetings_hierarchy(
+      @governing_body.documents.complete.includes(:topics).with_attached_pdf
+    )
 
     @pagy_people, @people = pagy(
       @governing_body.people.by_appearances,

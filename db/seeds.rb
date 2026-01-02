@@ -170,43 +170,58 @@ module Seeds
       governing_bodies_by_town.each_value do |bodies|
         bodies.each do |body|
           meeting_count = rand(6..18)
-          meeting_dates = meeting_count.times.map { random_date_in_past }.sort.reverse
+          # Mix of past and future meetings
+          past_dates = (meeting_count - 2).times.map { random_date_in_past }.sort.reverse
+          future_dates = 2.times.map { random_date_in_future }.sort
+          meeting_dates = past_dates + future_dates
 
           meeting_dates.each do |date|
-            doc_type = %w[agenda minutes minutes].sample
             meeting_time = random_time
-            file_name = "#{body.name.parameterize}-#{doc_type}-#{date.strftime('%Y-%m-%d')}.pdf"
-            file_hash = Digest::SHA256.hexdigest("#{body.id}-#{file_name}")
-
-            # Skip if document already exists
-            next if Document.exists?(source_file_hash: file_hash)
-
             attendees_data = build_attendees_data(attendees_by_body[body.id])
             topics = generate_topics
+            is_future_meeting = date > Date.current
 
-            metadata = {
-              "governing_body" => body.name,
-              "document_type" => doc_type,
-              "meeting_date" => date.to_s,
-              "meeting_time" => meeting_time,
-              "abstract" => generate_abstract(body.name, doc_type, date),
-              "abstract_source_text" => "Meeting called to order at #{meeting_time}.",
-              "attendees" => attendees_data,
-              "topics" => topics
-            }
+            # Future meetings: only agenda (meeting hasn't happened yet)
+            # Past meetings: always have minutes, sometimes also have agenda (~50%)
+            doc_types = if is_future_meeting
+              %w[agenda]
+            elsif rand < 0.5
+              %w[agenda minutes]
+            else
+              %w[minutes]
+            end
 
-            doc = Document.create!(
-              source_file_name: file_name,
-              source_file_hash: file_hash,
-              status: :complete,
-              governing_body: body,
-              extracted_metadata: metadata.to_json,
-              raw_text: "Sample extracted text for #{body.name} #{doc_type} from #{date}."
-            )
+            doc_types.each do |doc_type|
+              file_name = "#{body.name.parameterize}-#{doc_type}-#{date.strftime('%Y-%m-%d')}.pdf"
+              file_hash = Digest::SHA256.hexdigest("#{body.id}-#{file_name}")
 
-            create_document_attendees(doc, attendees_by_body[body.id], attendees_data)
-            create_document_topics(doc, topics)
-            documents_created += 1
+              # Skip if document already exists
+              next if Document.exists?(source_file_hash: file_hash)
+
+              metadata = {
+                "governing_body" => body.name,
+                "document_type" => doc_type,
+                "meeting_date" => date.to_s,
+                "meeting_time" => meeting_time,
+                "abstract" => generate_abstract(body.name, doc_type, date),
+                "abstract_source_text" => "Meeting called to order at #{meeting_time}.",
+                "attendees" => attendees_data,
+                "topics" => topics
+              }
+
+              doc = Document.create!(
+                source_file_name: file_name,
+                source_file_hash: file_hash,
+                status: :complete,
+                governing_body: body,
+                extracted_metadata: metadata.to_json,
+                raw_text: "Sample extracted text for #{body.name} #{doc_type} from #{date}."
+              )
+
+              create_document_attendees(doc, attendees_by_body[body.id], attendees_data)
+              create_document_topics(doc, topics)
+              documents_created += 1
+            end
           end
         end
       end
@@ -524,6 +539,10 @@ module Seeds
 
     def random_date_in_past(months_back: 24)
       rand(1..months_back).months.ago.to_date - rand(0..27).days
+    end
+
+    def random_date_in_future(months_ahead: 3)
+      rand(1..months_ahead).months.from_now.to_date + rand(0..14).days
     end
 
     def random_time

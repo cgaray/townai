@@ -1,37 +1,46 @@
-<%# Timeline item for person: document with role/status and topics %>
-<% doc = item[:document] %>
-<% extra = item[:extra] || {} %>
-<% topics = extra[:topics] || [] %>
-<% doc_type = doc.metadata_field("document_type")&.downcase %>
-<% governing_body = doc.metadata_field("governing_body") %>
+<%# Timeline item for person: combined meeting with documents and topics %>
+<% documents = item[:documents] || [] %>
+<% extras = item[:extras] || {} %>
+<% topics = item[:topics] || [] %>
+<% governing_body = item[:governing_body] %>
+
+<%# Get role/status from the first document's extra data (should be same for all docs in meeting) %>
+<% first_extra = extras.values.first || {} %>
 
 <div class="w-full">
-  <%# Document Header Row %>
-  <%= link_to town_document_path(current_town, doc), class: "inline-flex items-center gap-2 py-1 px-2 rounded-lg hover:bg-base-200 transition-colors group" do %>
-    <%# Document Type Badge %>
-    <%= document_type_badge(doc_type) %>
+  <%# Meeting Header Row %>
+  <div class="flex flex-wrap items-center gap-2 py-1 px-2">
+    <%# Document Type Badges (each links to its document) %>
+    <% documents.each do |doc| %>
+      <% doc_type = doc.metadata_field("document_type")&.downcase %>
+      <%= link_to town_document_path(current_town, doc), class: "hover:shadow-md transition-shadow" do %>
+        <%= document_type_badge(doc_type) %>
+      <% end %>
+    <% end %>
     
     <%# Governing Body %>
-    <span class="text-sm text-base-content/60 group-hover:text-base-content transition-colors"><%= governing_body %></span>
+    <span class="text-sm text-base-content/60"><%= governing_body %></span>
     
     <%# Role Badge %>
-    <% if extra[:role] %>
-      <%= role_badge(extra[:role]) %>
+    <% if first_extra[:role] %>
+      <%= role_badge(first_extra[:role]) %>
     <% end %>
     
     <%# Status Badge %>
-    <% if extra[:status] %>
-      <span class="badge badge-sm <%= extra[:status] == 'present' ? 'badge-success' : extra[:status] == 'remote' ? 'badge-info' : 'badge-warning' %> badge-outline">
-        <%= extra[:status].capitalize %>
+    <% if first_extra[:status] %>
+      <span class="badge badge-sm <%= first_extra[:status] == 'present' ? 'badge-success' : first_extra[:status] == 'remote' ? 'badge-info' : 'badge-warning' %> badge-outline">
+        <%= first_extra[:status].capitalize %>
       </span>
     <% end %>
-  <% end %>
+  </div>
 
   <%# Topics List %>
   <% if topics.any? %>
     <div class="mt-2 ml-2 pl-3 border-l-2 border-base-300 space-y-1">
-      <% topics.each do |topic| %>
-        <%= link_to town_document_path(current_town, doc, anchor: "topic-#{topic.id}"),
+      <% topics.each do |topic_data| %>
+        <% topic = topic_data[:topic] %>
+        <% topic_doc = topic_data[:document] %>
+        <%= link_to town_document_path(current_town, topic_doc, anchor: "topic-#{topic.id}"),
                     class: "flex items-center gap-2 py-0.5 text-sm hover:text-primary transition-colors group/topic" do %>
           <span class="text-base-content/40 group-hover/topic:text-primary/60">•</span>
           <span class="text-base-content/70 group-hover/topic:text-base-content truncate"><%= topic.title %></span>
