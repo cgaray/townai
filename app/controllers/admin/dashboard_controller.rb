@@ -10,6 +10,7 @@ module Admin
           documents: Document.count,
           documents_failed: Document.failed.count,
           documents_pending: Document.where(status: [ :pending, :extracting_text, :extracting_metadata ]).count,
+          documents_pending_review: Document.needs_review.count,
           people: Person.count,
           users: User.count,
           topics: Topic.count

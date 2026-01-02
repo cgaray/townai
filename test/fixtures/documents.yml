@@ -51,3 +51,27 @@ failed_document:
   governing_body: select_board
   raw_text: "Unable to extract text"
   extracted_metadata:
+
+pending_review_document:
+  source_file_name: "pending_review_agenda.pdf"
+  source_file_hash: "pendrev123456"
+  status: 5  # pending_review
+  governing_body: select_board
+  extraction_confidence: "high"
+  extracted_metadata: '{"document_type":"agenda","governing_body":"Select Board","meeting_date":"2025-01-15","attendees":[],"topics":[{"title":"Test Topic","summary":"Test summary","action_taken":"approved"}]}'
+
+pending_review_low_confidence:
+  source_file_name: "low_confidence_doc.pdf"
+  source_file_hash: "lowconf789012"
+  status: 5  # pending_review
+  governing_body: redevelopment_board
+  extraction_confidence: "low"
+  extracted_metadata: '{"document_type":"minutes","meeting_date":null,"attendees":[],"topics":[]}'
+
+rejected_document:
+  source_file_name: "rejected_doc.pdf"
+  source_file_hash: "rejected345678"
+  status: 6  # rejected
+  governing_body: select_board
+  rejection_reason: "Duplicate of another document"
+  extracted_metadata: '{"document_type":"agenda"}'

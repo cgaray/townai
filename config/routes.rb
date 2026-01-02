@@ -51,12 +51,15 @@ Rails.application.routes.draw do
     end
     resources :api_costs, only: [ :index ]
 
-    resources :documents, only: [ :index, :destroy ] do
+    resources :documents, only: [ :index, :create, :show, :update, :destroy ] do
       member do
         post :reextract
+        post :approve
+        post :reject
       end
       collection do
         post :bulk_retry
+        post :bulk_approve
       end
     end
 

@@ -7,10 +7,12 @@
       <div class="stat-title">Documents</div>
       <div class="stat-value text-primary"><%= @stats[:documents] %></div>
       <div class="stat-desc">
-        <% if @stats[:documents_failed] > 0 %>
+        <% if @stats[:documents_pending_review] > 0 %>
+          <span class="text-warning"><%= @stats[:documents_pending_review] %> pending review</span>
+        <% elsif @stats[:documents_failed] > 0 %>
           <span class="text-error"><%= @stats[:documents_failed] %> failed</span>
         <% elsif @stats[:documents_pending] > 0 %>
-          <span class="text-warning"><%= @stats[:documents_pending] %> processing</span>
+          <span class="text-info"><%= @stats[:documents_pending] %> processing</span>
         <% else %>
           All complete
         <% end %>
@@ -44,17 +46,39 @@
     </div>
   </div>
 
+  <%# Review Queue Alert %>
+  <% if @stats[:documents_pending_review] > 0 %>
+    <div class="alert alert-warning shadow-sm">
+      <div class="flex items-center gap-3">
+        <%= icon("exclamation-triangle", size: "w-6 h-6") %>
+        <div>
+          <h3 class="font-semibold"><%= @stats[:documents_pending_review] %> documents pending review</h3>
+          <p class="text-sm">New documents need approval before they're visible to users.</p>
+        </div>
+      </div>
+      <%= link_to admin_documents_path(stage: "pending_review"), class: "btn btn-sm btn-warning" do %>
+        Review Now
+        <%= icon("chevron-right", size: "w-4 h-4") %>
+      <% end %>
+    </div>
+  <% end %>
+
   <%# Quick Actions Grid %>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <%= link_to admin_documents_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow" do %>
+    <%= link_to admin_documents_path, class: "card bg-base-100 border border-base-200 shadow-sm hover:shadow-md transition-shadow #{@stats[:documents_pending_review] > 0 ? 'ring-2 ring-warning' : ''}" do %>
       <div class="card-body p-5">
         <div class="flex items-center gap-3">
           <div class="p-2 rounded-lg bg-primary/10">
             <%= icon("document", size: "w-6 h-6 text-primary") %>
           </div>
-          <div>
-            <h3 class="font-semibold">Documents</h3>
-            <p class="text-sm text-base-content/60">Re-extract, delete, bulk retry</p>
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <h3 class="font-semibold">Documents</h3>
+              <% if @stats[:documents_pending_review] > 0 %>
+                <span class="badge badge-warning badge-sm"><%= @stats[:documents_pending_review] %></span>
+              <% end %>
+            </div>
+            <p class="text-sm text-base-content/60">Upload, review, manage</p>
           </div>
         </div>
       </div>

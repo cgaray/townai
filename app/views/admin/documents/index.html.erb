@@ -1,61 +1,166 @@
 <%= render "shared/page_header",
-           title: "Document Management",
-           subtitle: "Manage documents, retry extractions, and delete records" %>
+           title: "Documents",
+           subtitle: "Upload, monitor extraction, and manage documents" %>
 
 <div class="space-y-6">
-  <%# Filters %>
+  <%# Pipeline steps - visual summary and filter %>
   <div class="card bg-base-100 border border-base-200 shadow-sm">
     <div class="card-body p-4">
-      <div class="flex flex-wrap items-center gap-4">
-        <%# Status filter %>
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-base-content/70">Status:</span>
-          <div class="flex flex-wrap gap-2">
-            <%= link_to admin_documents_path(params.permit(:governing_body_id)),
-                        class: "btn btn-sm #{params[:status].blank? ? 'btn-primary' : 'btn-ghost'}" do %>
-              All
-              <span class="opacity-70 text-xs"><%= @status_counts.values.sum %></span>
-            <% end %>
-            <% Document.statuses.keys.each do |status| %>
-              <%= link_to admin_documents_path(params.permit(:governing_body_id).merge(status: status)),
-                          class: "btn btn-sm #{params[:status] == status ? 'btn-primary' : 'btn-ghost'}" do %>
-                <%= status.humanize %>
-                <span class="opacity-70 text-xs"><%= @status_counts[status] || 0 %></span>
-              <% end %>
-            <% end %>
-          </div>
-        </div>
+      <ul class="steps steps-horizontal w-full">
+        <%
+          # Calculate counts for each stage
+          pending_count = @status_counts["pending"] || 0
+          extracting_count = (@status_counts["extracting_text"] || 0) + (@status_counts["extracting_metadata"] || 0)
+          review_count = @status_counts["pending_review"] || 0
+          complete_count = @status_counts["complete"] || 0
+          failed_count = @status_counts["failed"] || 0
+          rejected_count = @status_counts["rejected"] || 0
 
-        <%# Governing body filter %>
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-base-content/70">Board:</span>
-          <select class="select select-bordered select-sm" onchange="window.location.href = this.value">
-            <option value="<%= admin_documents_path(params.permit(:status)) %>"
-                    <%= 'selected' if params[:governing_body_id].blank? %>>
-              All Boards
-            </option>
-            <% @governing_bodies.each do |body| %>
-              <option value="<%= admin_documents_path(params.permit(:status).merge(governing_body_id: body.id)) %>"
-                      <%= 'selected' if params[:governing_body_id].to_s == body.id.to_s %>>
-                <%= body.name %>
-              </option>
-            <% end %>
-          </select>
-        </div>
-      </div>
+          stages = [
+            { key: "pending", label: "Queued", count: pending_count, color: "step-neutral" },
+            { key: "extracting", label: "Extracting", count: extracting_count, color: "step-info" },
+            { key: "pending_review", label: "Review", count: review_count, color: "step-warning" },
+            { key: "complete", label: "Complete", count: complete_count, color: "step-success" }
+          ]
 
-      <%# Bulk actions %>
-      <% if params[:governing_body_id].present? && (@status_counts["failed"] || 0) > 0 %>
-        <div class="mt-3 pt-3 border-t border-base-200">
-          <%= button_to bulk_retry_admin_documents_path(governing_body_id: params[:governing_body_id]),
-                        method: :post,
-                        class: "btn btn-sm btn-warning",
-                        data: { confirm: "Retry all failed documents in this governing body?" } do %>
-            <%= icon("arrow-path", size: "w-4 h-4") %>
-            Retry All Failed
+          # Determine active stage based on current filter
+          current_stage = params[:stage]
+        %>
+        <% stages.each do |stage| %>
+          <%
+            is_active = current_stage == stage[:key]
+            step_color = is_active ? stage[:color] : ""
+          %>
+          <%= link_to admin_documents_path(stage: stage[:key], governing_body_id: params[:governing_body_id]),
+                      class: "step #{step_color}" do %>
+            <div class="flex flex-col items-center">
+              <span class="text-sm font-medium"><%= stage[:label] %></span>
+              <span class="badge badge-sm <%= is_active ? 'badge-primary' : 'badge-ghost' %>"><%= stage[:count] %></span>
+            </div>
+          <% end %>
+        <% end %>
+      </ul>
+
+      <%# Problem states %>
+      <% if failed_count > 0 || rejected_count > 0 %>
+        <div class="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-base-200">
+          <% if failed_count > 0 %>
+            <%= link_to admin_documents_path(stage: "failed", governing_body_id: params[:governing_body_id]),
+                        class: "btn btn-sm #{current_stage == 'failed' ? 'btn-error' : 'btn-ghost text-error'}" do %>
+              <%= icon("x-circle", size: "w-4 h-4") %>
+              Failed
+              <span class="badge badge-error badge-sm"><%= failed_count %></span>
+            <% end %>
+          <% end %>
+
+          <% if rejected_count > 0 %>
+            <%= link_to admin_documents_path(stage: "rejected", governing_body_id: params[:governing_body_id]),
+                        class: "btn btn-sm #{current_stage == 'rejected' ? 'btn-error btn-outline' : 'btn-ghost'}" do %>
+              <%= icon("x-circle", size: "w-4 h-4") %>
+              Rejected
+              <span class="badge badge-sm"><%= rejected_count %></span>
+            <% end %>
           <% end %>
         </div>
       <% end %>
+    </div>
+  </div>
+
+  <%# Filters and actions bar %>
+  <div class="card bg-base-100 border border-base-200 shadow-sm">
+    <div class="card-body p-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-4">
+          <%# Current stage label %>
+          <h2 class="font-semibold">
+            <%= case current_stage
+                when "pending" then "Queued for Extraction"
+                when "extracting" then "Currently Extracting"
+                when "pending_review" then "Pending Review"
+                when "failed" then "Failed"
+                when "rejected" then "Rejected"
+                when "complete" then "Complete"
+                else "All Documents"
+                end %>
+          </h2>
+
+          <%# Clear filter %>
+          <% if current_stage.present? %>
+            <%= link_to admin_documents_path(governing_body_id: params[:governing_body_id]),
+                        class: "btn btn-xs btn-ghost" do %>
+              Clear filter
+              <%= icon("x-mark", size: "w-3 h-3") %>
+            <% end %>
+          <% end %>
+
+          <%# Governing body filter %>
+          <% if @governing_bodies.any? %>
+            <select class="select select-bordered select-sm" onchange="window.location.href = this.value">
+              <option value="<%= admin_documents_path(stage: current_stage) %>"
+                      <%= 'selected' if params[:governing_body_id].blank? %>>
+                All Boards
+              </option>
+              <% @governing_bodies.each do |body| %>
+                <option value="<%= admin_documents_path(stage: current_stage, governing_body_id: body.id) %>"
+                        <%= 'selected' if params[:governing_body_id].to_s == body.id.to_s %>>
+                  <%= body.name %>
+                </option>
+              <% end %>
+            </select>
+          <% end %>
+
+          <%# Confidence filter (only for pending_review) %>
+          <% if current_stage == "pending_review" %>
+            <div class="flex items-center gap-1">
+              <span class="text-sm text-base-content/70">Confidence:</span>
+              <%= link_to admin_documents_path(stage: current_stage, governing_body_id: params[:governing_body_id]),
+                          class: "btn btn-xs #{params[:confidence].blank? ? 'btn-primary' : 'btn-ghost'}" do %>
+                All
+              <% end %>
+              <% %w[low medium high].each do |conf| %>
+                <%= link_to admin_documents_path(stage: current_stage, governing_body_id: params[:governing_body_id], confidence: conf),
+                            class: "btn btn-xs #{params[:confidence] == conf ? 'btn-primary' : 'btn-ghost'}" do %>
+                  <%= conf.capitalize %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <%# Actions %>
+        <div class="flex items-center gap-2">
+          <%# Bulk approve (pending_review only) %>
+          <% if current_stage == "pending_review" && @documents.any? %>
+            <%= button_to bulk_approve_admin_documents_path(
+                            governing_body_id: params[:governing_body_id],
+                            confidence: params[:confidence]
+                          ),
+                          method: :post,
+                          class: "btn btn-sm btn-success",
+                          data: { confirm: "Approve all #{@pagy.count} documents?" } do %>
+              <%= icon("check-circle", size: "w-4 h-4") %>
+              Approve All
+            <% end %>
+          <% end %>
+
+          <%# Bulk retry (failed only) %>
+          <% if current_stage == "failed" && @documents.any? && params[:governing_body_id].present? %>
+            <%= button_to bulk_retry_admin_documents_path(governing_body_id: params[:governing_body_id]),
+                          method: :post,
+                          class: "btn btn-sm btn-warning",
+                          data: { confirm: "Retry all failed documents?" } do %>
+              <%= icon("arrow-path", size: "w-4 h-4") %>
+              Retry All
+            <% end %>
+          <% end %>
+
+          <%# Upload button - opens modal %>
+          <button class="btn btn-sm btn-primary" onclick="document.getElementById('upload-modal').showModal()">
+            <%= icon("cloud-arrow-up", size: "w-4 h-4") %>
+            Upload
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -69,10 +174,13 @@
               <tr class="bg-base-200/50">
                 <th class="font-semibold">Document</th>
                 <th class="font-semibold">Governing Body</th>
-                <th class="font-semibold">Status</th>
-                <th class="font-semibold">Meeting Date</th>
-                <th class="font-semibold">Created</th>
-                <th class="font-semibold w-32">Actions</th>
+                <% if current_stage == "pending_review" %>
+                  <th class="font-semibold">Confidence</th>
+                <% elsif current_stage.blank? %>
+                  <th class="font-semibold">Status</th>
+                <% end %>
+                <th class="font-semibold">Date</th>
+                <th class="font-semibold w-40">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -82,57 +190,63 @@
                     <div class="flex items-center gap-3">
                       <%= document_type_icon(doc.metadata_field("document_type"), size: :sm) %>
                       <div>
-                        <% if doc.governing_body&.town %>
-                          <%= link_to town_document_path(doc.governing_body.town, doc),
-                                      class: "link link-hover font-medium" do %>
-                            <%= truncate(doc.source_file_name, length: 40) %>
-                          <% end %>
-                        <% else %>
-                          <span class="font-medium"><%= truncate(doc.source_file_name, length: 40) %></span>
+                        <%= link_to admin_document_path(doc), class: "link link-hover font-medium" do %>
+                          <%= truncate(doc.display_title, length: 50) %>
                         <% end %>
                         <div class="text-xs text-base-content/50">
-                          <%= doc.try(:topics_count_cache) || doc.topics.count %> topics, <%= doc.try(:attendees_count_cache) || doc.document_attendees.count %> attendees
+                          <%= doc.source_file_name %>
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <% if doc.governing_body %>
-                      <%= link_to doc.governing_body.name,
-                                  admin_documents_path(governing_body_id: doc.governing_body_id),
-                                  class: "link link-hover text-sm" %>
-                    <% else %>
-                      <span class="text-base-content/50">-</span>
-                    <% end %>
-                  </td>
-                  <td><%= status_badge(doc.status) %></td>
                   <td class="text-sm">
-                    <% if doc.metadata_field("meeting_date") %>
-                      <%= Date.parse(doc.metadata_field("meeting_date")).strftime("%b %d, %Y") rescue doc.metadata_field("meeting_date") %>
-                    <% else %>
-                      <span class="text-base-content/50">-</span>
-                    <% end %>
+                    <%= doc.governing_body&.name || doc.metadata_field("governing_body") || "-" %>
                   </td>
+                  <% if current_stage == "pending_review" %>
+                    <td><%= confidence_badge(doc.extraction_confidence) %></td>
+                  <% elsif current_stage.blank? %>
+                    <td><%= status_badge(doc.status) %></td>
+                  <% end %>
                   <td class="text-sm text-base-content/70">
-                    <%= doc.created_at.strftime("%b %d, %Y") %>
+                    <%= doc.meeting_date_formatted || doc.created_at.strftime("%b %d, %Y") %>
                   </td>
                   <td>
                     <div class="flex items-center gap-1">
-                      <%# Re-extract button %>
-                      <%= button_to reextract_admin_document_path(doc),
-                                    method: :post,
-                                    class: "btn btn-ghost btn-xs",
-                                    title: "Re-extract metadata",
-                                    data: { confirm: "Re-extract this document? This will clear existing topics and attendees." } do %>
-                        <%= icon("arrow-path", size: "w-4 h-4") %>
+                      <% if doc.pending_review? %>
+                        <%= button_to approve_admin_document_path(doc),
+                                      method: :post,
+                                      class: "btn btn-success btn-xs" do %>
+                          <%= icon("check-circle", size: "w-4 h-4") %>
+                          Approve
+                        <% end %>
+                        <%= button_to reject_admin_document_path(doc),
+                                      method: :post,
+                                      class: "btn btn-ghost btn-xs text-error",
+                                      data: { confirm: "Reject this document?" } do %>
+                          <%= icon("x-circle", size: "w-4 h-4") %>
+                        <% end %>
+                      <% elsif doc.failed? || doc.rejected? %>
+                        <%= button_to reextract_admin_document_path(doc),
+                                      method: :post,
+                                      class: "btn btn-warning btn-xs",
+                                      data: { confirm: "Re-extract?" } do %>
+                          <%= icon("arrow-path", size: "w-4 h-4") %>
+                          Retry
+                        <% end %>
+                      <% elsif doc.pending? || doc.extracting_text? || doc.extracting_metadata? %>
+                        <span class="loading loading-spinner loading-xs"></span>
+                      <% else %>
+                        <%= button_to reextract_admin_document_path(doc),
+                                      method: :post,
+                                      class: "btn btn-ghost btn-xs",
+                                      data: { confirm: "Re-extract?" } do %>
+                          <%= icon("arrow-path", size: "w-4 h-4") %>
+                        <% end %>
                       <% end %>
-
-                      <%# Delete button %>
                       <%= button_to admin_document_path(doc),
                                     method: :delete,
                                     class: "btn btn-ghost btn-xs text-error",
-                                    title: "Delete document",
-                                    data: { confirm: "Delete this document? This cannot be undone." } do %>
+                                    data: { confirm: "Delete?" } do %>
                         <%= icon("trash", size: "w-4 h-4") %>
                       <% end %>
                     </div>
@@ -144,16 +258,73 @@
         </div>
 
         <div class="p-4 border-t border-base-200">
-          <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { admin_documents_path(params.permit(:status, :governing_body_id).merge(page: page)) } %>
+          <%= render "shared/pagination", pagy: @pagy, url_builder: ->(page) { admin_documents_path(params.permit(:stage, :governing_body_id, :confidence).merge(page: page)) } %>
         </div>
       <% else %>
         <div class="p-8">
           <%= render "shared/empty_state",
-                     icon_name: "document",
-                     title: "No Documents Found",
-                     description: "No documents match your current filters." %>
+                     icon_name: current_stage == "pending_review" ? "check-circle" : "document",
+                     title: case current_stage
+                            when "pending" then "No Documents Queued"
+                            when "extracting" then "Nothing Processing"
+                            when "pending_review" then "All Caught Up!"
+                            when "failed" then "No Failures"
+                            when "rejected" then "No Rejected Documents"
+                            when "complete" then "No Complete Documents"
+                            else "No Documents"
+                            end,
+                     description: "Upload documents to get started." %>
         </div>
       <% end %>
     </div>
   </div>
 </div>
+
+<%# Upload Modal %>
+<dialog id="upload-modal" class="modal">
+  <div class="modal-box max-w-lg">
+    <form method="dialog">
+      <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+        <%= icon("x-mark", size: "w-4 h-4") %>
+      </button>
+    </form>
+
+    <h3 class="font-bold text-lg mb-4">Upload Documents</h3>
+
+    <%= form_with url: admin_documents_path, method: :post, multipart: true, class: "space-y-4" do |f| %>
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-medium">Town (optional)</span>
+        </label>
+        <select name="town_id" class="select select-bordered w-full">
+          <option value="">Auto-detect from document</option>
+          <% Town.order(:name).each do |town| %>
+            <option value="<%= town.id %>"><%= town.name %></option>
+          <% end %>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-medium">PDF Files</span>
+        </label>
+        <input type="file"
+               name="files[]"
+               accept="application/pdf"
+               multiple
+               class="file-input file-input-bordered w-full">
+        <label class="label">
+          <span class="label-text-alt">Select one or more PDF files</span>
+        </label>
+      </div>
+
+      <div class="modal-action">
+        <button type="button" class="btn btn-ghost" onclick="document.getElementById('upload-modal').close()">Cancel</button>
+        <%= f.submit "Upload", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>

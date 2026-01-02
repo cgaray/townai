@@ -1,0 +1,234 @@
+<%= render "shared/back_link", path: admin_documents_path, text: "Back to Documents" %>
+
+<%= render "shared/page_header",
+           title: @document.display_title,
+           subtitle: @document.source_file_name %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <%# Main content %>
+  <div class="lg:col-span-2 space-y-6">
+    <%# Metadata card with inline editing %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <%= form_with url: admin_document_path(@document), method: :patch, class: "space-y-4" do |f| %>
+          <div class="flex items-center justify-between">
+            <%= section_header("Extracted Metadata", icon_name: "document") %>
+            <%= status_badge(@document.status) %>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label pb-1">
+                <span class="label-text text-base-content/70">Document Type</span>
+              </label>
+              <select name="metadata[document_type]" class="select select-bordered select-sm">
+                <option value="">Unknown</option>
+                <option value="agenda" <%= 'selected' if @document.metadata_field("document_type") == "agenda" %>>Agenda</option>
+                <option value="minutes" <%= 'selected' if @document.metadata_field("document_type") == "minutes" %>>Minutes</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label pb-1">
+                <span class="label-text text-base-content/70">Governing Body</span>
+              </label>
+              <select name="document[governing_body_id]" class="select select-bordered select-sm">
+                <option value="">Select...</option>
+                <% @governing_bodies.group_by(&:town).each do |town, bodies| %>
+                  <% if town %>
+                    <optgroup label="<%= town.name %>">
+                      <% bodies.each do |body| %>
+                        <option value="<%= body.id %>" <%= 'selected' if @document.governing_body_id == body.id %>>
+                          <%= body.name %>
+                        </option>
+                      <% end %>
+                    </optgroup>
+                  <% end %>
+                <% end %>
+              </select>
+              <% if @document.metadata_field("governing_body") && @document.governing_body.nil? %>
+                <label class="label pt-0">
+                  <span class="label-text-alt text-warning">Extracted: <%= @document.metadata_field("governing_body") %></span>
+                </label>
+              <% end %>
+            </div>
+
+            <div class="form-control">
+              <label class="label pb-1">
+                <span class="label-text text-base-content/70">Meeting Date</span>
+              </label>
+              <input type="date"
+                     name="metadata[meeting_date]"
+                     class="input input-bordered input-sm"
+                     value="<%= @document.metadata_field("meeting_date") %>">
+            </div>
+
+            <div class="form-control">
+              <label class="label pb-1">
+                <span class="label-text text-base-content/70">Confidence</span>
+              </label>
+              <div class="pt-1">
+                <%= confidence_badge(@document.extraction_confidence) || content_tag(:span, "N/A", class: "text-base-content/50 text-sm") %>
+              </div>
+            </div>
+          </div>
+
+          <% if @document.metadata_field("abstract").present? %>
+            <div>
+              <label class="label pb-1">
+                <span class="label-text text-base-content/70">Abstract</span>
+              </label>
+              <p class="text-sm"><%= @document.metadata_field("abstract") %></p>
+            </div>
+          <% end %>
+
+          <div class="flex justify-end pt-2">
+            <%= f.submit "Save Changes", class: "btn btn-sm btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Topics %>
+    <% if @topics.any? %>
+      <div class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body">
+          <%= section_header("Topics", icon_name: "list-bullet", count: @topics.count) %>
+
+          <div class="space-y-3 mt-4">
+            <% @topics.each_with_index do |topic, idx| %>
+              <div class="p-3 bg-base-50 rounded-lg border border-base-200">
+                <div class="flex items-start gap-3">
+                  <span class="number-circle"><%= idx + 1 %></span>
+                  <div class="flex-1">
+                    <h4 class="font-medium"><%= topic.title %></h4>
+                    <% if topic.summary.present? %>
+                      <p class="text-sm text-base-content/70 mt-1"><%= topic.summary %></p>
+                    <% end %>
+                    <% if topic.has_action? %>
+                      <div class="mt-2">
+                        <%= action_badge(topic.action_taken) %>
+                        <% if topic.action_taken_raw.present? && topic.action_taken_raw != topic.action_taken %>
+                          <span class="text-xs text-base-content/50 ml-2">(<%= topic.action_taken_raw %>)</span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Attendees %>
+    <% if @attendees.any? %>
+      <div class="card bg-base-100 border border-base-200 shadow-sm">
+        <div class="card-body">
+          <%= section_header("Attendees", icon_name: "users", count: @attendees.count) %>
+
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+            <% @attendees.each do |da| %>
+              <div class="flex items-center gap-2 p-2 bg-base-50 rounded-lg">
+                <%= avatar(da.attendee.name, size: :sm) %>
+                <div class="min-w-0">
+                  <p class="font-medium text-sm truncate"><%= da.attendee.name %></p>
+                  <% if da.role.present? %>
+                    <%= role_badge(da.role) %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Sidebar %>
+  <div class="space-y-6">
+    <%# Actions card %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <%= section_header("Actions", icon_name: "cursor-arrow-rays") %>
+
+        <div class="space-y-3 mt-4">
+          <% if @document.pending_review? %>
+            <%= button_to approve_admin_document_path(@document),
+                          method: :post,
+                          class: "btn btn-success w-full" do %>
+              <%= icon("check-circle", size: "w-5 h-5") %>
+              Approve
+            <% end %>
+
+            <%= button_to reject_admin_document_path(@document),
+                          method: :post,
+                          class: "btn btn-error btn-outline w-full",
+                          data: { confirm: "Reject this document?" } do %>
+              <%= icon("x-circle", size: "w-5 h-5") %>
+              Reject
+            <% end %>
+          <% end %>
+
+          <%= button_to reextract_admin_document_path(@document),
+                        method: :post,
+                        class: "btn btn-warning btn-outline w-full",
+                        data: { confirm: "Re-extract? This clears existing topics and attendees." } do %>
+            <%= icon("arrow-path", size: "w-5 h-5") %>
+            Re-extract
+          <% end %>
+
+          <%= button_to admin_document_path(@document),
+                        method: :delete,
+                        class: "btn btn-ghost text-error w-full",
+                        data: { confirm: "Delete permanently?" } do %>
+            <%= icon("trash", size: "w-5 h-5") %>
+            Delete
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <%# File info card %>
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body">
+        <%= section_header("File Info", icon_name: "document") %>
+
+        <div class="space-y-2 mt-4 text-sm">
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Status</span>
+            <%= status_badge(@document.status) %>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-base-content/70">Uploaded</span>
+            <span><%= @document.created_at.strftime("%b %d, %Y %H:%M") %></span>
+          </div>
+          <% if @document.reviewed_at %>
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Reviewed</span>
+              <span><%= @document.reviewed_at.strftime("%b %d, %Y") %></span>
+            </div>
+          <% end %>
+          <% if @document.pdf.attached? %>
+            <div class="flex justify-between">
+              <span class="text-base-content/70">Size</span>
+              <span><%= number_to_human_size(@document.pdf.byte_size) %></span>
+            </div>
+          <% end %>
+        </div>
+
+        <% if @document.pdf.attached? %>
+          <div class="mt-4">
+            <%= link_to rails_blob_path(@document.pdf, disposition: "inline"),
+                        class: "btn btn-sm btn-ghost w-full",
+                        target: "_blank" do %>
+              <%= icon("eye", size: "w-4 h-4") %>
+              View PDF
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

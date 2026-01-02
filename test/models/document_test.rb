@@ -2,7 +2,7 @@ require "test_helper"
 
 class DocumentTest < ActiveSupport::TestCase
   test "should have valid statuses" do
-    assert_equal %w[pending extracting_text extracting_metadata complete failed], Document.statuses.keys
+    assert_equal %w[pending extracting_text extracting_metadata complete failed pending_review rejected], Document.statuses.keys
   end
 
   test "should default to pending status" do
@@ -95,5 +95,95 @@ class DocumentTest < ActiveSupport::TestCase
     assert_respond_to doc, :pdf
     assert_respond_to doc.pdf, :attach
     assert_respond_to doc.pdf, :attached?
+  end
+
+  test "pending_review? returns true for pending_review status" do
+    doc = documents(:pending_review_document)
+    assert doc.pending_review?
+  end
+
+  test "rejected? returns true for rejected status" do
+    doc = documents(:rejected_document)
+    assert doc.rejected?
+  end
+
+  test "needs_review scope returns pending_review documents" do
+    pending_review_docs = Document.needs_review
+    assert pending_review_docs.all?(&:pending_review?)
+    assert_includes pending_review_docs, documents(:pending_review_document)
+    assert_includes pending_review_docs, documents(:pending_review_low_confidence)
+  end
+
+  test "approved scope returns complete documents" do
+    approved_docs = Document.approved
+    assert approved_docs.all?(&:complete?)
+  end
+
+  test "calculate_confidence returns high for complete metadata" do
+    metadata = {
+      "document_type" => "agenda",
+      "governing_body" => "Select Board",
+      "meeting_date" => "2025-01-15",
+      "attendees" => [ { "name" => "John" } ],
+      "topics" => [ { "title" => "Topic 1" } ]
+    }
+    assert_equal "high", Document.calculate_confidence(metadata)
+  end
+
+  test "calculate_confidence returns medium for partial metadata" do
+    metadata = {
+      "document_type" => "agenda",
+      "governing_body" => "Select Board",
+      "meeting_date" => "2025-01-15",
+      "attendees" => [],
+      "topics" => []
+    }
+    assert_equal "medium", Document.calculate_confidence(metadata)
+  end
+
+  test "calculate_confidence returns low for minimal metadata" do
+    metadata = {
+      "document_type" => "agenda",
+      "attendees" => [],
+      "topics" => []
+    }
+    assert_equal "low", Document.calculate_confidence(metadata)
+  end
+
+  test "calculate_confidence returns low for invalid input" do
+    assert_equal "low", Document.calculate_confidence(nil)
+    assert_equal "low", Document.calculate_confidence("string")
+  end
+
+  test "approve! transitions to complete and records reviewer" do
+    doc = documents(:pending_review_document)
+    user = users(:admin)
+
+    doc.approve!(user)
+
+    assert doc.complete?
+    assert_equal user, doc.reviewed_by
+    assert_not_nil doc.reviewed_at
+    assert_nil doc.rejection_reason
+  end
+
+  test "reject! transitions to rejected and records reason" do
+    doc = documents(:pending_review_document)
+    user = users(:admin)
+
+    doc.reject!(user, reason: "Poor quality scan")
+
+    assert doc.rejected?
+    assert_equal user, doc.reviewed_by
+    assert_not_nil doc.reviewed_at
+    assert_equal "Poor quality scan", doc.rejection_reason
+  end
+
+  test "extraction_confidence enum works correctly" do
+    doc = documents(:pending_review_document)
+    assert doc.extraction_confidence_high?
+
+    doc_low = documents(:pending_review_low_confidence)
+    assert doc_low.extraction_confidence_low?
   end
 end

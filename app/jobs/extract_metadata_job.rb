@@ -60,7 +60,15 @@ class ExtractMetadataJob < ApplicationJob
       record_api_call(document, usage, response_time_ms, "success")
 
       begin
-        document.update!(extracted_metadata: normalized, status: :complete)
+        # Calculate confidence and transition to pending_review for admin approval
+        parsed_metadata = JSON.parse(normalized)
+        confidence = Document.calculate_confidence(parsed_metadata)
+
+        document.update!(
+          extracted_metadata: normalized,
+          status: :pending_review,
+          extraction_confidence: confidence
+        )
 
         # Log extraction completed
         DocumentEventLogJob.perform_later(
@@ -69,7 +77,8 @@ class ExtractMetadataJob < ApplicationJob
           metadata: {
             duration_ms: response_time_ms,
             prompt_tokens: usage["prompt_tokens"],
-            completion_tokens: usage["completion_tokens"]
+            completion_tokens: usage["completion_tokens"],
+            confidence: confidence
           }
         )
 

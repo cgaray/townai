@@ -29,10 +29,29 @@ module DocumentsHelper
   STATUS_CONFIG = {
     "complete" => { badge: "badge-soft badge-success", icon: "check-circle" },
     "failed" => { badge: "badge-soft badge-error", icon: "x-circle" },
-    "pending" => { badge: "badge-ghost", icon: "clock-pending" }
+    "pending" => { badge: "badge-ghost", icon: "clock-pending" },
+    "pending_review" => { badge: "badge-soft badge-warning", icon: "eye" },
+    "rejected" => { badge: "badge-soft badge-error", icon: "x-circle" }
   }.freeze
 
   DEFAULT_STATUS_CONFIG = { badge: "badge-soft badge-warning", icon: "arrow-path" }.freeze
+
+  # Confidence badge helper
+  def confidence_badge(confidence)
+    return nil if confidence.blank?
+
+    config = case confidence.to_s
+    when "high" then { badge: "badge-success", icon: "check-circle" }
+    when "medium" then { badge: "badge-warning", icon: "exclamation-triangle" }
+    when "low" then { badge: "badge-error", icon: "exclamation-triangle" }
+    else { badge: "badge-ghost", icon: "question-mark-circle" }
+    end
+
+    content_tag :span, class: "badge badge-sm badge-outline #{config[:badge]}" do
+      concat icon(config[:icon], size: "size-[1em]")
+      concat confidence.to_s.capitalize
+    end
+  end
 
   def status_badge(status)
     config = STATUS_CONFIG[status.to_s] || DEFAULT_STATUS_CONFIG

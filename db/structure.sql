@@ -41,15 +41,8 @@ FOREIGN KEY ("document_id")
 CREATE INDEX "index_document_attendees_on_attendee_id" ON "document_attendees" ("attendee_id") /*application='Townai'*/;
 CREATE UNIQUE INDEX "index_document_attendees_on_document_id_and_attendee_id" ON "document_attendees" ("document_id", "attendee_id") /*application='Townai'*/;
 CREATE INDEX "index_document_attendees_on_document_id" ON "document_attendees" ("document_id") /*application='Townai'*/;
-CREATE TABLE IF NOT EXISTS "documents" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "extracted_metadata" text, "governing_body_id" integer, "raw_text" text, "source_file_hash" varchar, "source_file_name" varchar, "status" integer DEFAULT 0, "updated_at" datetime(6) NOT NULL, CONSTRAINT "fk_rails_d8dcddfde2"
-FOREIGN KEY ("governing_body_id")
-  REFERENCES "governing_bodies" ("id")
-);
-CREATE INDEX "index_documents_on_governing_body_id" ON "documents" ("governing_body_id") /*application='Townai'*/;
-CREATE UNIQUE INDEX "index_documents_on_source_file_hash" ON "documents" ("source_file_hash") /*application='Townai'*/;
 CREATE TABLE IF NOT EXISTS "schema_migrations" ("version" varchar NOT NULL PRIMARY KEY);
 CREATE TABLE IF NOT EXISTS "ar_internal_metadata" ("key" varchar NOT NULL PRIMARY KEY, "value" varchar, "created_at" datetime(6) NOT NULL, "updated_at" datetime(6) NOT NULL);
-CREATE INDEX "index_documents_on_status" ON "documents" ("status") /*application='Townai'*/;
 CREATE VIRTUAL TABLE search_entries USING fts5(
   entity_type,
   entity_id UNINDEXED,
@@ -123,7 +116,21 @@ FOREIGN KEY ("duplicate_person_id")
 CREATE INDEX "index_duplicate_suggestions_on_person_id" ON "duplicate_suggestions" ("person_id") /*application='Townai'*/;
 CREATE INDEX "index_duplicate_suggestions_on_duplicate_person_id" ON "duplicate_suggestions" ("duplicate_person_id") /*application='Townai'*/;
 CREATE UNIQUE INDEX "idx_on_person_id_duplicate_person_id_5606038b71" ON "duplicate_suggestions" ("person_id", "duplicate_person_id") /*application='Townai'*/;
+CREATE TABLE IF NOT EXISTS "documents" ("id" integer PRIMARY KEY AUTOINCREMENT NOT NULL, "created_at" datetime(6) NOT NULL, "extracted_metadata" text, "governing_body_id" integer, "raw_text" text, "source_file_hash" varchar, "source_file_name" varchar, "status" integer DEFAULT 0, "updated_at" datetime(6) NOT NULL, "extraction_confidence" varchar, "reviewed_at" datetime(6), "reviewed_by_id" integer, "rejection_reason" text /*application='Townai'*/, CONSTRAINT "fk_rails_d8dcddfde2"
+FOREIGN KEY ("governing_body_id")
+  REFERENCES "governing_bodies" ("id")
+, CONSTRAINT "fk_rails_10bdb0b022"
+FOREIGN KEY ("reviewed_by_id")
+  REFERENCES "users" ("id")
+);
+CREATE INDEX "index_documents_on_governing_body_id" ON "documents" ("governing_body_id") /*application='Townai'*/;
+CREATE UNIQUE INDEX "index_documents_on_source_file_hash" ON "documents" ("source_file_hash") /*application='Townai'*/;
+CREATE INDEX "index_documents_on_status" ON "documents" ("status") /*application='Townai'*/;
+CREATE INDEX "index_documents_on_reviewed_by_id" ON "documents" ("reviewed_by_id") /*application='Townai'*/;
+CREATE INDEX "index_documents_on_extraction_confidence" ON "documents" ("extraction_confidence") /*application='Townai'*/;
+CREATE INDEX "index_documents_on_reviewed_at" ON "documents" ("reviewed_at") /*application='Townai'*/;
 INSERT INTO "schema_migrations" (version) VALUES
+('20260102022910'),
 ('20260101184306'),
 ('20260101134241'),
 ('20260101124059'),
