@@ -86,6 +86,7 @@ class ApiCallTest < ActiveSupport::TestCase
   end
 
   test "this_month scope returns only current month calls" do
+    ApiCall.delete_all
     ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: 2.months.ago)
     current = ApiCall.create!(provider: "test", model: "test", operation: "test", status: "success", created_at: Time.current)
 
