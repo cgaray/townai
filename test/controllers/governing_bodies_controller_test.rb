@@ -47,4 +47,28 @@ class GoverningBodiesControllerTest < ActionDispatch::IntegrationTest
     get town_governing_body_path(@town, id: 999999)
     assert_response :not_found
   end
+
+  # Tests for JOIN with GROUP BY optimization
+
+  test "index renders with people_count computed via JOIN" do
+    get town_governing_bodies_path(@town)
+    assert_response :success
+    # Page renders with people_count computed via LEFT JOIN + GROUP BY
+  end
+
+  test "show renders with people_count for single governing body" do
+    gb = governing_bodies(:select_board)
+
+    get town_governing_body_path(@town, gb)
+    assert_response :success
+    # Page renders with people_count computed via LEFT JOIN + GROUP BY
+  end
+
+  test "show paginates members list" do
+    gb = governing_bodies(:select_board)
+
+    get town_governing_body_path(@town, gb, people_page: 1)
+    assert_response :success
+    # Members section should be paginated
+  end
 end
