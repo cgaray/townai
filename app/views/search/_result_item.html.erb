@@ -47,7 +47,7 @@
         
         <% if result[:snippet].present? %>
           <p class="text-sm text-base-content/70 mt-2 line-clamp-2">
-            <%== result[:snippet] %>
+            <%= sanitize(result[:snippet], tags: %w[mark]) %>
           </p>
         <% end %>
       </div>

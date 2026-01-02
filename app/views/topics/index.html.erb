@@ -36,7 +36,7 @@
                     <%= 'selected' if params[:governing_body_id].blank? %>>
               All Boards
             </option>
-            <% current_town.governing_bodies.order(:name).each do |body| %>
+            <% @governing_bodies.each do |body| %>
               <option value="<%= town_topics_path(current_town, action_taken: params[:action_taken], governing_body_id: body.id) %>"
                       <%= 'selected' if params[:governing_body_id].to_s == body.id.to_s %>>
                 <%= body.name %>
@@ -55,11 +55,9 @@
         <div class="card bg-base-100 border border-base-200 shadow-sm overflow-hidden">
           <%= render "topics/date_header", date_label: date_label, topics_count: topics.size %>
 
-          <%# Topics for this date %>
+          <%# Topics for this date - use collection rendering for better performance %>
           <div class="divide-y divide-base-200">
-            <% topics.each do |topic| %>
-              <%= render "topics/topic_row", topic: topic %>
-            <% end %>
+            <%= render partial: "topics/topic_row", collection: topics, as: :topic %>
           </div>
         </div>
       <% end %>

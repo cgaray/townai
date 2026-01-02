@@ -9,6 +9,9 @@ class TopicsController < ApplicationController
 
     @filter_counts = Topic.filter_counts_for_town(current_town)
     @pagy, @topics = pagy(topics, limit: 50)
+
+    # Preload governing bodies for filter dropdown to avoid N+1 in view
+    @governing_bodies = current_town.governing_bodies.order(:name)
   end
 
   private
